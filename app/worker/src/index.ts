@@ -1,9 +1,10 @@
-
+import 'dotenv/config';
 import {logger} from './config/logger';
 import {redis} from './config/redis';
 
 async function main() {
   try {
+    
     logger.info('Worker starting...');
 
     // Test Redis connection

@@ -1,5 +1,5 @@
 import Redis from "ioredis";
-import z from "zod";
+import { z } from "zod";
 import { logger } from "./logger";
 
 
