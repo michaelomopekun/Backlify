@@ -9,7 +9,11 @@
     "dev": "ts-node src/index.ts",
     "build": "tsc",
     "lint": "tslint -c tslint.json src/**/*.ts",
-    "prepublish": "npm run build"
+    "prepublish": "npm run build",
+    "drizzle-generate": "npm --prefix ../../package/db run drizzle-generate",
+    "drizzle-push": "npm --prefix ../../package/db run drizzle-push",
+    "drizzle-drop": "npm --prefix ../../package/db run drizzle-drop",
+    "drizzle-studio": "npm --prefix ../../package/db run drizzle-studio"
   },
   "keywords": [],
   "author": "",

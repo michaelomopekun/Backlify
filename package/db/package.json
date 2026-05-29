@@ -1,0 +1,23 @@
+{
+  "name": "db",
+  "version": "1.0.0",
+  "description": "Database package with Drizzle ORM",
+  "main": "index.ts",
+  "scripts": {
+    "drizzle-generate": "drizzle-kit generate",
+    "drizzle-push": "drizzle-kit push",
+    "drizzle-drop": "drizzle-kit drop",
+    "drizzle-studio": "drizzle-kit studio"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "drizzle-orm": "^0.30.0",
+    "postgres": "^3.4.0"
+  },
+  "devDependencies": {
+    "drizzle-kit": "^0.20.0",
+    "typescript": "^5.3.0"
+  }
+}
