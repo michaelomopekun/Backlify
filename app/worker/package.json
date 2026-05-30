@@ -21,9 +21,11 @@
   "type": "commonjs",
   "dependencies": {
     "db": "file:../../package/db",
+    "shared": "file:../../package/shared",
     "dotenv": "^17.4.2",
     "tslint": "^5.20.1",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    
   },
   "files": [
     "./bin/*",

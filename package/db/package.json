@@ -13,6 +13,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "shared": "file:../shared",
     "drizzle-orm": "^0.30.0",
     "postgres": "^3.4.0"
   },
