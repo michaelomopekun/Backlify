@@ -8,6 +8,8 @@ import { v4 as uuidv4 } from "uuid";
 
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 
+import { BackupRepository as backupRepository } from "../repo/backup.repo";
+
 
 // ?input validation
 const CreateBackupInputSchema = z.object({
@@ -50,12 +52,25 @@ export class BackupService {
 
             }
 
-            // generate job id
+            // 2 generate job id
             const jobId = this.generateJobId();
 
             logger.info({ jobId }, "Creating backup job");
 
-            // 2
+            // 3 save metadata to database
+            await backupRepository.saveBackupJob({
+
+                jobId,
+
+                databaseUrl: validated.data.databaseUrl,
+
+                jobStatus: BACKUP_JOB_STATUS.PENDING,
+
+                timestamp: Date.now(),
+
+            });
+
+            // 4 create job
             const jobData: BackupJobData = {
 
                 jobId,
@@ -68,13 +83,23 @@ export class BackupService {
 
             };
 
-            // 3
+            // 5 enqueue job
             const job = await backupQueue.add("backup", jobData, { jobId });
 
-            // 4
             logger.info({ jobId: job.id, status: job.data.jobStatus }, "Backup job added to queue");
 
-            // 5
+            // 6 update job status to queued
+            await backupRepository.updateJobStatus(
+
+                jobId,
+
+                BACKUP_JOB_STATUS.PENDING,
+
+                BACKUP_JOB_STATUS.QUEUED
+            
+            );
+
+            // 7
             return {
 
                 success: true,
