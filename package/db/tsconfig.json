@@ -14,7 +14,16 @@
         "resolveJsonModule": true,
         "types": [
             "node"
-        ]
+        ],
+        // "baseUrl": ".",
+        // "paths": {
+        //     "@backlify/shared": [
+        //         "../shared"
+        //     ],
+        //     "@backlify/shared/*": [
+        //         "../shared/*"
+        //     ]
+        // }
     },
     "include": [
         "**/*.ts"
@@ -22,5 +31,6 @@
     "exclude": [
         "node_modules",
         "dist"
-    ]
+    ],
+    "extends": "../../tsconfig.base.json"
 }

@@ -1,11 +1,9 @@
-import { pgTable, text, timestamp, varchar, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import { BACKUP_JOB_STATUS_VALUES } from 'shared/constants/backupJobStatus';
 
-export const backupJobStatus = pgEnum('backup_job_status', [
-  'pending',
-  'in_progress',
-  'completed',
-  'failed',
-]);
+// Drizzle enum for backup job status
+const backupJobStatus = pgEnum('backup_job_status', BACKUP_JOB_STATUS_VALUES);
+
 
 export const backupJobs = pgTable('backup_jobs', {
   id: text('id').primaryKey(),
