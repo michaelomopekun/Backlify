@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { logger } from "../config/logger";
 
-import { backupQueue, BackupJobData, BackupJobDataSchema } from "../queue/backup.queue";
+import { backupQueue, BackupJobData } from "../queue/backup.queue";
 
 import { v4 as uuidv4 } from "uuid";
 

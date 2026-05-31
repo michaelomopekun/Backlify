@@ -2,14 +2,14 @@ import { Queue } from "bullmq";
 import { z } from "zod";
 import { redis } from "../config/redis";
 import { logger } from "../config/logger";
-import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
+import { BACKUP_JOB_STATUS_VALUES } from "shared/constants/backupJobStatus";
 
 
 // validate job data
 export const BackupJobDataSchema = z.object({
     jobId: z.string(),
     databaseUrl: z.string().url("Invalid database URL format"),
-    jobStatus: z.enum(BACKUP_JOB_STATUS),
+    jobStatus: z.enum(BACKUP_JOB_STATUS_VALUES),
     timestamp: z.number().optional(),
 });
 
