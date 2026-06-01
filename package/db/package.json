@@ -4,8 +4,8 @@
   "description": "Database package with Drizzle ORM",
   "main": "index.ts",
   "scripts": {
-    "drizzle-generate": "drizzle-kit generate",
-    "drizzle-push": "drizzle-kit push",
+    "drizzle-generate": "drizzle-kit generate:pg",
+    "drizzle-push": "drizzle-kit push:pg",
     "drizzle-drop": "drizzle-kit drop",
     "drizzle-studio": "drizzle-kit studio"
   },
