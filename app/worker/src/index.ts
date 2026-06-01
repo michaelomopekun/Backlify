@@ -4,6 +4,8 @@ import {logger} from './config/logger';
 
 import {redis} from './config/redis';
 
+import { BackupService } from './service/backup.service';
+
 
 
 async function main() {
@@ -19,6 +21,20 @@ async function main() {
 
 
     logger.info('Worker listening...');
+
+
+    // Create and queue test job
+    logger.info('Creating test backup job...');
+
+    const backupService = new BackupService();
+    
+    const testJob = await backupService.createBackup({
+    
+      databaseUrl: 'postgresql://postgres:password@localhost:5432/test_db',
+    
+    });
+
+    logger.info({ testJob }, 'Test backup job queued successfully');
 
 
     // shutdown
@@ -41,7 +57,7 @@ async function main() {
     process.exit(1);
   
   }
-
+  
 }
 
 
