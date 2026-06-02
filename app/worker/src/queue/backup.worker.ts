@@ -6,7 +6,6 @@ import { logger } from "../config/logger";
 
 import { BackupJobData } from "./backup.queue";
 
-import { BackupService } from "../service/backup.service";
 
 
 
@@ -18,13 +17,18 @@ export const backupWorker = new Worker<BackupJobData>(
 
         logger.info({ jobId : job.id }, "Processing backup job");
 
-        const backupService = new BackupService();
 
-        await backupService.createBackup({
+        // 1 update status from pending to running
 
-            databaseUrl: job.data.databaseUrl,
-        
-        });
+
+        // 2 call pgdump service to perform backup
+
+
+        // 3 wait for result and update status accordingly
+
+
+        // 4 log completion
+
 
         logger .info({ jobId : job.id }, "Backup job completed");
         
