@@ -6,6 +6,8 @@ import { logger } from "../config/logger";
 
 import { BackupJobData } from "./backup.queue";
 
+import { BackupService } from "../service/backup.service";
+
 
 
 export const backupWorker = new Worker<BackupJobData>(
@@ -16,8 +18,13 @@ export const backupWorker = new Worker<BackupJobData>(
 
         logger.info({ jobId : job.id }, "Processing backup job");
 
-        // will implement the actual backup logic here
-        await new Promise((resolve) => setTimeout(resolve, 5000)); // just to simulate backup time
+        const backupService = new BackupService();
+
+        await backupService.createBackup({
+
+            databaseUrl: job.data.databaseUrl,
+        
+        });
 
         logger .info({ jobId : job.id }, "Backup job completed");
         
