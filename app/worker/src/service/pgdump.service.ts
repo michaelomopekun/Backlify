@@ -1,4 +1,4 @@
-import { spawn } from "child-process";
+import { spawn } from "child_process";
 
 import { promises as fs } from "fs";
 
