@@ -92,7 +92,6 @@ export class PgDumpService {
             }
 
             // fetch file size
-
             const stats = await fs.stat(backUpPath);
 
             const duration = Date.now() - startTime;
@@ -141,16 +140,63 @@ export class PgDumpService {
 
     }
 
+    private parseConnectionString(dbUrl: string): { host: string; port: string; database: string; user: string; password: string } {
+
+        const url = new URL(dbUrl);
+        
+        return {
+        
+            host: url.hostname,
+        
+            port: url.port,
+        
+            database: url.pathname.slice(1),
+        
+            user: url.username,
+        
+            password: url.password,
+        
+        };
+    
+    }
+
     private spawnPgDump( databaseUrl: string, outputFile: string, timeout: number ): Promise<{ success: boolean; error?: string }> {
 
         return new Promise((resolve) => {
-            
+
+            const pgDumpPath = process.env.PG_DUMP_PATH || 
+                (process.platform === 'win32' ? 'C:\\Program Files\\PostgreSQL\\16\\bin\\pg_dump.exe' : 'pg_dump');
+
+            const conn = this.parseConnectionString(databaseUrl);
+
+            const args = [
+                '-h', conn.host,
+
+                '-p', conn.port,
+                
+                '-U', conn.user,
+                
+                '-Fc',
+                
+                '-f', outputFile,
+                
+                conn.database,
+            ];
+                
             // spawn pg_dump process
-            const process = spawn( "pg_dump", [databaseUrl, '-Fc', "-f", outputFile], {
+            const backupProcess = spawn( pgDumpPath, args, {
 
                 stdio: ["ignore", "pipe", "pipe"],
 
                 timeout,
+
+                env: {
+
+                    ...process.env,
+
+                    PGPASSWORD: conn.password,
+
+                },
 
             });
 
@@ -159,7 +205,7 @@ export class PgDumpService {
             let timedOut = false;
 
             // capture stderr
-            process.stderr.on("data", (data: Buffer) => {
+            backupProcess.stderr.on("data", (data: Buffer) => {
 
                 stderr += data.toString();
 
@@ -170,12 +216,12 @@ export class PgDumpService {
 
                 timedOut = true;
 
-                process.kill("SIGTERM");
+                backupProcess.kill("SIGTERM");
 
             }, timeout);
 
             // handle process close
-            process.on('close', (code: number | null) => {
+            backupProcess.on('close', (code: number | null) => {
 
                 clearTimeout(timeoutHandle);
 
