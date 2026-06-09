@@ -4,9 +4,7 @@ import {logger} from './config/logger';
 
 import {redis} from './config/redis';
 
-// import { BackupService } from './service/backup.service';
-
-import { PgDumpService } from './service/pgdump.service';
+import { BackupService } from './service/backup.service';
 
 
 
@@ -25,32 +23,20 @@ async function main() {
     logger.info('Worker listening...');
 
 
-    // // Create and queue test job
-    // logger.info('Creating test backup job...');
+    // Create and queue test job
+    const databaseUrl = process.env.DATABASE_URL;
 
-    // const backupService = new BackupService();
+    logger.info('Creating test backup job...');
+
+    const backupService = new BackupService();
     
-    // const testJob = await backupService.createBackup({
+    const testJob = await backupService.createBackup({
     
-    //   databaseUrl: 'postgresql://postgres:password@localhost:5432/test_db',
+      databaseUrl: databaseUrl!,
     
-    // });
-
-    // logger.info({ testJob }, 'Test backup job queued successfully');
-
-
-    // Test pg_dump execution 
-    const pgDumpService = new PgDumpService();
-
-    const backupResult = await pgDumpService.executePgDump({
-
-      databaseUrl: 'postgresql://postgres:password@localhost:5432/test_db',
-
-      jobId: "testJob.jobId",
-
     });
 
-    logger.info({ backupResult }, 'Backup result');
+    logger.info({ testJob }, 'Backup job result');
 
 
     // shutdown
