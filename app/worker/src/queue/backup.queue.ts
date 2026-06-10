@@ -40,7 +40,7 @@ export const backupQueue = new Queue<BackupJobData>("backup-jobs", {
 
             type: "exponential",
 
-            delay: 2000,
+            delay: 60000, // 1 minute
 
         },
 

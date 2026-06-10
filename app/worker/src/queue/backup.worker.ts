@@ -68,21 +68,12 @@ export const backupWorker = new Worker<BackupJobData>(
         } 
         else {
 
-            // update status to failed
-            await BackupRepository.updateJobStatus(
+            // 4 log failure — throw error here triggers BullMQ retry (attempts: 3, exponential backoff)
+            const errorMessage = backup_result.error ?? "pg_dump failed";
             
-                job.data.jobId,
+            logger.error({ jobId : job.id, error: errorMessage }, "Backup job failed, will retry if attempts remain");
             
-                job.data.jobStatus,
-            
-                BACKUP_JOB_STATUS.FAILED,
-            
-            );
-            
-            // 4 log failure
-            logger.info({ jobId : job.id }, "Backup job failed");
-            
-            return { success: false };
+            throw new Error(errorMessage);
         }
 
     },
@@ -105,9 +96,32 @@ backupWorker.on("completed", (job) => {
 
 });
 
-backupWorker.on("failed", (job, err) => {
+backupWorker.on("failed", async (job, err) => {
 
     logger.error({ jobId: job?.id, err: err.message, attempts: job?.attemptsMade }, "Backup job failed");
+
+    // Mark as FAILED in DB after all retries are exhausted
+    if (job) {  
+
+        try {
+        
+            await BackupRepository.updateJobStatus(
+        
+                job.data.jobId,
+        
+                job.data.jobStatus,
+        
+                BACKUP_JOB_STATUS.FAILED,
+        
+            );
+        
+        } catch (updateErr) {
+        
+            logger.error({ jobId: job.id, err: updateErr }, "Failed to update job status to FAILED");
+        
+        }
+    
+    }
 
 });
 
