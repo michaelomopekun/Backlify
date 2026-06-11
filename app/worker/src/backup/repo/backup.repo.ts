@@ -1,4 +1,4 @@
-import { logger } from "../config/logger";
+import { logger } from "../../config/logger";
 
 import { BackupJobData } from "../queue/backup.queue";
 

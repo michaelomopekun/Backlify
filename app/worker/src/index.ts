@@ -4,7 +4,7 @@ import {logger} from './config/logger';
 
 import {redis} from './config/redis';
 
-import { BackupService } from './service/backup.service';
+import { BackupService } from './backup/service/backup.service';
 
 
 
