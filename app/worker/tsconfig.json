@@ -29,6 +29,12 @@
 	},
 	"include": [
 		"typings/**/*",
-		"src/**/*"
+		"src/**/*",
+		"src/backup/service",
+		"src/backup/repo",
+		"src/backup/queue",
+		"src/restore/service",
+		"src/restore/repo",
+		"src/restore/queue"
 	]
 }
