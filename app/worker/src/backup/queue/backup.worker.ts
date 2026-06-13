@@ -11,6 +11,7 @@ import { BackupRepository } from "../repo/backup.repo"
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 
 import { PgDumpService } from "../service/pgdump.service";
+import { BackupFileUploadService } from "../service/backup_file_upload.service";
 
 
 
@@ -50,7 +51,21 @@ export const backupWorker = new Worker<BackupJobData>(
 
         // 3 wait for result and update status accordingly
         if (backup_result.success) {
+
+            const backup_file_service = new BackupFileUploadService();
+
+            // 4 save backup file to database (for now, will switch to cloud storage later)
+            await backup_file_service.saveBackupFile({
+                
+                jobId: job.data.jobId,
+                
+                filePath: backup_result.filePath as string,
+                
+                fileSize: backup_result.fileSize as number,
             
+            });
+
+            // 5 update job status to completed
             await BackupRepository.updateJobStatus(
             
                 job.data.jobId,
@@ -61,14 +76,14 @@ export const backupWorker = new Worker<BackupJobData>(
             
             );
             
-            // 4 log completion
+            // 6 log completion
             logger.info({ jobId : job.id }, "Backup job completed");
             
             return { success: true };
         } 
         else {
 
-            // 4 log failure — throw error here triggers BullMQ retry (attempts: 3, exponential backoff)
+            // 6 log failure — throw error here triggers BullMQ retry (attempts: 3, exponential backoff)
             const errorMessage = backup_result.error ?? "pg_dump failed";
             
             logger.error({ jobId : job.id, error: errorMessage }, "Backup job failed, will retry if attempts remain");
