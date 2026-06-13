@@ -6,11 +6,12 @@ import { logger } from "../../config/logger";
 
 import { BackupJobData } from "./backup.queue";
 
-import { BackupRepository } from "../repo/backup.repo"
+import { BackupRepository } from "../repo/backup.repo";
 
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 
 import { PgDumpService } from "../service/pgdump.service";
+
 import { BackupFileUploadService } from "../service/backup_file_upload.service";
 
 

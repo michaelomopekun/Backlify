@@ -8,9 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { logger } from "../../config/logger";
 
-import { db } from "db";
-
-import { backupFiles } from "db/schema/backup-file";
+import { BackupFileRepository } from "../repo/backup_file.repo";
 
 
 export interface BackupFileUploadOptions {
@@ -63,7 +61,7 @@ export class BackupFileUploadService {
             const fileName = path.basename(filePath);
 
             // 4 save record to database
-            await db.insert(backupFiles).values({
+            await BackupFileRepository.saveBackupFile({
 
                 id: backupFileId,
 
