@@ -36,6 +36,15 @@ export const backupWorker = new Worker<BackupJobData>(
             BACKUP_JOB_STATUS.IN_PROGRESS
         
         );
+        
+        // save the current status to job.data.jobStatus for alignment
+        await job.updateData({
+            
+            ...job.data,
+            
+            jobStatus: BACKUP_JOB_STATUS.IN_PROGRESS,
+            
+        });
 
         logger.info({ jobId : job.id }, "updated job status to in_progress");
 
@@ -130,6 +139,7 @@ backupWorker.on("failed", async (job, err) => {
                 BACKUP_JOB_STATUS.FAILED,
         
             );
+            
         
         } catch (updateErr) {
         

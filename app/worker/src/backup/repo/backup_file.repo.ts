@@ -1,6 +1,6 @@
 import { backupFiles } from "db/schema/backup-file";
 
-import { db } from "db";
+import { db, eq } from "db";
 
 import { logger } from "../../config/logger";
 
@@ -81,6 +81,32 @@ export class BackupFileRepository {
         } catch (error) {
 
             logger.error({ error, backupFile }, "Failed to save backup file");
+
+            throw error;
+
+        }
+
+    }
+
+    static async getBackupFileById(backupFileId: string) {
+
+        try {
+
+            logger.info({ backupFileId }, "Fetching backup file from database");
+
+            const result = await db.select().from(backupFiles).where(eq(backupFiles.id, backupFileId));
+
+            if (!result || result.length === 0) {
+
+                return null;
+
+            }
+
+            return result[0];
+
+        } catch (error) {
+
+            logger.error({ error, backupFileId }, "Failed to fetch backup file");
 
             throw error;
 
