@@ -2,9 +2,8 @@ import { spawn } from "child_process";
 
 import { promises as fs } from "fs";
 
-import path from "path";
-
 import { logger } from "../../config/logger";
+
 
 
 export interface PgRestoreOptions {
@@ -40,7 +39,7 @@ export class PgRestoreService {
 
         try {
 
-            // 1 verify the backup file exists before attempting restore
+            // 1 verify the local backup file exists
             await fs.access(backupFilePath);
 
             logger.info({ jobId, backupFilePath }, "Starting pg_restore process");
