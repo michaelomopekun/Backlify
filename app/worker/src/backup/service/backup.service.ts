@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 
-import { BackupRepository as backupRepository } from "../repo/backup.repo";
+import { BackupRepository as backupRepository } from "db";
 
 
 // ?input validation
@@ -65,8 +65,6 @@ export class BackupService {
                 databaseUrl: validated.data.databaseUrl,
 
                 jobStatus: BACKUP_JOB_STATUS.PENDING,
-
-                timestamp: Date.now(),
 
             });
 

@@ -6,7 +6,7 @@ import { logger } from "../../config/logger";
 
 import { BackupJobData } from "./backup.queue";
 
-import { BackupRepository } from "../repo/backup.repo";
+import { BackupRepository } from "db";
 
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 

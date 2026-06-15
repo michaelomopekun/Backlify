@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { RESTORE_JOB_STATUS } from "shared/constants/restoreJobStatus";
 
-import { RestoreRepository as restoreRepository } from "../repo/restore.repo";
+import { RestoreRepository as restoreRepository } from "db/repo/restore/restore.repo";
 
 
 
@@ -72,8 +72,6 @@ export class RestoreService {
                 targetDatabaseUrl: validated.data.targetDatabaseUrl,
 
                 jobStatus: RESTORE_JOB_STATUS.PENDING,
-
-                timestamp: Date.now(),
 
             });
 

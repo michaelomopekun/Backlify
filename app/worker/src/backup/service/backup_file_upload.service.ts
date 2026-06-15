@@ -8,7 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { logger } from "../../config/logger";
 
-import { BackupFileRepository } from "../repo/backup_file.repo";
+import { BackupFileRepository } from "db";
 
 
 export interface BackupFileUploadOptions {

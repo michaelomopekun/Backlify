@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { redis } from "../../config/redis";
 
-import { logger } from "../../config/logger";
+import { logger } from "../../config//logger";
 
 import { BACKUP_JOB_STATUS_VALUES } from "shared/constants/backupJobStatus";
 

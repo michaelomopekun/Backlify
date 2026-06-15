@@ -6,13 +6,11 @@ import { logger } from "../../config/logger";
 
 import { RestoreJobData } from "./restore.queue";
 
-import { RestoreRepository } from "../repo/restore.repo";
-
 import { RESTORE_JOB_STATUS } from "shared/constants/restoreJobStatus";
 
 import { PgRestoreService } from "../service/pgrestore.service";
 
-import { BackupFileRepository } from "../../backup/repo/backup_file.repo";
+import { RestoreRepository, BackupFileRepository } from "db";
 
 
 
