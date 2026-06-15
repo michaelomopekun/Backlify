@@ -35,6 +35,7 @@
 		"src/backup/queue",
 		"src/restore/service",
 		"src/restore/repo",
-		"src/restore/queue"
+		"src/restore/queue",
+		"src/config"
 	]
 }
