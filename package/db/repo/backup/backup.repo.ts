@@ -115,4 +115,31 @@ export class BackupRepository {
         }
 
     } 
+
+    static async getJobById(jobId: string) {
+
+        try {
+
+            console.log(`[DB] Fetching backup job: ${jobId}`);
+
+            const result = await db.select().from(backupJobs).where(eq(backupJobs.id, jobId));
+
+            if (!result || result.length === 0) {
+
+                return null;
+
+            }
+
+            return result[0];
+
+        } catch (error) {
+
+            console.error(`[DB] Failed to fetch backup job ${jobId}:`, error);
+
+            throw error;
+
+        }
+
+    }
+
 }

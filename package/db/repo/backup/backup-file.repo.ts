@@ -113,4 +113,30 @@ export class BackupFileRepository {
 
     }
 
+    static async getBackupFileByJobId(backupJobId: string) {
+
+        try {
+
+            console.log(`[DB] Fetching backup file by job ID: ${backupJobId}`);
+
+            const result = await db.select().from(backupFiles).where(eq(backupFiles.backupJobId, backupJobId));
+
+            if (!result || result.length === 0) {
+
+                return null;
+
+            }
+
+            return result[0];
+
+        } catch (error) {
+
+            console.error(`[DB] Failed to fetch backup file for job ${backupJobId}:`, error);
+
+            throw error;
+
+        }
+
+    }
+
 }

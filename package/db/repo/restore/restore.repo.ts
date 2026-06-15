@@ -108,4 +108,31 @@ export class RestoreRepository {
         }
 
     } 
+
+    static async getJobById(jobId: string) {
+
+        try {
+
+            console.log(`[DB] Fetching restore job: ${jobId}`);
+
+            const result = await db.select().from(restoreJobs).where(eq(restoreJobs.id, jobId));
+
+            if (!result || result.length === 0) {
+
+                return null;
+
+            }
+
+            return result[0];
+
+        } catch (error) {
+
+            console.error(`[DB] Failed to fetch restore job ${jobId}:`, error);
+
+            throw error;
+
+        }
+
+    }
+
 }
