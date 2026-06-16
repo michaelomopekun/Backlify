@@ -1,8 +1,8 @@
 import { Worker } from "bullmq";
 
-import { redis } from "../../config/redis";
+import { redis } from "shared/config/redis";
 
-import { logger } from "../../config/logger";
+import { logger } from "shared/config/logger";
 
 import { BackupJobData } from "./backup.queue";
 
@@ -105,7 +105,7 @@ export const backupWorker = new Worker<BackupJobData>(
 
     {
 
-        connection: redis,
+        connection: redis as any,
 
         concurrency: 5,
 

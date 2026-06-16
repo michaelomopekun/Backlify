@@ -4,7 +4,7 @@ import { promises as fs } from "fs";
 
 import path from "path";
 
-import { logger } from "../../config/logger";
+import { logger } from "shared/config/logger";
 
 
 export interface PgDumpOptions {

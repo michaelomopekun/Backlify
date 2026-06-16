@@ -2,9 +2,9 @@ import { Queue } from "bullmq";
 
 import { z } from "zod";
 
-import { redis } from "../../config/redis";
+import { redis } from "shared/config/redis";
 
-import { logger } from "../../config//logger";
+import { logger } from "shared/config/logger";
 
 import { BACKUP_JOB_STATUS_VALUES } from "shared/constants/backupJobStatus";
 
@@ -30,7 +30,7 @@ export type BackupJobData = z.infer<typeof BackupJobDataSchema>;
 // backup queue
 export const backupQueue = new Queue<BackupJobData>("backup-jobs", {
 
-    connection: redis,
+    connection: redis as any,
 
     defaultJobOptions: {
 

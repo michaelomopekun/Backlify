@@ -2,6 +2,8 @@ import { backupFiles } from "../../schema/backup-file";
 
 import { db, eq } from "../../index";
 
+import { logger } from "shared/config/logger";
+
 
 export interface BackupFile {
 
@@ -28,7 +30,7 @@ export class BackupFileRepository {
 
         try {
 
-            console.log(`[DB] Saving backup file to database: ${backupFile.id}`);
+            logger.info({backupFileId: backupFile.id}, "Saving backup file to database");
 
             const result = await db.insert(backupFiles).values({
 
@@ -72,13 +74,13 @@ export class BackupFileRepository {
 
             });
 
-            console.log(`[DB] Backup file saved: ${backupFile.id}`);
+            logger.info({backupFileId: backupFile.id}, "Backup file saved");
 
             return result[0];
 
         } catch (error) {
 
-            console.error(`[DB] Failed to save backup file ${backupFile.id}:`, error);
+            logger.error({backupFileId: backupFile.id, error}, "Failed to save backup file");
 
             throw error;
 
@@ -91,7 +93,7 @@ export class BackupFileRepository {
 
         try {
 
-            console.log(`[DB] Fetching backup file from database: ${backupFileId}`);
+            logger.info({backupFileId}, "Fetching backup file from database");
 
             const result = await db.select().from(backupFiles).where(eq(backupFiles.id, backupFileId));
 
@@ -105,7 +107,7 @@ export class BackupFileRepository {
 
         } catch (error) {
 
-            console.error(`[DB] Failed to fetch backup file ${backupFileId}:`, error);
+            logger.error({backupFileId, error}, "Failed to fetch backup file");
 
             throw error;
 
@@ -117,7 +119,7 @@ export class BackupFileRepository {
 
         try {
 
-            console.log(`[DB] Fetching backup file by job ID: ${backupJobId}`);
+            logger.info({backupJobId}, "Fetching backup file by job ID");
 
             const result = await db.select().from(backupFiles).where(eq(backupFiles.backupJobId, backupJobId));
 
@@ -131,7 +133,7 @@ export class BackupFileRepository {
 
         } catch (error) {
 
-            console.error(`[DB] Failed to fetch backup file for job ${backupJobId}:`, error);
+            logger.error({backupJobId, error}, "Failed to fetch backup file");
 
             throw error;
 

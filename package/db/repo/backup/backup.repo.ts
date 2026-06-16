@@ -1,8 +1,11 @@
-import { BackupJobStatusType, BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
+import { BackupJobStatusType } from "shared/constants/backupJobStatus";
 
 import { db, and, eq } from "../../index";
 
 import { backupJobs } from "../../schema/backup-job";
+
+import { logger } from "shared/config/logger";
+
 
 
 export interface CreateBackupJobParams {
@@ -26,7 +29,7 @@ export class BackupRepository {
 
             const projectId = params.projectId || "default";
 
-            console.log(`[DB] Saving backup job to database: ${params.jobId}`);
+            logger.info({jobId: params.jobId}, "Saving backup job to database");
 
             const result = await db.insert(backupJobs).values({
 
@@ -52,13 +55,13 @@ export class BackupRepository {
 
             });
 
-            console.log(`[DB] Backup job saved: ${params.jobId}`);
+            logger.info({jobId: params.jobId}, "Backup job saved");
 
             return result[0];
 
         } catch (error) {
 
-            console.error(`[DB] Failed to save backup job ${params.jobId}:`, error);
+            logger.error({jobId: params.jobId, error}, "Failed to save backup job");
 
             throw error;
 
@@ -70,7 +73,7 @@ export class BackupRepository {
 
         try{
 
-            console.log(`[DB] Updating backup job status ${jobId} from ${initialJobStatus} to ${newJobStatus}`);
+            logger.info({jobId, initialJobStatus, newJobStatus}, "Updating backup job status");
 
             const result = await db.update(backupJobs)
 
@@ -102,13 +105,13 @@ export class BackupRepository {
                 
                 });
 
-            console.log(`[DB] Backup job status updated: ${jobId}`);
+            logger.info({jobId}, "Backup job status updated");
 
             return result[0];
 
         } catch (error) {
 
-            console.error(`[DB] Failed to update backup job status ${jobId}:`, error);
+            logger.error({jobId, error}, "Failed to update backup job status");
 
             throw error;
 
@@ -120,7 +123,7 @@ export class BackupRepository {
 
         try {
 
-            console.log(`[DB] Fetching backup job: ${jobId}`);
+            logger.info({jobId}, "Fetching backup job");
 
             const result = await db.select().from(backupJobs).where(eq(backupJobs.id, jobId));
 
@@ -134,7 +137,7 @@ export class BackupRepository {
 
         } catch (error) {
 
-            console.error(`[DB] Failed to fetch backup job ${jobId}:`, error);
+            logger.error({jobId, error}, "Failed to fetch backup job");
 
             throw error;
 
