@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
 
             databaseUrl,
 
-            jobStatus: BACKUP_JOB_STATUS.PENDING as any,
+            jobStatus: BACKUP_JOB_STATUS.PENDING as BackupJobStatusType,
 
             timestamp: Date.now(),
 
