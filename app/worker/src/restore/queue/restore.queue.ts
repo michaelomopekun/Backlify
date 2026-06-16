@@ -2,9 +2,9 @@ import { Queue } from "bullmq";
 
 import { z } from "zod";
 
-import { redis } from "../../config/redis";
+import { redis } from "shared/config/redis";
 
-import { logger } from "../../config/logger";
+import { logger } from "shared/config/logger";
 
 import { RESTORE_JOB_STATUS_VALUES } from "shared/constants/restoreJobStatus";
 
@@ -32,7 +32,7 @@ export type RestoreJobData = z.infer<typeof RestoreJobDataSchema>;
 // restore queue
 export const restoreQueue = new Queue<RestoreJobData>("restore-jobs", {
 
-    connection: redis,
+    connection: redis as any,
 
     defaultJobOptions: {
 

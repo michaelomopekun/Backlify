@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { logger } from "../../config/logger";
+import { logger } from "shared/config/logger";
 
 import { restoreQueue, RestoreJobData } from "../queue/restore.queue";
 

@@ -4,6 +4,8 @@ import { db, and, eq } from "../../index";
 
 import { restoreJobs } from "../../schema/restore-job";
 
+import { logger } from "shared/config/logger";
+
 
 export interface CreateRestoreJobParams {
 
@@ -23,7 +25,7 @@ export class RestoreRepository {
 
         try{
 
-            console.log(`[DB] Saving restore job to database: ${params.jobId}`);
+            logger.info({ jobId: params.jobId }, "Saving restore job to database");
 
             const result = await db.insert(restoreJobs).values({
 
@@ -47,13 +49,13 @@ export class RestoreRepository {
 
             });
 
-            console.log(`[DB] Restore job saved: ${params.jobId}`);
+            logger.info({ jobId: params.jobId }, "Restore job saved");
 
             return result[0];
 
         } catch (error) {
 
-            console.error(`[DB] Failed to save restore job ${params.jobId}:`, error);
+            logger.error({ jobId: params.jobId, error }, "Failed to save restore job");
 
             throw error;
 
@@ -65,7 +67,7 @@ export class RestoreRepository {
 
         try{
 
-            console.log(`[DB] Updating restore job status ${jobId} from ${initialJobStatus} to ${newJobStatus}`);
+            logger.info({ jobId, initialJobStatus, newJobStatus }, "Updating restore job status");
 
             const result = await db.update(restoreJobs)
 
@@ -95,13 +97,13 @@ export class RestoreRepository {
                 
                 });
 
-            console.log(`[DB] Restore job status updated: ${jobId}`);
+            logger.info({ jobId }, "Restore job status updated");
 
             return result[0];
 
         } catch (error) {
 
-            console.error(`[DB] Failed to update restore job status ${jobId}:`, error);
+            logger.error({ jobId, error }, "Failed to update restore job status");
 
             throw error;
 
@@ -113,7 +115,7 @@ export class RestoreRepository {
 
         try {
 
-            console.log(`[DB] Fetching restore job: ${jobId}`);
+            logger.info({ jobId }, "Fetching restore job");
 
             const result = await db.select().from(restoreJobs).where(eq(restoreJobs.id, jobId));
 
@@ -127,7 +129,7 @@ export class RestoreRepository {
 
         } catch (error) {
 
-            console.error(`[DB] Failed to fetch restore job ${jobId}:`, error);
+            logger.error({ jobId, error }, "Failed to fetch restore job");
 
             throw error;
 

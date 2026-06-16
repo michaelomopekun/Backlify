@@ -1,8 +1,8 @@
 import { Worker, Job } from "bullmq";
 
-import { redis } from "../../config/redis";
+import { redis } from "shared/config/redis";
 
-import { logger } from "../../config/logger";
+import { logger } from "shared/config/logger";
 
 import { RestoreJobData } from "./restore.queue";
 
@@ -103,7 +103,7 @@ export const restoreWorker = new Worker<RestoreJobData>(
 
     {
 
-        connection: redis,
+        connection: redis as any,
 
         concurrency: 2,
 
