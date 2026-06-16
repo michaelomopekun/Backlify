@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { restoreQueue } from "@/lib/queues";
 
-import { RESTORE_JOB_STATUS } from "shared/constants/restoreJobStatus";
+import { RESTORE_JOB_STATUS, RestoreJobStatusType } from "shared/constants/restoreJobStatus";
 
 import { RestoreRepository, BackupFileRepository } from "db";
 
@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
 
         // save metadata to database
 
-        await RestoreRepository.saveRestoreJob({ jobId, backupFileId, targetDatabaseUrl });
+        await RestoreRepository.saveRestoreJob({ jobId, backupFileId, targetDatabaseUrl, jobStatus: RESTORE_JOB_STATUS.PENDING as RestoreJobStatusType });
 
 
         // create job payload
@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
 
             targetDatabaseUrl,
 
-            jobStatus: RESTORE_JOB_STATUS.PENDING as any,
+            jobStatus: RESTORE_JOB_STATUS.PENDING as RestoreJobStatusType,
 
             timestamp: Date.now(),
 
@@ -82,7 +82,7 @@ export async function POST(req: NextRequest) {
 
         // update job status to queued
 
-        await RestoreRepository.updateJobStatus(jobId, RESTORE_JOB_STATUS.PENDING as any, RESTORE_JOB_STATUS.QUEUED as any);
+        await RestoreRepository.updateJobStatus(jobId, RESTORE_JOB_STATUS.PENDING as RestoreJobStatusType, RESTORE_JOB_STATUS.QUEUED as RestoreJobStatusType);
 
 
         return NextResponse.json({
