@@ -15,7 +15,7 @@
   "dependencies": {
     "drizzle-orm": "^0.30.0",
     "postgres": "^3.4.0",
-    "shared": "file:../shared"
+    "shared": "*"
   },
   "devDependencies": {
     "@types/node": "^25.9.1",

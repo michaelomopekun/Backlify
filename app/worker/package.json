@@ -21,10 +21,10 @@
   "type": "commonjs",
   "dependencies": {
     "bullmq": "^5.0.0",
-    "db": "file:../../package/db",
+    "db": "*",
     "dotenv": "^17.4.2",
     "pino": "^8.0.0",
-    "shared": "file:../../package/shared",
+    "shared": "*",
     "tslint": "^5.20.1",
     "typescript": "^6.0.3",
     "uuid": "^9.0.0",

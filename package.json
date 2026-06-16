@@ -1,0 +1,22 @@
+{
+  "name": "backlify",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Backlify — Automated PostgreSQL backup and restore platform",
+  "workspaces": [
+    "package/shared",
+    "package/db",
+    "app/worker",
+    "app/web"
+  ],
+  "scripts": {
+    "dev:web": "npm run dev --workspace=web",
+    "dev:worker": "npm run dev --workspace=worker",
+    "build:web": "npm run build --workspace=web",
+    "build:worker": "npm run build --workspace=worker",
+    "lint": "npm run lint --workspaces --if-present",
+    "drizzle-generate": "npm run drizzle-generate --workspace=db",
+    "drizzle-push": "npm run drizzle-push --workspace=db",
+    "drizzle-studio": "npm run drizzle-studio --workspace=db"
+  }
+}

@@ -12,8 +12,8 @@
     "next": "16.2.9",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "db": "file:../../package/db",
-    "shared": "file:../../package/shared",
+    "db": "*",
+    "shared": "*",
     "bullmq": "^5.0.0",
     "ioredis": "^5.3.0"
   },
