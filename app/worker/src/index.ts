@@ -1,8 +1,8 @@
 import 'dotenv/config';
 
-import {logger} from './config/logger';
+import {logger} from 'shared/config/logger';
 
-import {redis} from './config/redis';
+import {redis} from 'shared/config/redis';
 
 import { BackupService } from './backup/service/backup.service';
 
