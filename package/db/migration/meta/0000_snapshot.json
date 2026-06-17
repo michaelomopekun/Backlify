@@ -1,10 +1,10 @@
 {
-  "id": "46c7d435-1be3-486d-ae4f-b9de2e4997ac",
+  "id": "819f61ce-2b8c-4cfc-b5fb-a245d4fa1b01",
   "prevId": "00000000-0000-0000-0000-000000000000",
-  "version": "7",
-  "dialect": "postgresql",
+  "version": "5",
+  "dialect": "pg",
   "tables": {
-    "public.backup_files": {
+    "backup_files": {
       "name": "backup_files",
       "schema": "",
       "columns": {
@@ -56,6 +56,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},
@@ -75,12 +82,9 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
-    "public.backup_jobs": {
+    "backup_jobs": {
       "name": "backup_jobs",
       "schema": "",
       "columns": {
@@ -105,7 +109,6 @@
         "status": {
           "name": "status",
           "type": "backup_job_status",
-          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'pending'"
@@ -152,12 +155,9 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
-    "public.restore_jobs": {
+    "restore_jobs": {
       "name": "restore_jobs",
       "schema": "",
       "columns": {
@@ -182,7 +182,6 @@
         "status": {
           "name": "status",
           "type": "restore_job_status",
-          "typeSchema": "public",
           "primaryKey": false,
           "notNull": true,
           "default": "'pending'"
@@ -230,39 +229,32 @@
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     }
   },
   "enums": {
-    "public.backup_job_status": {
+    "backup_job_status": {
       "name": "backup_job_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "in_progress",
-        "completed",
-        "failed"
-      ]
+      "values": {
+        "pending": "pending",
+        "queued": "queued",
+        "in_progress": "in_progress",
+        "completed": "completed",
+        "failed": "failed"
+      }
     },
-    "public.restore_job_status": {
+    "restore_job_status": {
       "name": "restore_job_status",
-      "schema": "public",
-      "values": [
-        "pending",
-        "in_progress",
-        "completed",
-        "failed"
-      ]
+      "values": {
+        "pending": "pending",
+        "queued": "queued",
+        "in_progress": "in_progress",
+        "completed": "completed",
+        "failed": "failed"
+      }
     }
   },
   "schemas": {},
-  "sequences": {},
-  "roles": {},
-  "policies": {},
-  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

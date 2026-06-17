@@ -5,7 +5,7 @@ import { BACKUP_JOB_STATUS_VALUES } from 'shared/constants/backupJobStatus';
 
 
 // Drizzle enum for backup job status
-const backupJobStatus = pgEnum('backup_job_status', BACKUP_JOB_STATUS_VALUES);
+export const backupJobStatus = pgEnum('backup_job_status', BACKUP_JOB_STATUS_VALUES);
 
 
 export const backupJobs = pgTable('backup_jobs', {

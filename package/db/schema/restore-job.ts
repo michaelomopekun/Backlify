@@ -2,20 +2,11 @@ import { pgTable, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
 
 import { backupFiles } from './backup-file';
 
+import { RESTORE_JOB_STATUS_VALUES } from 'shared/constants/restoreJobStatus';
 
 
-export const restoreJobStatus = pgEnum('restore_job_status', [
 
-  'pending',
-
-  'in_progress',
-
-  'completed',
-
-  'failed',
-
-]);
-
+export const restoreJobStatus = pgEnum('restore_job_status', RESTORE_JOB_STATUS_VALUES);
 
 export const restoreJobs = pgTable('restore_jobs', {
 
