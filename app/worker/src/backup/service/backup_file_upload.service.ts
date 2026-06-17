@@ -8,7 +8,10 @@ import { v4 as uuidv4 } from "uuid";
 
 import { logger } from "shared/config/logger";
 
+import { StorageService } from "shared/config/storage";
+
 import { BackupFileRepository } from "db";
+
 
 
 export interface BackupFileUploadOptions {
@@ -32,14 +35,27 @@ export interface BackupFileUploadResult {
 }
 
 
+
 export class BackupFileUploadService {
 
+    private storageService: StorageService;
+
+
+    constructor() {
+
+        this.storageService = new StorageService();
+
+    }
+
+
     /**
-     * After a successful pg_dump, save the backup file record to the database.
+     * After a successful pg_dump:
+     * 1. Generate checksum
+     * 2. Upload dump file to R2 cloud storage
+     * 3. Save the cloud key as filePath in DB (storageProvider: "r2")
+     * 4. Delete the local temp file
      * 
-     * For now (Phase 4): stores the local temp path.
-     * Phase 6: will upload to cloud storage (R2/S3) first, 
-     *          then save the remote URL as filePath and cleanup the local temp file.
+     * Falls back to local storage if cloud upload fails.
      */
     async saveBackupFile(options: BackupFileUploadOptions): Promise<BackupFileUploadResult> {
 
@@ -60,7 +76,46 @@ export class BackupFileUploadService {
 
             const fileName = path.basename(filePath);
 
-            // 4 save record to database
+            // 4 upload to cloud storage
+            const cloudKey = `backups/${jobId}/${fileName}`;
+
+            let storageProvider = "local";
+
+            let storedPath = filePath;
+
+            try {
+
+                logger.info({ jobId, cloudKey }, "Uploading backup file to cloud storage");
+
+                await this.storageService.uploadFile(cloudKey, filePath);
+
+                storageProvider = "r2";
+
+                storedPath = cloudKey;
+
+                logger.info({ jobId, cloudKey }, "Backup file uploaded to cloud storage");
+
+                // 5 cleanup local temp file after successful upload
+                try {
+
+                    await fs.unlink(filePath);
+
+                    logger.info({ jobId, filePath }, "Local temp file cleaned up");
+
+                } catch (cleanupErr) {
+
+                    logger.warn({ jobId, filePath, error: cleanupErr }, "Failed to cleanup local temp file (non-fatal)");
+
+                }
+
+            } catch (uploadErr) {
+
+                logger.warn({ jobId, error: uploadErr }, "Cloud upload failed, falling back to local storage");
+
+                // Keep local path as fallback
+            }
+
+            // 6 save record to database
             await BackupFileRepository.saveBackupFile({
 
                 id: backupFileId,
@@ -69,17 +124,17 @@ export class BackupFileUploadService {
 
                 fileName,
 
-                filePath,
+                filePath: storedPath,
 
                 fileSize,
 
-                storageProvider: "local",
+                storageProvider,
 
                 checksum,
 
             });
 
-            logger.info({ jobId, backupFileId, fileName, fileSize }, "Backup file record saved");
+            logger.info({ jobId, backupFileId, fileName, fileSize, storageProvider }, "Backup file record saved");
 
             return {
 

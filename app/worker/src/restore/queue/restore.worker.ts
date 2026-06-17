@@ -56,14 +56,43 @@ export const restoreWorker = new Worker<RestoreJobData>(
 
         }
 
-        // TODO Phase 6: if backupFile.storageProvider !== "local", download from cloud to temp dir here.
+        // Phase 6: if stored in cloud, download to temp dir first
+        let restoreFilePath = backupFile.filePath;
+
+        let tempDownloadPath: string | null = null;
+
+        if (backupFile.storageProvider !== "local") {
+
+            const { StorageService } = await import("shared/config/storage");
+
+            const storageService = new StorageService();
+
+            const path = await import("path");
+
+            const { promises: fs } = await import("fs");
+
+            const tempDir = path.join(process.cwd(), "src", "temp");
+
+            await fs.mkdir(tempDir, { recursive: true });
+
+            tempDownloadPath = path.join(tempDir, `restore_${job.data.jobId}_${backupFile.fileName}`);
+
+            logger.info({ jobId: job.id, cloudKey: backupFile.filePath, tempDownloadPath }, "Downloading backup from cloud storage");
+
+            await storageService.downloadFile(backupFile.filePath, tempDownloadPath);
+
+            restoreFilePath = tempDownloadPath;
+
+            logger.info({ jobId: job.id, tempDownloadPath }, "Backup file downloaded from cloud");
+
+        }
 
         const pgRestoreService = new PgRestoreService();
 
         // 3 execute pg_restore
         const restoreResult = await pgRestoreService.executePgRestore({
 
-            backupFilePath: backupFile.filePath,
+            backupFilePath: restoreFilePath,
 
             targetDatabaseUrl: job.data.targetDatabaseUrl,
 
@@ -71,7 +100,26 @@ export const restoreWorker = new Worker<RestoreJobData>(
 
         });
 
-        // 4 wait for result and update status accordingly
+        // 4 cleanup temp download if we pulled from cloud
+        if (tempDownloadPath) {
+
+            try {
+
+                const { promises: fs } = await import("fs");
+
+                await fs.unlink(tempDownloadPath);
+
+                logger.info({ jobId: job.id, tempDownloadPath }, "Cleaned up temp download file");
+
+            } catch (cleanupErr) {
+
+                logger.warn({ jobId: job.id, error: cleanupErr }, "Failed to cleanup temp download (non-fatal)");
+
+            }
+
+        }
+
+        // 5 wait for result and update status accordingly
         if (restoreResult.success) {
 
             await RestoreRepository.updateJobStatus(
