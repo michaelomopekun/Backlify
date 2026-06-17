@@ -4,7 +4,14 @@ import {logger} from 'shared/config/logger';
 
 import {redis} from 'shared/config/redis';
 
-import { BackupService } from './backup/service/backup.service';
+// import { BackupService } from './backup/service/backup.service';
+
+// import { RestoreService } from './restore/service/restore.service';
+
+import './backup/queue/backup.worker';
+
+import './restore/queue/restore.worker';
+
 
 
 
@@ -20,23 +27,52 @@ async function main() {
     logger.info('Redis connection verified');
 
 
-    logger.info('Worker listening...');
+    // // backup test
+
+    // logger.info('backup Worker listening...');
 
 
-    // Create and queue test job
-    const databaseUrl = process.env.DATABASE_URL;
+    // // Create and queue test job
+    // const databaseUrl = "postgresql://postgres:Galaxias2005%25%25@localhost:5002/roadrescuedb";
 
-    logger.info('Creating test backup job...');
+    // logger.info('Creating test backup job...');
 
-    const backupService = new BackupService();
+    // const backupService = new BackupService();
     
-    const testJob = await backupService.createBackup({
+    // const testJob = await backupService.createBackup({
     
-      databaseUrl: databaseUrl!,
+    //   databaseUrl: databaseUrl!,
     
-    });
+    // });
 
-    logger.info({ testJob }, 'Backup job result');
+    // logger.info({ testJob }, 'Backup job result');
+
+
+
+    // // restore test
+
+    // logger.info("restore Worker Listening...");
+
+    // // Create and queue test job
+
+    // const databaseUrl = "postgresql://postgres:Galaxias2005%25%25@localhost:5002/roadrescuedb_restored";
+
+    // logger.info("Creating test restore job...");
+
+    // const restoreService = new RestoreService();
+
+    // const testJob = await restoreService.createRestore({
+
+    //   targetDatabaseUrl: databaseUrl,
+    //   backupFileId: "bkf-c4bd03c1-d41" 
+
+    // });
+
+    // logger.info({ testJob }, "Restore job result");
+
+    
+
+    logger.info('Worker is now listening for backup and restore jobs...');
 
 
     // shutdown
