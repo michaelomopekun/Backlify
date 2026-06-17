@@ -150,11 +150,11 @@ export class PgDumpService {
         
             port: url.port,
         
-            database: url.pathname.slice(1),
+            database: decodeURIComponent(url.pathname.slice(1)),
         
-            user: url.username,
+            user: decodeURIComponent(url.username),
         
-            password: url.password,
+            password: decodeURIComponent(url.password),
         
         };
     

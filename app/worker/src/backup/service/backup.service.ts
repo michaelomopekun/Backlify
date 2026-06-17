@@ -24,7 +24,7 @@ export class BackupService {
 
     private generateJobId(): string{
 
-        const uuid = uuidv4().substring(0, 12);
+        const uuid = uuidv4();
 
         return `backlify-backupJob-${uuid}`;
     }
