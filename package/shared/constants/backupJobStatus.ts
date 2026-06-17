@@ -7,6 +7,8 @@ export const BACKUP_JOB_STATUS = {
 
   IN_PROGRESS: 'in_progress',
 
+  UPLOADING: 'uploading',
+
   COMPLETED: 'completed',
 
   FAILED: 'failed',
@@ -25,6 +27,8 @@ export const BACKUP_JOB_STATUS_VALUES = [
   'queued',
 
   'in_progress',
+
+  'uploading',
 
   'completed',
 

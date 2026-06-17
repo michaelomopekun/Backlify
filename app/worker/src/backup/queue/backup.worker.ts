@@ -62,9 +62,30 @@ export const backupWorker = new Worker<BackupJobData>(
         // 3 wait for result and update status accordingly
         if (backup_result.success) {
 
+            // 4 transition to UPLOADING — tracks cloud upload phase
+            await BackupRepository.updateJobStatus(
+            
+                job.data.jobId,
+            
+                job.data.jobStatus,
+            
+                BACKUP_JOB_STATUS.UPLOADING,
+            
+            );
+
+            await job.updateData({
+                
+                ...job.data,
+                
+                jobStatus: BACKUP_JOB_STATUS.UPLOADING,
+                
+            });
+
+            logger.info({ jobId: job.id }, "Updated job status to uploading");
+
             const backup_file_service = new BackupFileUploadService();
 
-            // 4 save backup file to database (for now, will switch to cloud storage later)
+            // 5 upload backup file to cloud storage and save record
             await backup_file_service.saveBackupFile({
                 
                 jobId: job.data.jobId,
@@ -75,18 +96,18 @@ export const backupWorker = new Worker<BackupJobData>(
             
             });
 
-            // 5 update job status to completed
+            // 6 update job status to completed
             await BackupRepository.updateJobStatus(
             
                 job.data.jobId,
             
-                job.data.jobStatus,
+                BACKUP_JOB_STATUS.UPLOADING,
             
                 BACKUP_JOB_STATUS.COMPLETED,
             
             );
             
-            // 6 log completion
+            // 7 log completion
             logger.info({ jobId : job.id }, "Backup job completed");
             
             return { success: true };
