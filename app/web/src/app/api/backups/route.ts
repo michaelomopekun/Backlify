@@ -10,14 +10,12 @@ import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 
 import { BackupJobStatusType } from "shared/constants/backupJobStatus";
 
-import { BackupRepository } from "db";
+import { BackupRepository, ProjectRepository } from "db";
 
 
 const CreateBackupInputSchema = z.object({
 
-    databaseUrl: z.string().url("Invalid database URL format"),
-
-    projectId: z.string().optional().default("default"),
+    projectId: z.string().min(1, "projectId is required"),
 
 });
 
@@ -38,7 +36,18 @@ export async function POST(req: NextRequest) {
         }
 
 
-        const { databaseUrl, projectId } = validated.data;
+        const { projectId } = validated.data;
+
+        // Resolve databaseUrl from the project
+        const project = await ProjectRepository.getProjectById(projectId);
+
+        if (!project) {
+
+            return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
+
+        }
+
+        const databaseUrl = project.databaseUrl;
 
         const jobId = `backlify-backupJob-${uuidv4().substring(0, 12)}`;
 
