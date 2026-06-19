@@ -24,7 +24,17 @@ export const BackupJobDataSchema = z.object({
 });
 
 
-export type BackupJobData = z.infer<typeof BackupJobDataSchema>;
+export type BackupJobData = 
+
+  | z.infer<typeof BackupJobDataSchema>
+
+  | {
+
+        scheduleId: string;
+
+        projectId: string;
+
+    };
 
 
 // backup queue
