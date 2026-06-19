@@ -84,7 +84,7 @@ export class BackupService {
             // 5 enqueue job
             const job = await backupQueue.add("backup", jobData, { jobId });
 
-            logger.info({ jobId: job.id, status: job.data.jobStatus }, "Backup job added to queue");
+            logger.info({ jobId: job.id, status: jobData.jobStatus }, "Backup job added to queue");
 
             // 6 update job status to queued
             await backupRepository.updateJobStatus(
@@ -104,7 +104,7 @@ export class BackupService {
 
                 jobId: job.id,
 
-                status: job.data.jobStatus,
+                status: jobData.jobStatus,
 
                 message: "Backup job created and added to queue",
 

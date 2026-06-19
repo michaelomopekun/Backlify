@@ -4,29 +4,121 @@ import { redis } from "shared/config/redis";
 
 import { logger } from "shared/config/logger";
 
-import { BackupJobData } from "./backup.queue";
+import { backupQueue } from "./backup.queue";
 
-import { BackupRepository } from "db";
+import { BackupRepository, ProjectRepository, ScheduleRepository } from "db";
 
-import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
+import { BACKUP_JOB_STATUS, BackupJobStatusType } from "shared/constants/backupJobStatus";
 
 import { PgDumpService } from "../service/pgdump.service";
 
 import { BackupFileUploadService } from "../service/backup_file_upload.service";
 
+import { v4 as uuidv4 } from "uuid";
 
 
 
-export const backupWorker = new Worker<BackupJobData>(
+
+export const backupWorker = new Worker<any>(
 
     "backup-jobs",
 
     async (job) => {
 
-        logger.info({ jobId : job.id }, "Processing backup job");
+        logger.info({ jobId : job.id, jobName: job.name }, "Processing backup queue job");
+
+
+        if (job.name === "scheduled-backup") {
+
+            const { scheduleId, projectId } = job.data;
+
+            logger.info({ scheduleId, projectId }, "Triggering scheduled backup job");
+
+            try {
+
+                const schedule = await ScheduleRepository.getScheduleById(scheduleId);
+
+                if (!schedule || !schedule.isActive) {
+
+                    logger.warn({ scheduleId }, "Backup schedule not found or inactive, skipping");
+
+                    return { success: false, error: "Inactive or missing schedule" };
+
+                }
+
+
+                const project = await ProjectRepository.getProjectById(projectId);
+
+                if (!project) {
+
+                    logger.error({ projectId }, "Project not found for backup schedule, skipping");
+
+                    return { success: false, error: "Project not found" };
+
+                }
+
+
+                const jobId = `backlify-backupJob-${uuidv4().substring(0, 12)}`;
+
+
+                // 1. Create a pending job record in DB
+
+                await BackupRepository.saveBackupJob({
+
+                    jobId,
+
+                    databaseUrl: project.databaseUrl,
+
+                    projectId: project.id,
+
+                    jobStatus: BACKUP_JOB_STATUS.PENDING as BackupJobStatusType,
+
+                });
+
+
+                // 2. Add raw backup task to queue
+
+                await backupQueue.add("backup", {
+
+                    jobId,
+
+                    databaseUrl: project.databaseUrl,
+
+                    jobStatus: BACKUP_JOB_STATUS.PENDING as BackupJobStatusType,
+
+                    timestamp: Date.now(),
+
+                }, { jobId });
+
+
+                // 3. Mark job status as QUEUED in DB
+
+                await BackupRepository.updateJobStatus(jobId, BACKUP_JOB_STATUS.PENDING as BackupJobStatusType, BACKUP_JOB_STATUS.QUEUED as BackupJobStatusType);
+
+
+                // 4. Update lastRunAt on the schedule
+
+                await ScheduleRepository.updateLastRunAt(schedule.id, new Date());
+
+
+                logger.info({ scheduleId, projectId, jobId }, "Scheduled backup successfully triggered");
+
+                return { success: true, jobId };
+
+
+            } catch (error) {
+
+                logger.error({ scheduleId, projectId, error }, "Failed to execute scheduled backup trigger");
+
+                throw error;
+
+            }
+
+        }
 
 
         // 1 update status from queued to running
+
         await BackupRepository.updateJobStatus(
             
             job.data.jobId, 

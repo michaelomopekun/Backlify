@@ -2,6 +2,8 @@ import { pgTable, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
 
 import { BACKUP_JOB_STATUS_VALUES } from 'shared/constants/backupJobStatus';
 
+import { projects } from './project';
+
 
 
 // Drizzle enum for backup job status
@@ -12,7 +14,7 @@ export const backupJobs = pgTable('backup_jobs', {
 
   id: text('id').primaryKey(),
 
-  projectId: text('project_id').notNull(),
+  projectId: text('project_id').notNull().references(() => projects.id),
 
   databaseUrl: text('database_url').notNull(),
 
