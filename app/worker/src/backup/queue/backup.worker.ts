@@ -16,6 +16,8 @@ import { BackupFileUploadService } from "../service/backup_file_upload.service";
 
 import { v4 as uuidv4 } from "uuid";
 
+import { CleanupService } from "../service/cleanup.service";
+
 
 
 
@@ -228,9 +230,29 @@ export const backupWorker = new Worker<any>(
 
 
 // worker listeners
-backupWorker.on("completed", (job) => {
+
+backupWorker.on("completed", async (job) => {
 
     logger.info({ jobId: job.id }, "Backup job completed successfully");
+
+
+    try {
+
+        const dbJob = await BackupRepository.getJobById(job.data.jobId);
+
+        if (dbJob && dbJob.projectId) {
+
+            const cleanupService = new CleanupService();
+
+            await cleanupService.enforceRetentionPolicy(dbJob.projectId);
+
+        }
+
+    } catch (err) {
+
+        logger.error({ jobId: job.id, error: err }, "Failed to run cleanup service after backup completion");
+
+    }
 
 });
 

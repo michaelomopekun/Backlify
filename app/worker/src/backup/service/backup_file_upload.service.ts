@@ -12,6 +12,8 @@ import { StorageService } from "shared/config/storage";
 
 import { BackupFileRepository } from "db";
 
+import { EncryptionService } from "../../shared/service/encryption.service";
+
 
 
 export interface BackupFileUploadOptions {
@@ -40,10 +42,13 @@ export class BackupFileUploadService {
 
     private storageService: StorageService;
 
+    private encryptionService: EncryptionService;
 
     constructor() {
 
         this.storageService = new StorageService();
+
+        this.encryptionService = new EncryptionService();
 
     }
 
@@ -66,22 +71,67 @@ export class BackupFileUploadService {
             // 1 verify file exists
             await fs.access(filePath);
 
-            // 2 generate checksum for integrity verification
-            const checksum = await this.generateChecksum(filePath);
+            let finalFilePath = filePath;
 
-            logger.info({ jobId, checksum }, "Generated backup file checksum");
+            let finalFileSize = fileSize;
+
+            let isEncrypted = false;
+
+            let fileName = path.basename(filePath);
+
+
+            // 1.5 Encrypt if enabled
+
+            if (this.encryptionService.isEncryptionEnabled()) {
+
+                const encryptedPath = `${filePath}.enc`;
+
+                logger.info({ jobId, filePath, encryptedPath }, "Encrypting backup file");
+
+                await this.encryptionService.encryptFile(filePath, encryptedPath);
+
+                
+                // Switch to using the encrypted file for upload and checksum
+
+                finalFilePath = encryptedPath;
+
+                fileName = `${fileName}.enc`;
+
+                const stats = await fs.stat(encryptedPath);
+
+                finalFileSize = stats.size;
+
+                isEncrypted = true;
+
+                
+                // delete the original unencrypted file
+
+                try {
+
+                    await fs.unlink(filePath);
+
+                } catch (e) {
+
+                    logger.warn({ jobId, filePath, error: e }, "Failed to delete original unencrypted file");
+
+                }
+
+            }
+
+            // 2 generate checksum for integrity verification
+            const checksum = await this.generateChecksum(finalFilePath);
+
+            logger.info({ jobId, checksum, isEncrypted }, "Generated backup file checksum");
 
             // 3 generate backup file id
             const backupFileId = `bkf-${uuidv4().substring(0, 12)}`;
-
-            const fileName = path.basename(filePath);
 
             // 4 upload to cloud storage
             const cloudKey = `backups/${jobId}/${fileName}`;
 
             let storageProvider = "local";
 
-            let storedPath = filePath;
+            let storedPath = finalFilePath;
 
             try {
 
@@ -98,9 +148,9 @@ export class BackupFileUploadService {
                 // 5 cleanup local temp file after successful upload
                 try {
 
-                    await fs.unlink(filePath);
+                    await fs.unlink(finalFilePath);
 
-                    logger.info({ jobId, filePath }, "Local temp file cleaned up");
+                    logger.info({ jobId, filePath: finalFilePath }, "Local temp file cleaned up");
 
                 } catch (cleanupErr) {
 
@@ -126,11 +176,13 @@ export class BackupFileUploadService {
 
                 filePath: storedPath,
 
-                fileSize,
+                fileSize: finalFileSize,
 
                 storageProvider,
 
                 checksum,
+
+                isEncrypted,
 
             });
 
