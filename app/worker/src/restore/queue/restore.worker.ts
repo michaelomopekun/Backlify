@@ -12,6 +12,10 @@ import { PgRestoreService } from "../service/pgrestore.service";
 
 import { RestoreRepository, BackupFileRepository } from "db";
 
+import { EncryptionService } from "../../shared/service/encryption.service";
+
+import { createHash } from "crypto";
+
 
 
 export const restoreWorker = new Worker<RestoreJobData>(
@@ -87,12 +91,66 @@ export const restoreWorker = new Worker<RestoreJobData>(
 
         }
 
+        // --- File Validation (Checksum) ---
+
+        const { promises: fsPromises } = await import("fs");
+
+        const fileBuffer = await fsPromises.readFile(restoreFilePath);
+
+        const hash = createHash("sha256");
+
+        hash.update(fileBuffer);
+
+        const downloadedChecksum = hash.digest("hex");
+
+
+        if (downloadedChecksum !== backupFile.checksum) {
+
+            const err = `Checksum validation failed. Expected ${backupFile.checksum}, got ${downloadedChecksum}`;
+
+            logger.error({ jobId: job.id }, err);
+
+            throw new Error(err);
+
+        }
+
+        logger.info({ jobId: job.id }, "Checksum validation passed");
+
+
+        // --- Decryption (if applicable) ---
+
+        let finalRestorePath = restoreFilePath;
+
+        let decryptedTempPath: string | null = null;
+
+        
+        if (backupFile.isEncrypted) {
+
+            const encryptionService = new EncryptionService();
+
+            const path = await import("path");
+
+            const tempDir = path.join(process.cwd(), "src", "temp");
+
+            decryptedTempPath = path.join(tempDir, `restore_decrypted_${job.data.jobId}.dump`);
+
+            
+            logger.info({ jobId: job.id, restoreFilePath, decryptedTempPath }, "Decrypting backup file");
+
+            await encryptionService.decryptFile(restoreFilePath, decryptedTempPath);
+
+            finalRestorePath = decryptedTempPath;
+
+            logger.info({ jobId: job.id }, "Backup file decrypted successfully");
+
+        }
+
         const pgRestoreService = new PgRestoreService();
 
         // 3 execute pg_restore
         const restoreResult = await pgRestoreService.executePgRestore({
 
-            backupFilePath: restoreFilePath,
+            backupFilePath: finalRestorePath,
 
             targetDatabaseUrl: job.data.targetDatabaseUrl,
 
@@ -100,16 +158,18 @@ export const restoreWorker = new Worker<RestoreJobData>(
 
         });
 
-        // 4 cleanup temp download if we pulled from cloud
-        if (tempDownloadPath) {
+        // 4 cleanup temp downloads if we pulled from cloud or decrypted
+        if (tempDownloadPath || decryptedTempPath) {
 
             try {
 
                 const { promises: fs } = await import("fs");
 
-                await fs.unlink(tempDownloadPath);
+                if (tempDownloadPath) await fs.unlink(tempDownloadPath);
+                
+                if (decryptedTempPath) await fs.unlink(decryptedTempPath);
 
-                logger.info({ jobId: job.id, tempDownloadPath }, "Cleaned up temp download file");
+                logger.info({ jobId: job.id, tempDownloadPath, decryptedTempPath }, "Cleaned up temp restore files");
 
             } catch (cleanupErr) {
 
