@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, varchar, integer } from 'drizzle-orm/pg-core';
 
 
 export const projects = pgTable('projects', {
@@ -8,6 +8,8 @@ export const projects = pgTable('projects', {
   name: varchar('name', { length: 255 }).notNull(),
 
   databaseUrl: text('database_url').notNull(),
+
+  retentionCount: integer('retention_count').notNull().default(7),
 
   createdAt: timestamp('created_at').notNull().defaultNow(),
 

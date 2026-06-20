@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, varchar, boolean } from 'drizzle-orm/pg-core';
 
 import { backupJobs } from './backup-job';
 
@@ -23,6 +23,8 @@ export const backupFiles = pgTable('backup_files', {
   storageProvider: varchar('storage_provider', { length: 50 }).notNull(),
 
   checksum: varchar('checksum', { length: 128 }).notNull(),
+
+  isEncrypted: boolean('is_encrypted').notNull().default(false),
 
   createdAt: timestamp('created_at').notNull().defaultNow(),
 
