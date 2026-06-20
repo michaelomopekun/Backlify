@@ -22,6 +22,8 @@ export interface UpdateProjectParams {
 
   databaseUrl?: string;
 
+  retentionCount?: number;
+
 }
 
 

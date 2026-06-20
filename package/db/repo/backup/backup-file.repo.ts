@@ -21,6 +21,8 @@ export interface BackupFile {
 
     checksum: string;
 
+    isEncrypted?: boolean;
+
 }
 
 
@@ -48,6 +50,8 @@ export class BackupFileRepository {
 
                 checksum: backupFile.checksum,
 
+                isEncrypted: backupFile.isEncrypted ?? false,
+
                 createdAt: new Date(),
 
                 updatedAt: new Date(),
@@ -67,6 +71,8 @@ export class BackupFileRepository {
                 storageProvider: backupFiles.storageProvider,
 
                 checksum: backupFiles.checksum,
+                
+                isEncrypted: backupFiles.isEncrypted,
 
                 createdAt: backupFiles.createdAt,
 
@@ -134,6 +140,26 @@ export class BackupFileRepository {
         } catch (error) {
 
             logger.error({backupJobId, error}, "Failed to fetch backup file");
+
+            throw error;
+
+        }
+
+    }
+
+    static async deleteBackupFileByJobId(backupJobId: string) {
+
+        try {
+
+            logger.info({ backupJobId }, "Deleting backup file record by job ID");
+
+            const result = await db.delete(backupFiles).where(eq(backupFiles.backupJobId, backupJobId)).returning();
+
+            return result[0];
+
+        } catch (error) {
+
+            logger.error({ backupJobId, error }, "Failed to delete backup file");
 
             throw error;
 
