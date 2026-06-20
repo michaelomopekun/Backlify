@@ -14,6 +14,8 @@ import './restore/queue/restore.worker';
 
 import { loadSchedules } from './schedule/schedule.loader';
 
+import { RecoveryLoader } from './schedule/recovery.loader';
+
 
 
 
@@ -31,6 +33,12 @@ async function main() {
 
     // Load active backup schedules
     await loadSchedules();
+
+
+    // Start recovery loader for stalled jobs
+    const recoveryLoader = new RecoveryLoader();
+
+    recoveryLoader.start();
 
 
     // // backup test
@@ -85,6 +93,10 @@ async function main() {
     
       logger.info('Shutting down worker...');
     
+
+      recoveryLoader.stop();
+
+
       await redis.quit();
     
       logger.info('Bye!');
