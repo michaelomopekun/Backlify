@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -6,12 +7,7 @@ export default function Home() {
       {/* ── Floating Navbar ── */}
       <nav className="navbar">
         <div className="nav-logo">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M4 6h16" />
-            <path d="M10 12h10" />
-            <path d="M4 12h2" />
-            <path d="M4 18h16" />
-          </svg>
+          <Image src="/backlify-logo.svg" alt="Backlify Logo" width={24} height={24} />
         </div>
         
         <div className="navbar-links">

@@ -58,7 +58,7 @@ h1, h2, h3, h4, h5, h6, .font-serif {
   background: var(--background);
   border: 1px solid var(--foreground);
   border-radius: 14px;
-  padding: 0.5rem 0.5rem 0.5rem 1.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -105,9 +105,9 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 }
 
 .hero-headline {
-  font-size: clamp(3rem, 7vw, 5rem);
+  font-size: clamp(3.5rem, 8vw, 6rem);
   line-height: 1.1;
-  max-width: 800px;
+  max-width: 1400px;
   margin-bottom: 2rem;
 }
 
@@ -115,7 +115,7 @@ h1, h2, h3, h4, h5, h6, .font-serif {
   color: var(--muted);
   font-size: clamp(0.9rem, 1.5vw, 1.1rem);
   line-height: 1.6;
-  max-width: 600px;
+  max-width: 1000px;
   margin-bottom: 3rem;
 }
 
@@ -181,11 +181,11 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 }
 
 .hero-image {
-  width: 100%;
-  max-width: 1000px;
+  width: 95%;
+  max-width: 1400px;
   aspect-ratio: 16 / 9;
   background: var(--surface);
-  border-radius: 12px;
+  border-radius: 16px;
   border: 1px solid var(--border);
   overflow: hidden;
   position: relative;
