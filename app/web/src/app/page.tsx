@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { Spotlight } from "@/components/ui/spotlight-new";
 
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,17 +44,19 @@ export default function Home() {
 
       {/* ── Hero Section ── */}
       <section className="hero">
-        <h1 className="hero-headline">
-          Enterprise PostgreSQL backups built to vanish
+        <Spotlight />
+        
+        <h1 className="hero-headline relative z-10">
+          Enterprise PostgreSQL backups<br/>built to vanish
         </h1>
 
-        <p className="hero-sub">
+        <p className="hero-sub relative z-10">
           Backlify handles the heavy lifting. Automated schedules, point-in-time
           recovery, and live monitoring all work quietly in the background. Five
           minutes to setup. A lifetime of peace.
         </p>
 
-        <div className="hero-buttons">
+        <div className="hero-buttons relative z-10">
           <Link href="/dashboard" className="btn-primary">
             Start free
           </Link>

@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+Backlify_dashboard.png
+Backlify_dashboard_cut.png
+Backlify_hero_image_1_upscaled.png
