@@ -69,9 +69,9 @@ export default function Home() {
           <Image
             src="/Backlify_dashboard_cut.png"
             alt="Backlify Dashboard"
-            width={1400}
-            height={800}
-            style={{ width: '100%', height: 'auto', display: 'block' }}
+            width={700}
+            height={400}
+            style={{ width: '70%', height: '70%', display: 'block'}}
             priority
           />
         </div>
