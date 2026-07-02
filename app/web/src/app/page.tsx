@@ -67,11 +67,11 @@ export default function Home() {
 
         <div className="hero-image">
           <Image
-            src="/Backlify_dashboard_cut.png"
+            src="/Dashboard_figma.svg"
             alt="Backlify Dashboard"
             width={700}
             height={400}
-            style={{ width: '70%', height: '70%', display: 'block'}}
+            style={{ width: '100%', height: '100%', display: 'block'}}
             priority
           />
         </div>
