@@ -305,3 +305,120 @@ h1, h2, h3, h4, h5, h6, .font-serif {
     padding: 0.5rem 1rem;
   }
 }
+
+/* Features Section */
+.features {
+  padding: 6rem 1.5rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  position: relative;
+  z-index: 10;
+}
+
+.features-subtitle {
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  color: var(--muted);
+  font-size: clamp(1.1rem, 2vw, 1.5rem);
+  margin-bottom: 1rem;
+}
+
+.features-headline {
+  font-family: var(--font-sans), monospace;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.15;
+  color: var(--foreground);
+  margin-bottom: 1.5rem;
+  max-width: 800px;
+  font-weight: 400;
+}
+
+.features-desc {
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.5vw, 1.25rem);
+  margin-bottom: 5rem;
+  max-width: 600px;
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  width: 95%;
+  max-width: 1200px;
+  margin-bottom: 5rem;
+}
+
+.feature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem;
+  border-radius: 16px;
+  transition: background-color 0.3s ease;
+}
+
+.feature-card:hover {
+  background-color: rgba(255, 255, 255, 0.01);
+}
+
+.feature-icon {
+  width: 2rem;
+  height: 2rem;
+  color: var(--foreground);
+  margin-bottom: 2rem;
+}
+
+.feature-title {
+  font-family: var(--font-sans), monospace;
+  font-size: 1.25rem;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.feature-desc {
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 1rem;
+}
+
+.features-buttons {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  justify-content: center;
+}
+
+.features-link {
+  font-family: var(--font-sans), monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--foreground);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: opacity 0.2s ease;
+}
+
+.features-link:hover {
+  opacity: 0.8;
+}
+
+/* Responsive Features */
+@media (max-width: 768px) {
+  .features-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+}
