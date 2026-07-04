@@ -67,7 +67,7 @@ export default function Home() {
 
         <div className="hero-image">
           <Image
-            src="/Dashboard_figma.svg"
+            src="/Home_fig.svg"
             alt="Backlify Dashboard"
             width={700}
             height={400}
@@ -158,6 +158,163 @@ export default function Home() {
           <Link href="#features" className="features-link">
             Learn <span>&gt;</span>
           </Link>
+        </div>
+
+      </section>
+
+      {/* ── How It Works (Stacked Cards) Section ── */}
+      <section className="how-it-works">
+        
+        {/* Step 1 */}
+        <div id="step-1" className="how-card">
+          <div className="how-card-header">
+            <span className="how-card-num">1</span>
+            <span className="how-card-step">Connect database</span>
+          </div>
+          
+          <div className="how-card-content">
+            <div className="how-card-left">
+              <span className="how-card-tag">Quick start</span>
+              <h2 className="how-card-title">Link your PostgreSQL instance</h2>
+              <p className="how-card-desc">
+                Backlify reads your connection string and validates access immediately. No complex configuration required.
+              </p>
+              <div className="how-card-actions">
+                <Link href="/dashboard" className="btn-secondary" style={{ padding: '0.65rem 2.2rem', fontSize: '0.85rem' }}>
+                  Start
+                </Link>
+                <Link href="#step-2" className="how-card-next">
+                  Next <span>&gt;</span>
+                </Link>
+              </div>
+            </div>
+            
+            <div className="how-card-right">
+              <div className="ui-mockup">
+                <div className="db-input-group">
+                  <span className="db-label">Connection String</span>
+                  <input 
+                    type="text" 
+                    readOnly 
+                    className="db-input" 
+                    value="postgresql://postgres:••••••••••••@db.backlify.dev:5432/production" 
+                  />
+                </div>
+                <div className="db-input-group">
+                  <span className="db-label">Database Name</span>
+                  <input 
+                    type="text" 
+                    readOnly 
+                    className="db-input" 
+                    value="production" 
+                  />
+                </div>
+                <div className="db-status">
+                  <div className="status-dot"></div>
+                  <span>Connected & validated successfully</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Step 2 */}
+        <div id="step-2" className="how-card">
+          <div className="how-card-header">
+            <span className="how-card-num">2</span>
+            <span className="how-card-step">Configure schedule</span>
+          </div>
+          
+          <div className="how-card-content">
+            <div className="how-card-left">
+              <span className="how-card-tag">Set it up</span>
+              <h2 className="how-card-title">Choose backup frequency and retention</h2>
+              <p className="how-card-desc">
+                Pick daily, weekly, or custom intervals. Backlify handles the rest automatically from that moment forward.
+              </p>
+              <div className="how-card-actions">
+                <Link href="/dashboard" className="btn-secondary" style={{ padding: '0.65rem 2.2rem', fontSize: '0.85rem' }}>
+                  Configure
+                </Link>
+                <Link href="#step-3" className="how-card-next">
+                  Next <span>&gt;</span>
+                </Link>
+              </div>
+            </div>
+            
+            <div className="how-card-right">
+              <div className="ui-mockup">
+                <span className="scheduler-title">Backup Schedule</span>
+                <div className="scheduler-options">
+                  <div className="scheduler-btn">Hourly</div>
+                  <div className="scheduler-btn active">Daily</div>
+                  <div className="scheduler-btn">Weekly</div>
+                </div>
+                <div className="scheduler-slider" style={{ marginTop: '0.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-sans)', fontSize: '0.75rem', color: 'var(--muted)' }}>
+                    <span>Retention Limit</span>
+                    <span>30 days</span>
+                  </div>
+                  <div className="slider-track">
+                    <div className="slider-fill"></div>
+                    <div className="slider-thumb"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Step 3 */}
+        <div id="step-3" className="how-card">
+          <div className="how-card-header">
+            <span className="how-card-num">3</span>
+            <span className="how-card-step">Monitor and restore</span>
+          </div>
+          
+          <div className="how-card-content">
+            <div className="how-card-left">
+              <span className="how-card-tag">Done</span>
+              <h2 className="how-card-title">Watch backups run in real time</h2>
+              <p className="how-card-desc">
+                Your dashboard shows every job, every timestamp, every status. Restore any backup with one click whenever you need it.
+              </p>
+              <div className="how-card-actions">
+                <Link href="/dashboard" className="btn-secondary" style={{ padding: '0.65rem 2.2rem', fontSize: '0.85rem' }}>
+                  Monitor
+                </Link>
+                <Link href="#step-1" className="how-card-next">
+                  Done <span>&gt;</span>
+                </Link>
+              </div>
+            </div>
+            
+            <div className="how-card-right">
+              <div className="ui-mockup">
+                <div className="monitor-title">
+                  <span>backup_prod_db</span>
+                  <span className="monitor-badge running">
+                    <span className="status-dot blue" style={{ display: 'inline-block', marginRight: '4px', verticalAlign: 'middle' }}></span>
+                    Running
+                  </span>
+                </div>
+                <div className="monitor-logs">
+                  <div className="log-line">
+                    <span className="log-time">[22:35:10]</span>
+                    <span>Initializing PostgreSQL dump...</span>
+                  </div>
+                  <div className="log-line">
+                    <span className="log-time">[22:35:12]</span>
+                    <span>Exporting schema definitions...</span>
+                  </div>
+                  <div className="log-line">
+                    <span className="log-time">[22:35:15]</span>
+                    <span>Streaming 4.2 GB payload to S3 target...</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
       </section>

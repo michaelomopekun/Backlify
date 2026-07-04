@@ -422,3 +422,333 @@ h1, h2, h3, h4, h5, h6, .font-serif {
     gap: 3rem;
   }
 }
+
+/* How It Works Stack Section */
+.how-it-works {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 6rem 1.5rem 12rem;
+}
+
+.how-card {
+  position: sticky;
+  top: 100px;
+  background-color: var(--background);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 2.5rem 0 6rem;
+}
+
+.how-card-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1.5rem;
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: var(--foreground);
+  margin-bottom: 4rem;
+  opacity: 0.9;
+}
+
+.how-card-num {
+  font-family: var(--font-sans), monospace;
+  font-style: normal;
+  font-size: 1rem;
+}
+
+.how-card-content {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.how-card-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.how-card-tag {
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  color: var(--muted);
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+}
+
+.how-card-title {
+  font-family: var(--font-sans), monospace;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1.2;
+  color: var(--foreground);
+  margin-bottom: 2rem;
+  font-weight: 400;
+}
+
+.how-card-desc {
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  color: var(--muted);
+  font-size: clamp(1rem, 1.5vw, 1.15rem);
+  line-height: 1.6;
+  margin-bottom: 3.5rem;
+  max-width: 500px;
+}
+
+.how-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.how-card-next {
+  font-family: var(--font-sans), monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--foreground);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: opacity 0.2s ease;
+}
+
+.how-card-next:hover {
+  opacity: 0.8;
+}
+
+/* Right Visual Panels */
+.how-card-right {
+  width: 100%;
+  aspect-ratio: 1.25 / 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* UI Mockups inside how-card-right */
+.ui-mockup {
+  width: 90%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Step 1: Database Link UI */
+.db-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.db-label {
+  font-family: var(--font-sans), monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  text-align: left;
+}
+
+.db-input {
+  background: var(--surface-light);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  font-family: var(--font-sans), monospace;
+  font-size: 0.85rem;
+  color: var(--foreground);
+  width: 100%;
+  outline: none;
+}
+
+.db-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-serif), serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: #10B981; /* Success Emerald */
+  margin-top: 0.5rem;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #10B981;
+  animation: pulse-green 2s infinite;
+}
+
+@keyframes pulse-green {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+/* Step 2: Scheduler UI */
+.scheduler-title {
+  font-family: var(--font-sans), monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+  text-align: left;
+}
+
+.scheduler-options {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.scheduler-btn {
+  flex: 1;
+  background: var(--surface-light);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-family: var(--font-sans), monospace;
+  font-size: 0.8rem;
+  color: var(--muted);
+  cursor: pointer;
+  text-align: center;
+}
+
+.scheduler-btn.active {
+  border-color: var(--foreground);
+  color: var(--foreground);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.scheduler-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.slider-track {
+  height: 6px;
+  background: var(--surface-light);
+  border-radius: 3px;
+  position: relative;
+}
+
+.slider-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 60%;
+  background: var(--foreground);
+  border-radius: 3px;
+}
+
+.slider-thumb {
+  position: absolute;
+  left: 60%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: var(--foreground);
+  border-radius: 50%;
+  border: 2px solid var(--background);
+}
+
+/* Step 3: Monitor UI */
+.monitor-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-sans), monospace;
+  font-size: 0.9rem;
+}
+
+.monitor-badge {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10B981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}
+
+.monitor-badge.running {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3B82F6;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.status-dot.blue {
+  background-color: #3B82F6;
+  animation: pulse-blue 2s infinite;
+}
+
+@keyframes pulse-blue {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.monitor-logs {
+  background: var(--surface-light);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-family: var(--font-sans), monospace;
+  font-size: 0.75rem;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  max-height: 100px;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.log-line {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.log-time {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive How It Works */
+@media (max-width: 1024px) {
+  .how-card-content {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
+  .how-card-right {
+    aspect-ratio: 1.4 / 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .how-card {
+    top: 80px;
+    padding-bottom: 4rem;
+  }
+}
