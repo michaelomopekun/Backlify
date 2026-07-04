@@ -29,6 +29,7 @@ export default function RootLayout({
       className={`${instrumentSerif.variable} ${jetBrainsMono.variable} antialiased`}
     >
       <body>{children}</body>
+      {/* Trigger HMR */}
     </html>
   );
 }
