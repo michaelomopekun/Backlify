@@ -344,14 +344,7 @@ export default function Home() {
 
           {/* Center Graphic */}
           <div className="benefits-center">
-            <svg width="240" height="240" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="15" y="35" width="90" height="14" rx="4" fill="var(--accent)" />
-              <rect x="15" y="58" width="90" height="14" rx="4" fill="var(--accent)" />
-              <rect x="15" y="81" width="35" height="14" rx="4" fill="var(--accent)" />
-              
-              <path d="M 100 88 A 18 18 0 1 1 82 70" stroke="var(--accent)" strokeWidth="8" strokeLinecap="round" />
-              <path d="M 85 96 L 62 73 L 70 106 L 76 92 L 91 97 Z" fill="var(--accent)" />
-            </svg>
+            <Image src="/backlify-logo.svg" alt="Backlify Architecture" width={240} height={240} />
           </div>
 
           {/* Right Column */}
