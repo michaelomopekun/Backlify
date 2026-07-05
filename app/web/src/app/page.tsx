@@ -318,6 +318,66 @@ export default function Home() {
         </div>
 
       </section>
+
+      {/* ── Benefits Section ── */}
+      <section className="benefits">
+        <span className="features-subtitle">Why</span>
+        <h2 className="features-headline">The backbone of modern<br/>data protection</h2>
+        <p className="features-desc">
+          Your data stays encrypted at rest and in transit. Backlify never touches your credentials or sensitive information.
+        </p>
+
+        <div className="benefits-grid">
+          {/* Left Column */}
+          <div className="benefits-col">
+            <div className="benefit-item">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="benefit-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+              <h3 className="benefit-title">Security by default</h3>
+              <p className="benefit-desc">Your data stays encrypted at rest and in transit. Backlify never touches your credentials or sensitive information.</p>
+            </div>
+            <div className="benefit-item">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="benefit-icon"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path><path d="M12 12v6"></path><path d="M9 15l3-3 3 3"></path></svg>
+              <h3 className="benefit-title">Built for reliability</h3>
+              <p className="benefit-desc">Redundant storage and automated verification ensure your backups are always there when you need them most.</p>
+            </div>
+          </div>
+
+          {/* Center Graphic */}
+          <div className="benefits-center">
+            <svg width="240" height="240" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="15" y="35" width="90" height="14" rx="4" fill="var(--accent)" />
+              <rect x="15" y="58" width="90" height="14" rx="4" fill="var(--accent)" />
+              <rect x="15" y="81" width="35" height="14" rx="4" fill="var(--accent)" />
+              
+              <path d="M 100 88 A 18 18 0 1 1 82 70" stroke="var(--accent)" strokeWidth="8" strokeLinecap="round" />
+              <path d="M 85 96 L 62 73 L 70 106 L 76 92 L 91 97 Z" fill="var(--accent)" />
+            </svg>
+          </div>
+
+          {/* Right Column */}
+          <div className="benefits-col">
+            <div className="benefit-item">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="benefit-icon"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <h3 className="benefit-title">Disappears into your stack</h3>
+              <p className="benefit-desc">No agents to manage, no infrastructure to maintain. Backlify works quietly in the background without friction.</p>
+            </div>
+            <div className="benefit-item">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="benefit-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>
+              <h3 className="benefit-title">Encryption always on</h3>
+              <p className="benefit-desc">Every backup encrypted before it leaves your database. Backlify never sees raw data.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="features-buttons" style={{ marginTop: '5rem' }}>
+          <Link href="/dashboard" className="btn-secondary" style={{ padding: '0.65rem 2.2rem' }}>
+            Learn
+          </Link>
+          <Link href="#features" className="features-link">
+            Learn <span>&gt;</span>
+          </Link>
+        </div>
+      </section>
     </>
   );
 }
