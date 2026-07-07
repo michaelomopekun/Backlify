@@ -455,6 +455,125 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ── Pricing Section ── */}
+      <section id="pricing" className="pricing">
+        <span className="pricing-subtitle">Simple</span>
+        <h2 className="pricing-headline">Clear pricing</h2>
+        <p className="pricing-desc">
+          Pick the plan that fits your team. Scale up whenever you need more.
+        </p>
+
+        <div className="pricing-grid">
+          {/* Basic Plan */}
+          <div className="pricing-card">
+            <div className="pricing-header">
+              <h3 className="pricing-title">Basic plan</h3>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pricing-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+            </div>
+            <div className="pricing-price">
+              <span className="price-amount">$19</span>
+            </div>
+            <div className="pricing-period">per month</div>
+            
+            <hr className="pricing-divider" />
+            
+            <div className="pricing-features-title">Includes</div>
+            <ul className="pricing-features-list">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Daily automated backups</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>30 day retention</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>One database</span>
+              </li>
+            </ul>
+            
+            <button className="pricing-btn">Get started</button>
+          </div>
+
+          {/* Business Plan */}
+          <div className="pricing-card">
+            <div className="pricing-header">
+              <h3 className="pricing-title">Business plan</h3>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pricing-icon"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path><path d="M3 9l2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"></path><path d="M12 3v6"></path></svg>
+            </div>
+            <div className="pricing-price">
+              <span className="price-amount">$29</span>
+            </div>
+            <div className="pricing-period">per month</div>
+            
+            <hr className="pricing-divider" />
+            
+            <div className="pricing-features-title">Includes</div>
+            <ul className="pricing-features-list">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Hourly automated backups</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>90 day retention</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Five databases</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Priority support</span>
+              </li>
+            </ul>
+            
+            <button className="pricing-btn">Get started</button>
+          </div>
+
+          {/* Enterprise Plan */}
+          <div className="pricing-card">
+            <div className="pricing-header">
+              <h3 className="pricing-title">Enterprise plan</h3>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pricing-icon"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+            </div>
+            <div className="pricing-price">
+              <span className="price-amount">$49</span>
+            </div>
+            <div className="pricing-period">per month</div>
+            
+            <hr className="pricing-divider" />
+            
+            <div className="pricing-features-title">Includes</div>
+            <ul className="pricing-features-list">
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Custom backup intervals</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Unlimited retention</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Unlimited databases</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>24/7 dedicated support</span>
+              </li>
+              <li>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span>Custom integrations</span>
+              </li>
+            </ul>
+            
+            <button className="pricing-btn">Get started</button>
+          </div>
+        </div>
+      </section>
     </>
   );
 }
