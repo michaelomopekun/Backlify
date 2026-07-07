@@ -5,8 +5,58 @@ import Link from "next/link";
 import Image from "next/image";
 import { Spotlight } from "@/components/ui/spotlight-new";
 
+const TESTIMONIALS = [
+  {
+    logo: (
+      <svg width="120" height="28" viewBox="0 0 120 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 6l5 16h5L5 6H0zm9 0l5 16h5l-5-16H9zm9 0l5 16h5l-5-16h-5z" fill="currentColor"/>
+        <text x="36" y="21" fill="currentColor" fontFamily="system-ui, -apple-system, sans-serif" fontSize="20" fontWeight="bold" letterSpacing="-0.5">Webflow</text>
+      </svg>
+    ),
+    quote: `"We went from manual backups and constant worry to complete automation in an afternoon. Backlify just works."`,
+    name: "Sarah Chen",
+    title: "CTO, Verve Labs",
+    avatar: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+    )
+  },
+  {
+    logo: (
+      <svg width="110" height="28" viewBox="0 0 110 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 14L14 2l12 12M6 10v12h16V10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <text x="36" y="21" fill="currentColor" fontFamily="system-ui, -apple-system, sans-serif" fontSize="20" fontWeight="bold" letterSpacing="-0.5">FinCorp</text>
+      </svg>
+    ),
+    quote: `"We migrated 4TB of PostgreSQL databases to Backlify. The point-in-time recovery feature alone has saved us countless hours of engineering time."`,
+    name: "Elena Rodriguez",
+    title: "Lead DBA, FinCorp",
+    avatar: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><line x1="19" y1="8" x2="24" y2="13"></line><line x1="24" y1="8" x2="19" y2="13"></line></svg>
+    )
+  },
+  {
+    logo: (
+      <svg width="100" height="28" viewBox="0 0 100 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="14" cy="14" r="10" fill="currentColor" fillOpacity="0.2" stroke="currentColor" strokeWidth="2"/>
+        <path d="M14 8v12M8 14h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+        <text x="32" y="21" fill="currentColor" fontFamily="system-ui, -apple-system, sans-serif" fontSize="20" fontWeight="bold" letterSpacing="-0.5">HealthSync</text>
+      </svg>
+    ),
+    quote: `"When dealing with HIPAA-compliant healthcare data, you can't take chances. Backlify gave us the enterprise-grade reliability we needed."`,
+    name: "David Wallace",
+    title: "VP Engineering, HealthSync",
+    avatar: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+    )
+  }
+];
+
 export default function Home() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeTestimonial, setActiveTestimonial] = useState(0);
+
+  const nextTestimonial = () => setActiveTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
+  const prevTestimonial = () => setActiveTestimonial((prev) => (prev - 1 + TESTIMONIALS.length) % TESTIMONIALS.length);
 
   return (
     <>
@@ -374,26 +424,34 @@ export default function Home() {
 
       {/* ── Testimonial Section ── */}
       <section className="testimonial">
-        <div className="testimonial-logo">
-          <svg width="120" height="28" viewBox="0 0 120 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 6l5 16h5L5 6H0zm9 0l5 16h5l-5-16H9zm9 0l5 16h5l-5-16h-5z" fill="currentColor"/>
-            <text x="36" y="21" fill="currentColor" fontFamily="system-ui, -apple-system, sans-serif" fontSize="20" fontWeight="bold" letterSpacing="-0.5">Webflow</text>
-          </svg>
-        </div>
-        
-        <blockquote className="testimonial-quote">
-          "We went from manual backups and constant<br className="desktop-only" />
-          worry to complete automation in an afternoon.<br className="desktop-only" />
-          Backlify just works."
-        </blockquote>
-        
-        <div className="testimonial-author">
-          <div className="testimonial-avatar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+        <div className="testimonial-carousel">
+          <div className="testimonial-slide" key={activeTestimonial}>
+            <div className="testimonial-logo">
+              {TESTIMONIALS[activeTestimonial].logo}
+            </div>
+            
+            <blockquote className="testimonial-quote">
+              {TESTIMONIALS[activeTestimonial].quote}
+            </blockquote>
+            
+            <div className="testimonial-author">
+              <div className="testimonial-avatar">
+                {TESTIMONIALS[activeTestimonial].avatar}
+              </div>
+              <div className="testimonial-author-info">
+                <div className="testimonial-name">{TESTIMONIALS[activeTestimonial].name}</div>
+                <div className="testimonial-title">{TESTIMONIALS[activeTestimonial].title}</div>
+              </div>
+            </div>
           </div>
-          <div className="testimonial-author-info">
-            <div className="testimonial-name">Sarah Chen</div>
-            <div className="testimonial-title">CTO, Verve Labs</div>
+
+          <div className="testimonial-controls">
+            <button onClick={prevTestimonial} className="carousel-btn" aria-label="Previous testimonial">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button onClick={nextTestimonial} className="carousel-btn" aria-label="Next testimonial">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
           </div>
         </div>
       </section>
