@@ -1148,6 +1148,201 @@ h1, h2, h3, h4, h5, h6, .font-serif {
   gap: 1.5rem;
   width: 100%;
   max-width: 500px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.pricing-subtitle {
+  font-family: var(--font-serif), serif;
+  font-size: 1rem;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+}
+
+.pricing-headline {
+  font-family: var(--font-sans), monospace;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 400;
+  color: var(--foreground);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.pricing-desc {
+  font-family: var(--font-serif), serif;
+  color: var(--foreground);
+  font-size: clamp(1rem, 1.5vw, 1.1rem);
+  margin-bottom: 5rem;
+  text-align: center;
+  max-width: 600px;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  width: 100%;
+}
+
+@media (max-width: 1024px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    max-width: 500px;
+  }
+}
+
+.pricing-card {
+  border: 1px solid var(--foreground);
+  border-radius: 12px;
+  padding: 3rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  background: transparent;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.pricing-card:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-5px);
+}
+
+.pricing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+}
+
+.pricing-title {
+  font-family: var(--font-sans), monospace;
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--foreground);
+}
+
+.pricing-icon {
+  color: var(--foreground);
+}
+
+.pricing-price {
+  margin-bottom: 0.5rem;
+}
+
+.price-amount {
+  font-family: var(--font-sans), monospace;
+  font-size: 4.5rem;
+  font-weight: 400;
+  color: var(--foreground);
+  line-height: 1;
+}
+
+.pricing-period {
+  font-family: var(--font-serif), serif;
+  font-size: 0.85rem;
+  color: var(--foreground);
+  margin-bottom: 3rem;
+}
+
+.pricing-divider {
+  border: none;
+  border-top: 1px solid var(--foreground);
+  margin-bottom: 2.5rem;
+}
+
+.pricing-features-title {
+  font-family: var(--font-serif), serif;
+  font-size: 1rem;
+  color: var(--foreground);
+  margin-bottom: 1.5rem;
+}
+
+.pricing-features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  flex-grow: 1;
+  margin-bottom: 3rem;
+}
+
+.pricing-features-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.pricing-features-list svg {
+  width: 16px;
+  height: 16px;
+  color: var(--foreground);
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+}
+
+.pricing-features-list span {
+  font-family: var(--font-serif), serif;
+  font-size: 0.95rem;
+  color: var(--foreground);
+  line-height: 1.4;
+}
+
+.pricing-btn {
+  background: var(--foreground);
+  color: var(--background);
+  font-family: var(--font-serif), serif;
+  font-size: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  transition: opacity 0.2s ease;
+  font-weight: 500;
+}
+
+.pricing-btn:hover {
+  opacity: 0.9;
+}
+
+/* Waitlist Section */
+.waitlist {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8rem 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.waitlist-headline {
+  font-family: var(--font-sans), monospace;
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 400;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.waitlist-subtitle {
+  font-family: var(--font-serif), serif;
+  color: var(--muted);
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 4rem;
+  max-width: 500px;
+}
+
+.waitlist-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 500px;
   margin-bottom: 2rem;
 }
 
@@ -1168,20 +1363,22 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 }
 
 .waitlist-submit {
-  background: transparent;
-  border: 3px solid var(--foreground);
-  border-radius: 20px;
+  background: var(--background);
+  border: 2px solid var(--foreground);
+  border-radius: 14px;
   padding: 1.25rem 5rem;
-  font-family: var(--font-serif), serif;
-  font-size: 1.25rem;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
   color: var(--foreground);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.1s ease;
+  box-shadow: 0px 5px 0px 0px var(--foreground);
 }
 
-.waitlist-submit:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
+.waitlist-submit:active {
+  transform: translateY(5px);
+  box-shadow: 0px 0px 0px 0px var(--foreground);
 }
 
 .waitlist-stat {
