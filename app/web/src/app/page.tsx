@@ -67,7 +67,7 @@ export default function Home() {
             <Image src="/backlify-logo.svg" alt="Backlify Logo" width={24} height={24} />
           </div>
           <div className="nav-actions">
-            <Link href="/dashboard" className="btn-primary nav-cta">Sign in</Link>
+            <Link href="#waitlist" className="btn-primary nav-cta">Join Waitlist</Link>
             <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -88,7 +88,7 @@ export default function Home() {
         <div className="navbar-links">
           <Link href="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
           <Link href="#features" onClick={() => setIsMenuOpen(false)}>Features</Link>
-          <Link href="#pricing" onClick={() => setIsMenuOpen(false)}>Pricing</Link>
+          {/* <Link href="#pricing" onClick={() => setIsMenuOpen(false)}>Pricing</Link> */}
         </div>
       </nav>
 
@@ -107,8 +107,8 @@ export default function Home() {
         </p>
 
         <div className="hero-buttons relative z-10">
-          <Link href="/dashboard" className="btn-primary">
-            Start free
+          <Link href="#waitlist" className="btn-primary">
+            Join Waitlist
           </Link>
           <Link href="#features" className="btn-secondary">
             See features
@@ -150,11 +150,8 @@ export default function Home() {
           
           {/* Column 1 */}
           <div className="feature-card">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="feature-icon">
-              <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-              <path d="M12 12v9" />
-              <path d="m16 16-4-4-4 4" />
-            </svg>
+            <img src="./backup_icon.svg" alt="automated backup" className="feature-icon" style={{ marginBottom: '2.5rem', width: '48px', height: '48px' }} />
+
             <h3 className="feature-title">
               Automated<br />scheduled backups
             </h3>
@@ -165,13 +162,8 @@ export default function Home() {
 
           {/* Column 2 */}
           <div className="feature-card">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="feature-icon">
-              <path d="m19 8-5 5-3-3-5 5" />
-              <circle cx="19" cy="8" r="1.5" fill="currentColor" />
-              <circle cx="14" cy="13" r="1.5" fill="currentColor" />
-              <circle cx="11" cy="10" r="1.5" fill="currentColor" />
-              <circle cx="6" cy="15" r="1.5" fill="currentColor" />
-            </svg>
+            <img src="./trend_icon.svg" alt="Point in time recovery" className="feature-icon" style={{ marginBottom: '2.5rem', width: '48px', height: '48px' }} />
+
             <h3 className="feature-title">
               Point-in-time<br />recovery
             </h3>
@@ -182,14 +174,8 @@ export default function Home() {
 
           {/* Column 3 */}
           <div className="feature-card">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="feature-icon">
-              <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-              <polyline points="16 7 22 7 22 13" />
-              <line x1="4" y1="20" x2="4" y2="14" />
-              <line x1="9" y1="20" x2="9" y2="10" />
-              <line x1="14" y1="20" x2="14" y2="6" />
-              <line x1="19" y1="20" x2="19" y2="12" />
-            </svg>
+            <img src="./real-time_trend_icon.svg" alt="Real-time job monitoring" className="feature-icon" style={{ marginBottom: '2.5rem', width: '48px', height: '48px' }} />
+
             <h3 className="feature-title">
               Real-time job<br />monitoring
             </h3>
@@ -205,9 +191,9 @@ export default function Home() {
           <Link href="#features" className="btn-secondary" style={{ padding: '0.65rem 2.2rem', fontSize: '0.85rem' }}>
             Learn
           </Link>
-          <Link href="#features" className="features-link">
+          {/* <Link href="#features" className="features-link">
             Learn <span>&gt;</span>
-          </Link>
+          </Link> */}
         </div>
 
       </section>
@@ -230,7 +216,7 @@ export default function Home() {
                 Backlify reads your connection string and validates access immediately. No complex configuration required.
               </p>
               <div className="how-card-actions">
-                <Link href="/dashboard" className="btn-secondary" style={{ padding: '0.65rem 2.2rem', fontSize: '0.85rem' }}>
+                <Link href="/waitlist" className="btn-secondary" style={{ padding: '0.65rem 2.2rem', fontSize: '0.85rem' }}>
                   Start
                 </Link>
                 <Link href="#step-2" className="how-card-next">
@@ -283,7 +269,7 @@ export default function Home() {
                 Pick daily, weekly, or custom intervals. Backlify handles the rest automatically from that moment forward.
               </p>
               <div className="how-card-actions">
-                <Link href="/dashboard" className="btn-secondary" style={{ padding: '0.65rem 2.2rem', fontSize: '0.85rem' }}>
+                <Link href="/waitlist" className="btn-secondary" style={{ padding: '0.65rem 2.2rem', fontSize: '0.85rem' }}>
                   Configure
                 </Link>
                 <Link href="#step-3" className="how-card-next">
@@ -330,7 +316,7 @@ export default function Home() {
                 Your dashboard shows every job, every timestamp, every status. Restore any backup with one click whenever you need it.
               </p>
               <div className="how-card-actions">
-                <Link href="/dashboard" className="btn-secondary" style={{ padding: '0.65rem 2.2rem', fontSize: '0.85rem' }}>
+                <Link href="/waitlist" className="btn-secondary" style={{ padding: '0.65rem 2.2rem', fontSize: '0.85rem' }}>
                   Monitor
                 </Link>
                 <Link href="#step-1" className="how-card-next">
@@ -381,12 +367,12 @@ export default function Home() {
           {/* Left Column */}
           <div className="benefits-col">
             <div className="benefit-item">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="benefit-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M12 8v4"></path><path d="M12 16h.01"></path></svg>
+              <img src="./security_icon.svg" alt="security benefit" className="benefit-icon" style={{ marginBottom: '2.5rem', width: '48px', height: '48px' }} />
               <h3 className="benefit-title">Security by default</h3>
               <p className="benefit-desc">Your data stays encrypted at rest and in transit. Backlify never touches your credentials or sensitive information.</p>
             </div>
             <div className="benefit-item">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="benefit-icon"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"></path><path d="M12 12v6"></path><path d="M9 15l3-3 3 3"></path></svg>
+              <img src="./backup_icon.svg" alt="reliability benefit" className="benefit-icon" style={{ marginBottom: '2.5rem', width: '48px', height: '48px' }} />
               <h3 className="benefit-title">Built for reliability</h3>
               <p className="benefit-desc">Redundant storage and automated verification ensure your backups are always there when you need them most.</p>
             </div>
@@ -400,12 +386,12 @@ export default function Home() {
           {/* Right Column */}
           <div className="benefits-col">
             <div className="benefit-item">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="benefit-icon"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <img src="./disappears_icon.svg" alt="Disappears into stack benefit" className="benefit-icon" style={{ marginBottom: '2.5rem', width: '48px', height: '48px' }} />
               <h3 className="benefit-title">Disappears into your stack</h3>
               <p className="benefit-desc">No agents to manage, no infrastructure to maintain. Backlify works quietly in the background without friction.</p>
             </div>
             <div className="benefit-item">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="benefit-icon"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="M9 12l2 2 4-4"></path></svg>
+              <img src="./security_icon.svg" alt="Encryption benefit" className="benefit-icon" style={{ marginBottom: '2.5rem', width: '48px', height: '48px' }} />
               <h3 className="benefit-title">Encryption always on</h3>
               <p className="benefit-desc">Every backup encrypted before it leaves your database. Backlify never sees raw data.</p>
             </div>
@@ -413,17 +399,17 @@ export default function Home() {
         </div>
 
         <div className="features-buttons" style={{ marginTop: '5rem' }}>
-          <Link href="/dashboard" className="btn-secondary" style={{ padding: '0.65rem 2.2rem' }}>
+          <Link href="#features" className="btn-secondary" style={{ padding: '0.65rem 2.2rem' }}>
             Learn
           </Link>
-          <Link href="#features" className="features-link">
+          {/* <Link href="#features" className="features-link">
             Learn <span>&gt;</span>
-          </Link>
+          </Link> */}
         </div>
       </section>
 
       {/* ── Testimonial Section ── */}
-      <section className="testimonial">
+      {/* <section className="testimonial">
         <div className="testimonial-carousel">
           <div className="testimonial-slide" key={activeTestimonial}>
             <div className="testimonial-logo">
@@ -454,19 +440,19 @@ export default function Home() {
             </button>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* ── Pricing Section ── */}
       <section id="pricing" className="pricing">
-        <span className="pricing-subtitle">Simple</span>
+        {/* <span className="pricing-subtitle">Simple</span>
         <h2 className="pricing-headline">Clear pricing</h2>
         <p className="pricing-desc">
           Pick the plan that fits your team. Scale up whenever you need more.
-        </p>
+        </p> */}
 
         <div className="pricing-grid">
           {/* Basic Plan */}
-          <div className="pricing-card">
+          {/* <div className="pricing-card">
             <div className="pricing-header">
               <h3 className="pricing-title">Basic plan</h3>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pricing-icon"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
@@ -495,10 +481,10 @@ export default function Home() {
             </ul>
             
             <button className="pricing-btn">Get started</button>
-          </div>
+          </div> */}
 
           {/* Business Plan */}
-          <div className="pricing-card">
+          {/* <div className="pricing-card">
             <div className="pricing-header">
               <h3 className="pricing-title">Business plan</h3>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pricing-icon"><path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path><path d="M3 9l2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"></path><path d="M12 3v6"></path></svg>
@@ -531,10 +517,10 @@ export default function Home() {
             </ul>
             
             <button className="pricing-btn">Get started</button>
-          </div>
+          </div> */}
 
           {/* Enterprise Plan */}
-          <div className="pricing-card">
+          {/* <div className="pricing-card">
             <div className="pricing-header">
               <h3 className="pricing-title">Enterprise plan</h3>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pricing-icon"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
@@ -571,8 +557,25 @@ export default function Home() {
             </ul>
             
             <button className="pricing-btn">Get started</button>
-          </div>
+          </div>  */}
         </div>
+      </section>
+
+      {/* ── Waitlist Section ── */}
+      <section id="waitlist" className="waitlist">
+        <h2 className="waitlist-headline">Join Our Waitlist</h2>
+        <p className="waitlist-subtitle">
+          Be the first to experience Backlify. Join the waitlist today for early access and updates.
+        </p>
+
+        <form className="waitlist-form" onSubmit={(e) => e.preventDefault()}>
+          <input type="email" placeholder="Enter your email" className="waitlist-input" required />
+          <button type="submit" className="waitlist-submit">Join</button>
+        </form>
+        
+        <p className="waitlist-stat">
+          <span className="waitlist-stat-bold">106</span> people already joined
+        </p>
       </section>
     </>
   );

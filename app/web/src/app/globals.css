@@ -63,7 +63,7 @@ h1, h2, h3, h4, h5, h6, .font-serif {
   align-items: center;
   justify-content: space-between;
   width: 95%;
-  max-width: 1400px;
+  max-width: 1100px;
 }
 
 .navbar-header {
@@ -1111,4 +1111,89 @@ h1, h2, h3, h4, h5, h6, .font-serif {
 
 .pricing-btn:hover {
   opacity: 0.9;
+}
+
+/* Waitlist Section */
+.waitlist {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8rem 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.waitlist-headline {
+  font-family: var(--font-sans), monospace;
+  font-size: clamp(2.5rem, 5vw, 3.5rem);
+  font-weight: 400;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.waitlist-subtitle {
+  font-family: var(--font-serif), serif;
+  color: var(--muted);
+  font-size: 1.1rem;
+  text-align: center;
+  margin-bottom: 4rem;
+  max-width: 500px;
+}
+
+.waitlist-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 2rem;
+}
+
+.waitlist-input {
+  width: 100%;
+  background: transparent;
+  border: 3px solid var(--foreground);
+  border-radius: 20px;
+  padding: 1.5rem 2.5rem;
+  font-family: var(--font-serif), serif;
+  font-size: 1.25rem;
+  color: var(--foreground);
+  outline: none;
+}
+
+.waitlist-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.waitlist-submit {
+  background: transparent;
+  border: 3px solid var(--foreground);
+  border-radius: 20px;
+  padding: 1.25rem 5rem;
+  font-family: var(--font-serif), serif;
+  font-size: 1.25rem;
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.waitlist-submit:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.waitlist-stat {
+  font-family: var(--font-serif), serif;
+  font-size: 1.1rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-align: center;
+}
+
+.waitlist-stat-bold {
+  font-family: var(--font-sans), monospace;
+  font-weight: 600;
+  color: var(--foreground);
+  font-size: 1.25rem;
 }
