@@ -117,7 +117,7 @@ export default function Home() {
 
         <div className="hero-image">
           <Image
-            src="/Home_fig.svg"
+            src="/figma_Dashboard_90.svg"
             alt="Backlify Dashboard"
             width={700}
             height={400}
