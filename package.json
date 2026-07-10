@@ -18,8 +18,5 @@
     "drizzle-generate": "npm run drizzle-generate --workspace=db",
     "drizzle-push": "npm run drizzle-push --workspace=db",
     "drizzle-studio": "npm run drizzle-studio --workspace=db"
-  },
-  "dependencies": {
-    "@vercel/analytics": "^2.0.1"
   }
 }
