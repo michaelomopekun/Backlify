@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Instrument_Serif, JetBrains_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css";
 
 const instrumentSerif = Instrument_Serif({
@@ -28,7 +29,10 @@ export default function RootLayout({
       lang="en"
       className={`${instrumentSerif.variable} ${jetBrainsMono.variable} antialiased`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
       {/* Trigger HMR */}
     </html>
   );
