@@ -8,6 +8,8 @@ package-lock.json
 
 # Build outputs
 lib/
+!**/src/lib/
+!**/src/lib/**
 dist/
 build/
 *.tsbuildinfo
