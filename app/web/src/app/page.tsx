@@ -99,13 +99,12 @@ export default function Home() {
         <Spotlight />
         
         <h1 className="hero-headline relative z-10">
-          Enterprise PostgreSQL backups<br/>built to vanish
+          Automated PostgreSQL<br/>backups that just work.
         </h1>
 
         <p className="hero-sub relative z-10">
-          Backlify handles the heavy lifting. Automated schedules, point-in-time
-          recovery, and live monitoring all work quietly in the background. Five
-          minutes to setup. A lifetime of peace.
+          Backlify automatically backs up your PostgreSQL databases, stores them securely, and lets you restore them whenever disaster strikes. 
+          <br/>A lifetime of peace.
         </p>
 
         <div className="hero-buttons relative z-10">
