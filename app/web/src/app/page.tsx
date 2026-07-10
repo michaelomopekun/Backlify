@@ -90,7 +90,8 @@ export default function Home() {
         <div className="navbar-links">
           <Link href="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
           <Link href="#features" onClick={() => setIsMenuOpen(false)}>Features</Link>
-          {/* <Link href="#pricing" onClick={() => setIsMenuOpen(false)}>Pricing</Link> */}
+          <Link href="#how-it-works" onClick={() => setIsMenuOpen(false)}>How it works</Link>
+          <Link href="#benefits" onClick={() => setIsMenuOpen(false)}>Benefits</Link>
         </div>
       </nav>
 
@@ -200,7 +201,7 @@ export default function Home() {
       </section>
 
       {/* ── How It Works (Stacked Cards) Section ── */}
-      <section className="how-it-works">
+      <section id="how-it-works" className="how-it-works">
         
         {/* Step 1 */}
         <div id="step-1" className="how-card">
@@ -357,7 +358,7 @@ export default function Home() {
       </section>
 
       {/* ── Benefits Section ── */}
-      <section className="benefits">
+      <section id="benefits" className="benefits">
         <span className="features-subtitle">Why</span>
         <h2 className="features-headline">The backbone of modern<br/>data protection</h2>
         <p className="features-desc">
