@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { WaitlistForm } from "@/components/ui/waitlist-form";
+import { getWaitlistCount } from "@/app/actions/waitlist.actions";
 import Image from "next/image";
 import { Spotlight } from "@/components/ui/spotlight-new";
 
@@ -568,14 +570,7 @@ export default function Home() {
           Be the first to experience Backlify. Join the waitlist today for early access and updates.
         </p>
 
-        <form className="waitlist-form" onSubmit={(e) => e.preventDefault()}>
-          <input type="email" placeholder="Enter your email" className="waitlist-input" required />
-          <button type="submit" className="waitlist-submit">Join</button>
-        </form>
-        
-        <p className="waitlist-stat">
-          <span className="waitlist-stat-bold">106</span> people already joined
-        </p>
+        <WaitlistForm />
       </section>
     </>
   );
