@@ -60,6 +60,27 @@ export default function Home() {
   const nextTestimonial = () => setActiveTestimonial((prev) => (prev + 1) % TESTIMONIALS.length);
   const prevTestimonial = () => setActiveTestimonial((prev) => (prev - 1 + TESTIMONIALS.length) % TESTIMONIALS.length);
 
+  const handleScroll = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    const href = e.currentTarget.getAttribute("href");
+    if (!href) return;
+    
+    if (href.startsWith("#")) {
+      e.preventDefault();
+      setIsMenuOpen(false);
+      const id = href.replace("#", "");
+      const element = document.getElementById(id);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth" });
+        // We removed window.history.pushState so the URL stays clean without the #
+      }
+    } else if (href === "/") {
+      e.preventDefault();
+      setIsMenuOpen(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.history.pushState(null, "", "/");
+    }
+  };
+
   return (
     <>
       {/* ── Floating Navbar ── */}
@@ -69,7 +90,7 @@ export default function Home() {
             <Image src="/backlify-logo.svg" alt="Backlify Logo" width={24} height={24} />
           </div>
           <div className="nav-actions">
-            <Link href="#waitlist" className="btn-primary nav-cta">Join Waitlist</Link>
+            <Link href="#waitlist" className="btn-primary nav-cta" onClick={handleScroll}>Join Waitlist</Link>
             <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
               {isMenuOpen ? (
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -88,10 +109,10 @@ export default function Home() {
         </div>
         
         <div className="navbar-links">
-          <Link href="/" onClick={() => setIsMenuOpen(false)}>Home</Link>
-          <Link href="#features" onClick={() => setIsMenuOpen(false)}>Features</Link>
-          <Link href="#how-it-works" onClick={() => setIsMenuOpen(false)}>How it works</Link>
-          <Link href="#benefits" onClick={() => setIsMenuOpen(false)}>Benefits</Link>
+          <Link href="/" onClick={handleScroll}>Home</Link>
+          <Link href="#features" onClick={handleScroll}>Features</Link>
+          <Link href="#how-it-works" onClick={handleScroll}>How it works</Link>
+          <Link href="#benefits" onClick={handleScroll}>Benefits</Link>
         </div>
       </nav>
 
@@ -109,10 +130,10 @@ export default function Home() {
         </p>
 
         <div className="hero-buttons relative z-10">
-          <Link href="#waitlist" className="btn-primary">
+          <Link href="#waitlist" className="btn-primary" onClick={handleScroll}>
             Join Waitlist
           </Link>
-          <Link href="#features" className="btn-secondary">
+          <Link href="#features" className="btn-secondary" onClick={handleScroll}>
             See features
           </Link>
         </div>
