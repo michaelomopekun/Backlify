@@ -82,7 +82,7 @@ export default function Home() {
   };
 
   return (
-    <>
+    <div data-surface="marketing" style={{ display: "contents" }}>
       {/* ── Floating Navbar ── */}
       <nav className={`navbar ${isMenuOpen ? "mobile-menu-open" : ""}`}>
         <div className="navbar-header">
@@ -593,6 +593,6 @@ export default function Home() {
 
         <WaitlistForm />
       </section>
-    </>
+    </div>
   );
 }

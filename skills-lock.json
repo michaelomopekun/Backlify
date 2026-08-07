@@ -25,6 +25,12 @@
       "skillPath": "skills/build-a-brand/SKILL.md",
       "computedHash": "517fbf71f7cc399a116a354774218ebee10afbc971118a23df7ca905322c3617"
     },
+    "emil-design-eng": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/emil-design-eng/SKILL.md",
+      "computedHash": "87067d79205fdedc6d682891027dd9c7335486c4b4dc2e785638941a9d2e6061"
+    },
     "explainer": {
       "source": "Pika-Labs/Pika-Plugins",
       "sourceType": "github",
@@ -37,6 +43,12 @@
       "skillPath": "skills/founder-product-video/SKILL.md",
       "computedHash": "1599e80f082c76d56252a259ae1e61e8bc0597ebdae938db10eeeefc434b4b86"
     },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "93f53fd1c0352d3d7ec17b8f73d7351bf76f4821e55d123c9d2abc2c53ba48e4"
+    },
     "kiss-cam": {
       "source": "Pika-Labs/Pika-Plugins",
       "sourceType": "github",
@@ -48,6 +60,12 @@
       "sourceType": "github",
       "skillPath": "skills/podcast/SKILL.md",
       "computedHash": "e309cdd20c68c97c7b948020b19c36f2c47fecee0acf1c19d9aa3d996c6c9c35"
+    },
+    "shadcn": {
+      "source": "shadcn/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "f99ef49d9909d380ca683ceb8dc8c25775c20ee38140112c394e037d8c11ee18"
     },
     "ugc-ads": {
       "source": "Pika-Labs/Pika-Plugins",

@@ -54,3 +54,10 @@ ugc-ads/
 backlify-brand-kit
 backlify-design
 temp/
+see/
+
+# AI skill directories and lock file
+/.agents/skills/
+/.claude/skills/
+skills-lock.json
+DESIGN_SYSTEM.md
