@@ -1,10 +1,42 @@
 import { BackupJobStatusType, BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 
-import { db, and, eq, desc, lt, or } from "../../index";
+import { db, and, eq, desc, lt, or, inArray } from "../../index";
 
 import { backupJobs } from "../../schema/backup-job";
 
+import { backupFiles } from "../../schema/backup-file";
+
+import { projects } from "../../schema/project";
+
 import { logger } from "shared/config/logger";
+
+
+// Statuses that mean "still moving" — the UI polls only while one of these is
+// present, then stops.
+export const ACTIVE_BACKUP_STATUSES = [
+
+    BACKUP_JOB_STATUS.PENDING,
+
+    BACKUP_JOB_STATUS.QUEUED,
+
+    BACKUP_JOB_STATUS.IN_PROGRESS,
+
+    BACKUP_JOB_STATUS.UPLOADING,
+
+] as const;
+
+
+export interface ListBackupsParams {
+
+    projectId?: string;
+
+    statuses?: readonly BackupJobStatusType[];
+
+    limit?: number;
+
+    offset?: number;
+
+}
 
 
 
@@ -105,6 +137,14 @@ export class BackupRepository {
                 
                 });
 
+            if (!result[0]) {
+
+                logger.warn({ jobId, initialJobStatus, newJobStatus }, "Backup job status transition skipped (no matching current status)");
+
+                return null;
+
+            }
+
             logger.info({jobId}, "Backup job status updated");
 
             return result[0];
@@ -118,6 +158,68 @@ export class BackupRepository {
         }
 
     } 
+
+    static async forceUpdateJobStatus(jobId: string, newJobStatus: BackupJobStatusType, errorMessage?: string) {
+
+        try {
+
+            logger.info({ jobId, newJobStatus }, "Force updating backup job status");
+
+            const updatePayload: Record<string, unknown> = {
+
+                status: newJobStatus,
+
+                updatedAt: new Date(),
+
+            };
+
+            if (errorMessage !== undefined) {
+
+                updatePayload.errorMessage = errorMessage;
+
+            }
+
+            if (newJobStatus === BACKUP_JOB_STATUS.FAILED) {
+
+                updatePayload.failedAt = new Date();
+
+            }
+
+            const result = await db.update(backupJobs)
+
+                .set(updatePayload as any)
+
+                .where(eq(backupJobs.id, jobId))
+
+                .returning({
+
+                    id: backupJobs.id,
+
+                    status: backupJobs.status,
+
+                });
+
+            if (!result[0]) {
+
+                logger.warn({ jobId, newJobStatus }, "Force update did not find backup job");
+
+                return null;
+
+            }
+
+            logger.info({ jobId, newJobStatus }, "Backup job status force updated");
+
+            return result[0];
+
+        } catch (error) {
+
+            logger.error({ jobId, error }, "Failed to force update backup job status");
+
+            throw error;
+
+        }
+
+    }
 
     static async getJobById(jobId: string) {
 
@@ -174,6 +276,87 @@ export class BackupRepository {
         } catch (error) {
 
             logger.error({ projectId, error }, "Failed to fetch successful backups");
+
+            throw error;
+
+        }
+
+    }
+
+
+    /**
+     * Cross-project backup feed. Joins the project (for its name) and the
+     * backup file (for size/download), both left joins: a job has no file
+     * until it finishes uploading, and older rows may carry the "default"
+     * project placeholder.
+     */
+    static async listBackups(params: ListBackupsParams = {}) {
+
+        const { projectId, statuses, limit = 50, offset = 0 } = params;
+
+        try {
+
+            const filters = [];
+
+            if (projectId) {
+
+                filters.push(eq(backupJobs.projectId, projectId));
+
+            }
+
+            if (statuses && statuses.length > 0) {
+
+                filters.push(inArray(backupJobs.status, statuses as any));
+
+            }
+
+            const rows = await db.select({
+
+                id: backupJobs.id,
+
+                projectId: backupJobs.projectId,
+
+                projectName: projects.name,
+
+                status: backupJobs.status,
+
+                startedAt: backupJobs.startedAt,
+
+                completedAt: backupJobs.completedAt,
+
+                failedAt: backupJobs.failedAt,
+
+                errorMessage: backupJobs.errorMessage,
+
+                createdAt: backupJobs.createdAt,
+
+                fileId: backupFiles.id,
+
+                fileName: backupFiles.fileName,
+
+                fileSize: backupFiles.fileSize,
+
+            })
+
+                .from(backupJobs)
+
+                .leftJoin(projects, eq(backupJobs.projectId, projects.id))
+
+                .leftJoin(backupFiles, eq(backupFiles.backupJobId, backupJobs.id))
+
+                .where(filters.length > 0 ? and(...filters) : undefined)
+
+                .orderBy(desc(backupJobs.createdAt))
+
+                .limit(limit)
+
+                .offset(offset);
+
+            return rows;
+
+        } catch (error) {
+
+            logger.error({ projectId, error }, "Failed to list backups");
 
             throw error;
 

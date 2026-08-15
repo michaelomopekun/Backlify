@@ -10,7 +10,12 @@ import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 
 import { BackupJobStatusType } from "shared/constants/backupJobStatus";
 
-import { BackupRepository, ProjectRepository } from "db";
+import { BackupRepository, ProjectRepository, ACTIVE_BACKUP_STATUSES } from "db";
+
+import { BACKUP_JOB_STATUS_VALUES } from "shared/constants/backupJobStatus";
+
+
+export const dynamic = "force-dynamic";
 
 
 const CreateBackupInputSchema = z.object({
@@ -98,6 +103,87 @@ export async function POST(req: NextRequest) {
     } catch (error) {
 
         console.error("Failed to create backup job:", error);
+
+        return NextResponse.json({
+
+            success: false,
+
+            message: "Internal server error",
+
+            details: error instanceof Error ? error.message : String(error)
+
+        }, { status: 500 });
+
+    }
+
+}
+
+
+export async function GET(req: NextRequest) {
+
+    try {
+
+        const { searchParams } = new URL(req.url);
+
+        const projectId = searchParams.get("projectId") ?? undefined;
+
+        const status = searchParams.get("status");
+
+        const limit = Math.min(Number(searchParams.get("limit")) || 50, 200);
+
+        const offset = Math.max(Number(searchParams.get("offset")) || 0, 0);
+
+
+        // `status=active` is the shorthand the polling client uses; otherwise a
+        // comma-separated list of concrete statuses.
+        let statuses;
+
+        if (status === "active") {
+
+            statuses = ACTIVE_BACKUP_STATUSES;
+
+        } else if (status) {
+
+            const requested = status.split(",").map((s) => s.trim());
+
+            const invalid = requested.filter(
+
+                (s) => !(BACKUP_JOB_STATUS_VALUES as readonly string[]).includes(s)
+
+            );
+
+            if (invalid.length > 0) {
+
+                return NextResponse.json({
+
+                    success: false,
+
+                    error: `Unknown status: ${invalid.join(", ")}`
+
+                }, { status: 400 });
+
+            }
+
+            statuses = requested as any;
+
+        }
+
+
+        const backups = await BackupRepository.listBackups({ projectId, statuses, limit, offset });
+
+
+        return NextResponse.json({
+
+            success: true,
+
+            backups,
+
+        });
+
+
+    } catch (error) {
+
+        console.error("Failed to list backup jobs:", error);
 
         return NextResponse.json({
 

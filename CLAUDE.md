@@ -15,7 +15,7 @@ Package manager is **npm** — use `npm`/`npx` (not pnpm or bun) for every insta
 
 When creating or reshaping any UI in `app/web`, these sources work **together** — load all of them, in this order of authority:
 
-1. **`app/web/DESIGN_SYSTEM.md`** — the source of truth for the **product/dashboard** UI. Colors, the slate ramp, brand amber, the status→color table, type scale, spacing, motion specs, and component recipes are defined here. **This doc wins on any Backlify-specific value.** Read it before writing dashboard UI.
+1. **`app/web/DESIGN_SYSTEM.md`** — the source of truth for the **product/dashboard** UI. Colors, the slate ramp, brand amber, the status→color table, type scale, spacing, motion specs, and component recipes are defined here. **This doc wins on any Backlify-specific value.** Read it before writing dashboard UI. **Note: this file is gitignored (local-only), so it may be absent on a fresh clone.** When it's missing, the committed `app/web/src/app/globals.css` token block is the fallback source of truth — the `:root` and `[data-surface="marketing"]` tokens there are the same values §4 defines.
 2. **`shadcn` skill** — how to build the components: composition rules, semantic tokens (`bg-primary`, not raw hex in markup), CLI usage. Use existing components before custom markup.
 3. **`frontend-design` skill** — macro craft and taste: typography, layout, restraint, avoiding templated defaults.
 4. **`emil-design-eng` skill** — micro polish and feel: interaction states, animation decisions, and the invisible details that make components feel right. Applies during implementation, once structure and tokens are set.
@@ -29,6 +29,14 @@ When creating or reshaping any UI in `app/web`, these sources work **together** 
 
 The two surfaces (**marketing** landing vs **product** dashboard) are intentionally distinct — see `DESIGN_SYSTEM.md §0`. Don't apply the landing's chunky push-button / serif treatment to the dashboard, or vice-versa.
 
-### shadcn is not initialized yet
+### shadcn setup
 
-There is no `components.json`. Before adding the first shadcn component, run `npx shadcn@latest init` in `app/web` and align its output with the token block in `DESIGN_SYSTEM.md §4` (dark-native, Tailwind v4, `@tabler` icons, JetBrains Mono). Until then, the `shadcn` skill's auto-injected project context (`shadcn info`) will be empty — that's expected.
+shadcn is initialized in `app/web` (`components.json`: `radix-nova` style, `iconLibrary: tabler`, CSS at `src/app/globals.css`, Tailwind v4). Add components with `npx shadcn@latest add <name>` from `app/web`.
+
+Tokens are already aligned to §4 and split by surface in `globals.css`:
+- **`:root`** holds the dark-native **dashboard** tokens (§4) — the global default, so shadcn components (and their portals: Dialog, DropdownMenu, Popover) theme correctly everywhere.
+- **`[data-surface="marketing"]`** holds the landing tokens; `page.tsx` wraps the landing in it, keeping the marketing look intact.
+
+So new shadcn components inherit dashboard tokens by default. If you ever render one inside the marketing surface, expect it to pick up the landing palette.
+
+Heads up: `init` pulled in `lucide-react` as a dependency even though the icon library is `tabler`. It's unused — keep using `@tabler/icons-react`.

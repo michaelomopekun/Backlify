@@ -90,6 +90,7 @@
   --color-info: var(--info);
   --color-warning: var(--warning);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-sidebar: var(--sidebar);
@@ -118,13 +119,25 @@
 
   --radius-sm: 6px;
   --radius-md: 10px;
+  --radius-lg: 12px;
   --radius-xl: 16px;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/*
+ * Baseline reset. MUST stay inside @layer base: unlayered declarations outrank
+ * every cascade layer, so a bare `* { padding: 0 }` here would beat Tailwind's
+ * utilities (which live in @layer utilities) and silently kill `p-4`, `px-6`,
+ * `pl-60`, … across the whole product surface — the dashboard sidebar offset
+ * regressed exactly this way. Layering it lets utilities override as intended.
+ * (Tailwind's own preflight already resets these in @layer base; this is kept
+ * for intent/explicitness and is harmless once correctly layered.)
+ */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
 }
 
 html {
@@ -139,9 +152,36 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-h1, h2, h3, h4, h5, h6, .font-serif {
-  font-family: var(--font-serif), serif;
-  font-weight: 400;
+/*
+ * Element-level heading defaults. Both rules live in @layer base so Tailwind's
+ * weight utilities (@layer utilities, a later layer) can override them. Left
+ * unlayered, the `font-weight: inherit` below would outrank every `font-medium`
+ * / `font-semibold` on the dashboard and silently flatten them to the inherited
+ * 400 — across a layer boundary it's the layer that decides, never specificity.
+ *
+ * First rule: the marketing voice (Instrument Serif). It targets bare elements,
+ * so it also reaches the dashboard.
+ * Second rule: the product surface takes its headings back to JetBrains Mono
+ * (serif is marketing-only, DESIGN_SYSTEM §0). Higher specificity lets it win
+ * over the first rule within the layer; written additively so the landing is
+ * untouched. `font-weight: inherit` clears the serif rule's 400 and then defers
+ * to whatever weight utility the heading carries (or body's 400 if none).
+ *
+ * Marketing headings style themselves through hand-written classes
+ * (.hero-headline, .feature-title, …) with no weight utilities, so layering
+ * these element rules leaves the landing unchanged.
+ */
+@layer base {
+  h1, h2, h3, h4, h5, h6, .font-serif {
+    font-family: var(--font-serif), serif;
+    font-weight: 400;
+  }
+
+  [data-surface="product"] :is(h1, h2, h3, h4, h5, h6),
+  body:has([data-surface="product"]) :is(h1, h2, h3, h4, h5, h6) {
+    font-family: var(--font-sans), monospace;
+    font-weight: inherit;
+  }
 }
 
 /* Floating Navbar */

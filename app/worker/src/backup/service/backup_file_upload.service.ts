@@ -39,15 +39,9 @@ export interface BackupFileUploadResult {
 
 
 export class BackupFileUploadService {
-
-    private storageService: StorageService;
-
     private encryptionService: EncryptionService;
 
     constructor() {
-
-        this.storageService = new StorageService();
-
         this.encryptionService = new EncryptionService();
 
     }
@@ -137,7 +131,9 @@ export class BackupFileUploadService {
 
                 logger.info({ jobId, cloudKey }, "Uploading backup file to cloud storage");
 
-                await this.storageService.uploadFile(cloudKey, filePath);
+                const storageService = new StorageService();
+
+                await storageService.uploadFile(cloudKey, finalFilePath);
 
                 storageProvider = "r2";
 

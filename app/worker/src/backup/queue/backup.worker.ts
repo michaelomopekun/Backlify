@@ -19,6 +19,29 @@ import { v4 as uuidv4 } from "uuid";
 import { CleanupService } from "../service/cleanup.service";
 
 
+async function transitionBackupStatus(job: any, fromStatus: BackupJobStatusType, toStatus: BackupJobStatusType, opts?: { forceOnMismatch?: boolean; errorMessage?: string }) {
+
+    const updated = await BackupRepository.updateJobStatus(job.data.jobId, fromStatus, toStatus);
+
+    if (!updated && opts?.forceOnMismatch) {
+
+        logger.warn({ jobId: job.id, fromStatus, toStatus }, "Status mismatch detected; forcing status transition");
+
+        await BackupRepository.forceUpdateJobStatus(job.data.jobId, toStatus, opts.errorMessage);
+
+    }
+
+    await job.updateData({
+
+        ...job.data,
+
+        jobStatus: toStatus,
+
+    });
+
+}
+
+
 
 
 export const backupWorker = new Worker<any>(
@@ -121,24 +144,17 @@ export const backupWorker = new Worker<any>(
 
         // 1 update status from queued to running
 
-        await BackupRepository.updateJobStatus(
-            
-            job.data.jobId, 
-            
-            job.data.jobStatus, 
-            
-            BACKUP_JOB_STATUS.IN_PROGRESS
-        
+        await transitionBackupStatus(
+
+            job,
+
+            job.data.jobStatus as BackupJobStatusType,
+
+            BACKUP_JOB_STATUS.IN_PROGRESS as BackupJobStatusType,
+
+            { forceOnMismatch: true }
+
         );
-        
-        // save the current status to job.data.jobStatus for alignment
-        await job.updateData({
-            
-            ...job.data,
-            
-            jobStatus: BACKUP_JOB_STATUS.IN_PROGRESS,
-            
-        });
 
         logger.info({ jobId : job.id }, "updated job status to in_progress");
 
@@ -157,23 +173,17 @@ export const backupWorker = new Worker<any>(
         if (backup_result.success) {
 
             // 4 transition to UPLOADING — tracks cloud upload phase
-            await BackupRepository.updateJobStatus(
-            
-                job.data.jobId,
-            
-                job.data.jobStatus,
-            
-                BACKUP_JOB_STATUS.UPLOADING,
-            
-            );
+            await transitionBackupStatus(
 
-            await job.updateData({
-                
-                ...job.data,
-                
-                jobStatus: BACKUP_JOB_STATUS.UPLOADING,
-                
-            });
+                job,
+
+                job.data.jobStatus as BackupJobStatusType,
+
+                BACKUP_JOB_STATUS.UPLOADING as BackupJobStatusType,
+
+                { forceOnMismatch: true }
+
+            );
 
             logger.info({ jobId: job.id }, "Updated job status to uploading");
 
@@ -191,14 +201,16 @@ export const backupWorker = new Worker<any>(
             });
 
             // 6 update job status to completed
-            await BackupRepository.updateJobStatus(
-            
-                job.data.jobId,
-            
-                BACKUP_JOB_STATUS.UPLOADING,
-            
-                BACKUP_JOB_STATUS.COMPLETED,
-            
+            await transitionBackupStatus(
+
+                job,
+
+                BACKUP_JOB_STATUS.UPLOADING as BackupJobStatusType,
+
+                BACKUP_JOB_STATUS.COMPLETED as BackupJobStatusType,
+
+                { forceOnMismatch: true }
+
             );
             
             // 7 log completion
@@ -260,20 +272,36 @@ backupWorker.on("failed", async (job, err) => {
 
     logger.error({ jobId: job?.id, err: err.message, attempts: job?.attemptsMade }, "Backup job failed");
 
-    // Mark as FAILED in DB after all retries are exhausted
+    // Mark as FAILED in DB only after all retries are exhausted
     if (job) {  
 
+        const maxAttempts = job.opts.attempts ?? 1;
+
+        if (job.attemptsMade < maxAttempts) {
+
+            logger.info({ jobId: job.id, attemptsMade: job.attemptsMade, maxAttempts }, "Job failed but retries remain; skipping FAILED status update");
+
+            return;
+
+        }
+
         try {
-        
-            await BackupRepository.updateJobStatus(
-        
+
+            const updated = await BackupRepository.updateJobStatus(
+
                 job.data.jobId,
-        
+
                 job.data.jobStatus,
-        
+
                 BACKUP_JOB_STATUS.FAILED,
-        
+
             );
+
+            if (!updated) {
+
+                await BackupRepository.forceUpdateJobStatus(job.data.jobId, BACKUP_JOB_STATUS.FAILED, err.message);
+
+            }
             
         
         } catch (updateErr) {

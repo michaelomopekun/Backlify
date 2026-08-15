@@ -164,6 +164,24 @@ export class PgDumpService {
 
         return new Promise((resolve) => {
 
+            let settled = false;
+
+            const settle = (result: { success: boolean; error?: string }) => {
+
+                if (settled) {
+
+                    return;
+
+                }
+
+                settled = true;
+
+                clearTimeout(timeoutHandle);
+
+                resolve(result);
+
+            };
+
             const pgDumpPath = process.env.PG_DUMP_PATH || 
                 (process.platform === 'win32' ? 'C:\\Program Files\\PostgreSQL\\16\\bin\\pg_dump.exe' : 'pg_dump');
 
@@ -220,14 +238,24 @@ export class PgDumpService {
 
             }, timeout);
 
+            backupProcess.on("error", (error) => {
+
+                settle({
+
+                    success: false,
+
+                    error: `failed to start pg_dump: ${error.message}`,
+
+                });
+
+            });
+
             // handle process close
             backupProcess.on('close', (code: number | null) => {
 
-                clearTimeout(timeoutHandle);
-
                 if (timedOut) {
-                
-                    resolve({
+
+                    settle({
                 
                         success: false,
                 
@@ -241,12 +269,12 @@ export class PgDumpService {
 
                 
                 if (code === 0) {
-                
-                    resolve({ success: true });
+
+                    settle({ success: true });
                 
                 } else {
-                
-                    resolve({
+
+                    settle({
                 
                         success: false,
                 

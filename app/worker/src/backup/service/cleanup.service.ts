@@ -7,15 +7,8 @@ import { logger } from "shared/config/logger";
  
  
 export class CleanupService {
- 
-    private storageService: StorageService;
- 
- 
-    constructor() {
- 
-        this.storageService = new StorageService();
- 
-    }
+
+    constructor() {}
  
  
     /**
@@ -92,8 +85,10 @@ export class CleanupService {
                 if (backupFile.storageProvider === "r2" || backupFile.storageProvider === "aws") {
  
                     try {
- 
-                        await this.storageService.deleteFile(backupFile.filePath);
+
+                        const storageService = new StorageService();
+
+                        await storageService.deleteFile(backupFile.filePath);
  
                         logger.info({ jobId, cloudKey: backupFile.filePath }, "Deleted backup file from cloud storage");
  

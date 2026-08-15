@@ -4,9 +4,12 @@ import postgres from 'postgres';
 
 
 
-let dbInstance: any = null;
+type Database = ReturnType<typeof drizzle>;
 
-export function getDb() {
+
+let dbInstance: Database | null = null;
+
+export function getDb(): Database {
 
   if (!dbInstance) {
 
@@ -21,14 +24,21 @@ export function getDb() {
 }
 
 
-export const db = {
+// Proxy so `DATABASE_URL` is still read lazily (on first query, not at import
+// time), while callers get the fully-typed Drizzle instance — including
+// `.select({...})`, joins, and everything the old 4-method shim left out.
+export const db: Database = new Proxy({} as Database, {
 
-  insert: (table: any) => getDb().insert(table),
+  get: (_target, prop) => {
 
-  update: (table: any) => getDb().update(table),
+    const instance = getDb();
 
-  select: (table: any) => getDb().select(table),
+    const value = (instance as any)[prop];
 
-  delete: (table: any) => getDb().delete(table),
+    // Bind methods to the real instance so Drizzle's internal `this` is never
+    // the proxy.
+    return typeof value === "function" ? value.bind(instance) : value;
 
-} as any;
+  },
+
+});
