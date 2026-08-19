@@ -65,10 +65,15 @@ export default async function BackupsPage({
   const { status } = await searchParams;
   const active: FilterKey = isFilterKey(status) ? status : "all";
 
-  const backups = await BackupRepository.listBackups({
-    statuses: FILTERS[active].statuses,
-    limit: PAGE_SIZE,
-  });
+  let backups: any[] = [];
+  try {
+    backups = await BackupRepository.listBackups({
+      statuses: FILTERS[active].statuses,
+      limit: PAGE_SIZE,
+    });
+  } catch (err) {
+    console.warn("Database offline during backups list query:", err);
+  }
 
   return (
     <>

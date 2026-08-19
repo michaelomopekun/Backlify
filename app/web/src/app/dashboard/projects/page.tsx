@@ -16,10 +16,18 @@ import { getProjectSummaries } from "@/lib/queries";
 export const dynamic = "force-dynamic";
 
 export default async function ProjectsPage() {
-  const [projects, summaries] = await Promise.all([
-    listVisibleProjects(),
-    getProjectSummaries(),
-  ]);
+  let projects: any[] = [];
+  let summaries = new Map();
+  try {
+    const results = await Promise.all([
+      listVisibleProjects().catch(() => []),
+      getProjectSummaries().catch(() => new Map()),
+    ]);
+    projects = results[0] || [];
+    summaries = results[1] || new Map();
+  } catch (err) {
+    console.warn("Database offline during projects query:", err);
+  }
 
   return (
     <>
