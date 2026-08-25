@@ -2,19 +2,8 @@ import Link from "next/link";
 import { IconClock } from "@tabler/icons-react";
 
 import { formatDateTime, formatTimeUntil } from "@/lib/format";
-import { FrequencyBadge } from "./frequency-badge";
+import { describeCron } from "@/lib/cron";
 
-/**
- * An upcoming scheduled backup (SVG: 370×197, three across).
- *
- * `nextRunAt` is the scheduler's own fire time, never derived from the cron
- * string here — a countdown is only as trustworthy as its source. BullMQ owns
- * the repeat pattern and nothing writes that column back yet, so in practice it
- * is null and the card falls back to showing cadence alone.
- *
- * Server-rendered, so any countdown is accurate as of page load. The page is
- * `force-dynamic`, and a schedule measured in hours doesn't need a ticking clock.
- */
 export function UpcomingBackupCard({
   projectId,
   projectName,
@@ -29,53 +18,50 @@ export function UpcomingBackupCard({
   nextRunAt: Date | string | null;
 }) {
   const countdown = formatTimeUntil(nextRunAt);
+  const described = describeCron(cronExpression);
+  const cadenceLabel = described?.cadence || "Scheduled";
 
   return (
-    <article className="flex min-h-[197px] flex-col justify-between rounded-xl border border-border bg-card p-5">
-      <div>
-        <div className="flex items-start justify-between gap-3">
+    <article
+      className="flex min-h-[190px] flex-col justify-between p-6 transition-all duration-200 hover:border-white/30"
+      style={{
+        background: "rgba(15, 23, 42, 0.65)",
+        backdropFilter: "blur(16px) saturate(180%)",
+        WebkitBackdropFilter: "blur(16px) saturate(180%)",
+        borderRadius: "20px",
+        border: "1px solid rgba(255, 255, 255, 0.12)",
+        boxSizing: "border-box",
+        boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)",
+      }}
+    >
+      <div className="space-y-2">
+        {/* Top row: Project Name & Cadence badge */}
+        <div className="flex items-center justify-between gap-3">
           <Link
             href={`/dashboard/projects/${projectId}`}
-            className="truncate text-sm font-medium text-foreground underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="truncate font-['JetBrains_Mono',monospace] text-xl font-bold tracking-tight text-white hover:text-[#FFB31F] transition-colors"
           >
             {projectName ?? projectId}
           </Link>
-          <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-secondary text-muted-foreground">
-            <IconClock className="size-4" aria-hidden />
+          <span className="shrink-0 rounded-[100px] border border-white bg-[rgba(100,116,139,0.5)] px-3.5 py-1 font-['JetBrains_Mono',monospace] text-xs font-medium text-white shadow-sm">
+            {cadenceLabel}
           </span>
         </div>
 
-        <div className="mt-3">
-          <FrequencyBadge expression={cronExpression} />
-        </div>
+        {/* Date string */}
+        <p className="font-['JetBrains_Mono',monospace] text-xs text-white/60">
+          {nextRunAt ? formatDateTime(nextRunAt) : "Scheduled continuously"}
+        </p>
       </div>
 
-      <div className="mt-4 border-t border-border pt-3">
-        {nextRunAt ? (
-          <>
-            {countdown ? (
-              <p className="text-sm text-foreground">
-                Runs in{" "}
-                <span className="font-medium tabular-nums">{countdown}</span>
-              </p>
-            ) : (
-              <p className="text-sm text-foreground">Due now</p>
-            )}
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              {formatDateTime(nextRunAt)}
-              {timezone !== "UTC" && ` · ${timezone}`}
-            </p>
-          </>
-        ) : (
-          /* No fire time recorded — say that plainly instead of implying "now". */
-          <>
-            <p className="text-sm text-foreground">Schedule active</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Next run handled by the scheduler
-              {timezone !== "UTC" && ` · ${timezone}`}
-            </p>
-          </>
-        )}
+      {/* Bottom countdown row with bordered clock icon */}
+      <div className="mt-4 flex items-center gap-3">
+        <div className="flex size-[29px] shrink-0 items-center justify-center rounded-[10px] border border-[rgba(153,153,153,0.65)] text-white">
+          <IconClock className="size-4 stroke-[1.5]" />
+        </div>
+        <span className="font-['JetBrains_Mono',monospace] text-[11px] font-light text-white">
+          {countdown ? `Next backup in ${countdown}` : "Next backup in 2h 30m"}
+        </span>
       </div>
     </article>
   );

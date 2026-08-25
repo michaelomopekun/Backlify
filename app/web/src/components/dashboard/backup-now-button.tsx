@@ -52,7 +52,7 @@ export function BackupNowButton({
         ) : (
           <IconPlayerPlay className="size-4" aria-hidden />
         )}
-        {pending ? "Starting…" : "Back up now"}
+        {pending ? "Starting…" : ""}
       </Button>
       {error && (
         <p role="alert" className="max-w-xs text-right text-xs text-destructive">

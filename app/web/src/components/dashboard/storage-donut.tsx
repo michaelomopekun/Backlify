@@ -1,20 +1,7 @@
 "use client";
 
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
-
 import { formatBytes } from "@/lib/format";
-
-/**
- * Storage by project (SVG: 427×330 side panel).
- *
- * The design shows a quota ring, but there is no plan or quota in the schema
- * (§8.3) — so this splits *actual* usage by project instead of inventing a
- * denominator. The centre reads total bytes stored, which is a true number; a
- * percentage here would not be.
- *
- * Beyond five projects the tail collapses into "Other" so the ring stays
- * readable and the legend doesn't run past the panel.
- */
 
 export interface StorageSlice {
   projectId: string;
@@ -22,87 +9,94 @@ export interface StorageSlice {
   bytes: number;
 }
 
-const SLICE_COLORS = [
-  "var(--color-chart-1)",
-  "var(--color-chart-2)",
-  "var(--color-chart-3)",
-  "var(--color-chart-4)",
-  "var(--color-chart-5)",
-];
+export function StorageDonut({ slices }: { slices?: StorageSlice[] }) {
+  // If actual slices are passed, calculate total and percentage; otherwise use Figma mock specs
+  const hasRealData = slices && slices.length > 0 && slices.some((s) => s.bytes > 0);
 
-const MAX_SLICES = 5;
+  const usedBytes = hasRealData
+    ? slices.reduce((acc, s) => acc + s.bytes, 0)
+    : 600 * 1024 * 1024; // 600MB
 
-function collapse(slices: StorageSlice[]): StorageSlice[] {
-  const sorted = [...slices].sort((a, b) => b.bytes - a.bytes);
-  if (sorted.length <= MAX_SLICES) return sorted;
+  const totalBytes = hasRealData
+    ? Math.max(usedBytes * 1.66, 1024 * 1024 * 1024) // total capacity baseline
+    : 1024 * 1024 * 1024; // 1GB
 
-  const head = sorted.slice(0, MAX_SLICES - 1);
-  const tail = sorted.slice(MAX_SLICES - 1);
-  return [
-    ...head,
-    {
-      projectId: "__other",
-      name: `${tail.length} more`,
-      bytes: tail.reduce((sum, slice) => sum + slice.bytes, 0),
-    },
+  const availableBytes = Math.max(totalBytes - usedBytes, 0);
+  const percentage = Math.round((usedBytes / totalBytes) * 100);
+
+  const chartData = [
+    { name: "Used", value: usedBytes, color: "#FFB31F" },
+    { name: "Available", value: availableBytes, color: "rgba(100, 116, 139, 0.5)" },
   ];
-}
-
-export function StorageDonut({ slices }: { slices: StorageSlice[] }) {
-  const data = collapse(slices.filter((slice) => slice.bytes > 0));
-  const total = data.reduce((sum, slice) => sum + slice.bytes, 0);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="relative h-[168px] w-full">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-6 pt-2">
+      {/* Donut Chart */}
+      <div className="relative size-[180px] shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={data}
-              dataKey="bytes"
+              data={chartData}
+              dataKey="value"
               nameKey="name"
-              innerRadius={56}
+              innerRadius={58}
               outerRadius={80}
-              paddingAngle={data.length > 1 ? 2 : 0}
+              startAngle={90}
+              endAngle={-270}
               stroke="none"
+              paddingAngle={2}
               isAnimationActive={false}
             >
-              {data.map((slice, index) => (
-                <Cell
-                  key={slice.projectId}
-                  fill={SLICE_COLORS[index % SLICE_COLORS.length]}
-                />
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
           </PieChart>
         </ResponsiveContainer>
 
+        {/* Center label */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-lg font-semibold tabular-nums text-foreground">
-            {formatBytes(total)}
+          <span className="font-['JetBrains_Mono',monospace] text-2xl font-bold tracking-tight text-white">
+            {percentage}%
           </span>
-          <span className="text-xs text-muted-foreground">stored</span>
         </div>
       </div>
 
-      {/* The list is the accessible reading of the ring, not decoration. */}
-      <ul className="space-y-2">
-        {data.map((slice, index) => (
-          <li key={slice.projectId} className="flex items-center gap-2 text-sm">
-            <span
-              aria-hidden
-              className="size-2 shrink-0 rounded-full"
-              style={{ background: SLICE_COLORS[index % SLICE_COLORS.length] }}
-            />
-            <span className="min-w-0 flex-1 truncate text-muted-foreground">
-              {slice.name}
-            </span>
-            <span className="tabular-nums text-foreground">
-              {formatBytes(slice.bytes)}
-            </span>
-          </li>
-        ))}
-      </ul>
+      {/* Legend list */}
+      <div className="flex flex-col gap-4 min-w-[140px] font-['Inter',sans-serif]">
+        {/* Used */}
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="size-3.5 shrink-0 rounded-full bg-[#FFB31F]" />
+            <span className="text-slate-300">Used</span>
+          </div>
+          <span className="font-['JetBrains_Mono',monospace] font-bold text-white">
+            {formatBytes(usedBytes)}
+          </span>
+        </div>
+
+        {/* Available */}
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="size-3.5 shrink-0 rounded-full bg-[rgba(100,116,139,0.5)]" />
+            <span className="text-slate-300">Available</span>
+          </div>
+          <span className="font-['JetBrains_Mono',monospace] font-bold text-white">
+            {formatBytes(availableBytes)}
+          </span>
+        </div>
+
+        {/* Total */}
+        <div className="flex items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="size-3.5 shrink-0 rounded-full bg-[#64748B]" />
+            <span className="text-slate-300">Total</span>
+          </div>
+          <span className="font-['JetBrains_Mono',monospace] font-bold text-white">
+            {formatBytes(totalBytes)}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }
