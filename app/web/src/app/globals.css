@@ -1,61 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
-/* ── §4 Dashboard tokens (global default, dark-native) ── */
+/* ── Dashboard tokens (dark-native, Supabase-structural) ── */
 :root {
-  --background: #080B14;
-  --foreground: #E2E8F0;
+  --background: #0a0a0a;
+  --foreground: #f9fafb;
 
-  --card: #0F172A;
-  --card-foreground: #E2E8F0;
-  --popover: #0F172A;
-  --popover-foreground: #E2E8F0;
+  --card: #111111;
+  --card-foreground: #f9fafb;
+  --popover: #111111;
+  --popover-foreground: #f9fafb;
 
   --primary: #FFB31F;
-  --primary-foreground: #080B14;
+  --primary-foreground: #000000;
 
-  --secondary: #1E293B;
-  --secondary-foreground: #E2E8F0;
+  --secondary: #1a1a1a;
+  --secondary-foreground: #a1a1a1;
 
-  --muted: #151E33;
-  --muted-foreground: #64748B;
+  --muted: #1a1a1a;
+  --muted-foreground: #737373;
 
-  --accent: #1E293B;
-  --accent-foreground: #FFFFFF;
+  --accent: #1a1a1a;
+  --accent-foreground: #f9fafb;
 
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
 
-  --success: #10B981;
+  --success: #3ECF8E;
   --info: #3B82F6;
   --warning: #FFB31F;
 
-  --border: #1E293B;
-  --border-strong: #39455A;
-  --input: #1E293B;
+  --border: #262626;
+  --border-strong: #404040;
+  --input: #1a1a1a;
   --ring: #FFB31F;
 
   /* Sidebar */
-  --sidebar: #0F172A;
-  --sidebar-foreground: #E2E8F0;
+  --sidebar: #0f0f0f;
+  --sidebar-foreground: #f9fafb;
   --sidebar-primary: #FFB31F;
-  --sidebar-primary-foreground: #080B14;
-  --sidebar-accent: rgba(255,179,31,0.12);
+  --sidebar-primary-foreground: #000000;
+  --sidebar-accent: rgba(255,179,31,0.10);
   --sidebar-accent-foreground: #FFB31F;
-  --sidebar-border: #1E293B;
+  --sidebar-border: #1f1f1f;
   --sidebar-ring: #FFB31F;
 
   /* Charts */
   --chart-1: #FFB31F;
-  --chart-2: #3B82F6;
-  --chart-3: #10B981;
-  --chart-4: #6366F1;
-  --chart-5: #64748B;
+  --chart-2: #3ECF8E;
+  --chart-3: #3B82F6;
+  --chart-4: #EF4444;
+  --chart-5: #737373;
 
-  --radius: 0.75rem;
+  --radius: 0.375rem;
 }
 
 /* ── Marketing landing tokens (scoped to the landing surface) ── */
@@ -113,7 +114,7 @@
   --color-surface: var(--surface);
   --color-surface-light: var(--surface-light);
 
-  --font-sans: var(--font-jetbrains-mono);
+  --font-sans: 'Inter', sans-serif;
   --font-mono: var(--font-jetbrains-mono);
   --font-serif: var(--font-instrument-serif);
 
@@ -147,7 +148,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), monospace;
+  font-family: var(--font-sans), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
