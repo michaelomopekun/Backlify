@@ -131,8 +131,8 @@ export default async function ProjectLayout({ children, params }: Props) {
           </div>
         </header>
 
-        {/* Main Content Area */}
-        <main className="flex-1 p-7 bg-[#0c0c0c]">
+        {/* Main Content Area with Generous Whitespace & Cushion from Header */}
+        <main className="flex-1 px-10 pt-10 pb-16 bg-[#0c0c0c] max-w-[1600px] w-full">
           {children}
         </main>
       </SidebarInset>
