@@ -9,6 +9,8 @@ export interface CreateProjectParams {
 
   id: string;
 
+  orgId: string;
+
   name: string;
 
   databaseUrl: string;
@@ -38,6 +40,8 @@ export class ProjectRepository {
       const result = await db.insert(projects).values({
 
         id: params.id,
+
+        orgId: params.orgId,
 
         name: params.name,
 

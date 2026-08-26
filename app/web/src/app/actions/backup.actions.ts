@@ -77,6 +77,7 @@ export async function createProject(formData: FormData) {
   try {
     const project = await ProjectRepository.createProject({
       id: `proj-${uuidv4().substring(0, 12)}`,
+      orgId: "org-placeholder", // TODO: resolve from session when auth is wired
       name,
       databaseUrl,
     });

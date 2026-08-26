@@ -12,6 +12,8 @@ import { logger } from "shared/config/logger";
 
 const CreateProjectInputSchema = z.object({
 
+  orgId: z.string().min(1, "Organization ID is required"),
+
   name: z.string().min(1, "Name is required").max(255),
 
   databaseUrl: z.string().url("Invalid database URL format"),
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     
-    const { name, databaseUrl } = validated.data;
+    const { orgId, name, databaseUrl } = validated.data;
     
     const id = `proj-${uuidv4().substring(0, 12)}`;
 
@@ -50,6 +52,8 @@ export async function POST(req: NextRequest) {
     const project = await ProjectRepository.createProject({
 
       id,
+
+      orgId,
 
       name,
 

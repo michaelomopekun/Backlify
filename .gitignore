@@ -58,7 +58,9 @@ see/
 
 # AI skill directories and lock file
 /.agents/skills/
+/.agents/rules/
 /.claude/skills/
+/.agents/
 skills-lock.json
 DESIGN_SYSTEM.md
 marketing
