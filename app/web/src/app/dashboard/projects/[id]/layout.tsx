@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 
-import { Topbar } from "@/components/dashboard/topbar";
-import { ProjectTabs } from "@/components/dashboard/project-tabs";
-import { BackupNowButton } from "@/components/dashboard/backup-now-button";
+import { Topbar } from "@/components/layout/topbar";
+import { ProjectTabs } from "@/components/projects/overview/project-tabs";
+import { BackupNowButton } from "@/components/projects/backups/backup-now-button";
 import { getProject } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";

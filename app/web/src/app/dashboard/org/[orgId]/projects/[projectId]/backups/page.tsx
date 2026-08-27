@@ -1,4 +1,4 @@
-import { BackupsPageClient } from "@/components/dashboard/backups-page-client";
+import { BackupsPageClient } from "@/components/projects/backups/backups-page-client";
 
 export const metadata = {
   title: "Backups | Backlify",

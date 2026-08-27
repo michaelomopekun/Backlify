@@ -1,6 +1,6 @@
 import { ProjectRepository, BackupRepository } from "db";
 import { getCurrentUser } from "@/lib/current-user";
-import { ProjectOverviewHeader } from "@/components/dashboard/project-overview-client";
+import { ProjectOverviewHeader } from "@/components/projects/overview/project-overview-client";
 
 export const dynamic = "force-dynamic";
 

@@ -3,7 +3,7 @@ import { IconSearch, IconLayoutGrid, IconList, IconDotsVertical, IconHelp, IconB
 import { ProjectRepository, OrganizationRepository } from "db";
 import { getCurrentUser } from "@/lib/current-user";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { OrgSidebar } from "@/components/dashboard/app-sidebar";
+import { OrgSidebar } from "@/components/layout/app-sidebar";
 import { Separator } from "@/components/ui/separator";
 import {
   Breadcrumb,

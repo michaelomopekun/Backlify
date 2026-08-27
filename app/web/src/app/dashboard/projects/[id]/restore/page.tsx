@@ -1,9 +1,9 @@
 import { IconDatabaseOff } from "@tabler/icons-react";
 
-import { Panel } from "@/components/dashboard/card";
-import { EmptyState } from "@/components/dashboard/empty-state";
-import { StatusBadge } from "@/components/dashboard/status-badge";
-import { RestoreForm } from "@/components/dashboard/restore-form";
+import { Panel } from "@/components/shared/card";
+import { EmptyState } from "@/components/shared/empty-state";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { RestoreForm } from "@/components/projects/restores/restore-form";
 import { formatTableDateTime, jobDuration } from "@/lib/format";
 import { getRestorableBackups, getRestoreJobsForProject } from "@/lib/queries";
 

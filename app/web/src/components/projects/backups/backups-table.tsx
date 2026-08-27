@@ -3,7 +3,7 @@ import { IconDownload } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
 import { formatBytes, formatTableDateTime, jobDuration } from "@/lib/format";
-import { StatusBadge } from "./status-badge";
+import { StatusBadge } from "@/components/shared/status-badge";
 import { rowEndedAt, type BackupRow } from "./backup-row";
 
 /**

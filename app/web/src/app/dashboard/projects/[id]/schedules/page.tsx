@@ -1,10 +1,10 @@
 import { IconCalendarClock } from "@tabler/icons-react";
 
-import { Panel } from "@/components/dashboard/card";
-import { EmptyState } from "@/components/dashboard/empty-state";
-import { FrequencyBadge } from "@/components/dashboard/frequency-badge";
-import { ScheduleForm } from "@/components/dashboard/schedule-form";
-import { ScheduleRowActions } from "@/components/dashboard/schedule-row-actions";
+import { Panel } from "@/components/shared/card";
+import { EmptyState } from "@/components/shared/empty-state";
+import { FrequencyBadge } from "@/components/shared/frequency-badge";
+import { ScheduleForm } from "@/components/projects/schedules/schedule-form";
+import { ScheduleRowActions } from "@/components/projects/schedules/schedule-row-actions";
 import { formatRelativeTime } from "@/lib/format";
 import { getSchedulesForProject } from "@/lib/queries";
 

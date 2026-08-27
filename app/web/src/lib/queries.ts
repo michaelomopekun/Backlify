@@ -16,8 +16,8 @@ import {
 } from "db";
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 
-import type { BackupChartPoint } from "@/components/dashboard/backup-chart";
-import type { StorageSlice } from "@/components/dashboard/storage-donut";
+import type { BackupChartPoint } from "@/components/projects/backups/backup-chart";
+import type { StorageSlice } from "@/components/shared/storage-donut";
 
 /**
  * Read models for the dashboard pages.

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ProjectRepository, OrganizationRepository } from "db";
 import { getCurrentUser } from "@/lib/current-user";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { ProjectSidebar } from "@/components/dashboard/app-sidebar";
+import { ProjectSidebar } from "@/components/layout/app-sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

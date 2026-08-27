@@ -9,7 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { OrgPickerHeader } from "@/components/dashboard/org-picker-header";
+import { OrgPickerHeader } from "@/components/layout/org-picker-header";
 
 export default function NewOrganizationPage() {
   return (

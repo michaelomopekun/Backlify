@@ -2,8 +2,8 @@ import { IconDatabase } from "@tabler/icons-react";
 
 import { BackupRepository } from "db";
 
-import { EmptyState } from "@/components/dashboard/empty-state";
-import { LiveBackupsTable } from "@/components/dashboard/live-backups-table";
+import { EmptyState } from "@/components/shared/empty-state";
+import { LiveBackupsTable } from "@/components/projects/backups/live-backups-table";
 
 export const dynamic = "force-dynamic";
 

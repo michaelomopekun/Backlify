@@ -10,12 +10,12 @@ import {
 import { BackupRepository } from "db";
 import { notFound } from "next/navigation";
 
-import { Panel } from "@/components/dashboard/card";
-import { StatCard } from "@/components/dashboard/stat-card";
-import { EmptyState } from "@/components/dashboard/empty-state";
-import { FrequencyBadge } from "@/components/dashboard/frequency-badge";
-import { LiveBackupsTable } from "@/components/dashboard/live-backups-table";
-import { RetentionForm } from "@/components/dashboard/retention-form";
+import { Panel } from "@/components/shared/card";
+import { StatCard } from "@/components/shared/stat-card";
+import { EmptyState } from "@/components/shared/empty-state";
+import { FrequencyBadge } from "@/components/shared/frequency-badge";
+import { LiveBackupsTable } from "@/components/projects/backups/live-backups-table";
+import { RetentionForm } from "@/components/projects/settings/retention-form";
 import { Button } from "@/components/ui/button";
 import { formatBytes, formatRelativeTime } from "@/lib/format";
 import { getProject, getProjectMetrics, getSchedulesForProject } from "@/lib/queries";

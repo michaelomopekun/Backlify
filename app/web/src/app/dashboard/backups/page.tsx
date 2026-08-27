@@ -5,9 +5,9 @@ import { BackupRepository } from "db";
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 import type { BackupJobStatusType } from "shared/constants/backupJobStatus";
 
-import { Topbar } from "@/components/dashboard/topbar";
-import { EmptyState } from "@/components/dashboard/empty-state";
-import { LiveBackupsTable } from "@/components/dashboard/live-backups-table";
+import { Topbar } from "@/components/layout/topbar";
+import { EmptyState } from "@/components/shared/empty-state";
+import { LiveBackupsTable } from "@/components/projects/backups/live-backups-table";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";

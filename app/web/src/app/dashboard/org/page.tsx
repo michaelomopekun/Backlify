@@ -3,7 +3,7 @@ import { IconSearch, IconBuilding } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { OrganizationRepository } from "db";
 import { getCurrentUser } from "@/lib/current-user";
-import { OrgPickerHeader } from "@/components/dashboard/org-picker-header";
+import { OrgPickerHeader } from "@/components/layout/org-picker-header";
 
 export const dynamic = "force-dynamic";
 

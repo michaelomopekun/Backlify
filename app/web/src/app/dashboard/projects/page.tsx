@@ -6,9 +6,9 @@ import {
   IconStack2,
 } from "@tabler/icons-react";
 
-import { Topbar } from "@/components/dashboard/topbar";
-import { EmptyState } from "@/components/dashboard/empty-state";
-import { NewProjectForm } from "@/components/dashboard/new-project-form";
+import { Topbar } from "@/components/layout/topbar";
+import { EmptyState } from "@/components/shared/empty-state";
+import { NewProjectForm } from "@/components/projects/new-project-form";
 import { formatBytes, formatRelativeTime } from "@/lib/format";
 import { listVisibleProjects } from "@/lib/current-user";
 import { getProjectSummaries } from "@/lib/queries";
