@@ -145,7 +145,7 @@ export default async function OrgProjectsPage({ params }: Props) {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
                 {projects.length === 0 ? (
                   <Link
-                    href={`/dashboard/org/${orgId}/projects/proj-1`}
+                    href="/dashboard/project/proj-1"
                     className="group relative flex flex-col p-4 rounded-md border border-border bg-card hover:border-border/80 hover:bg-accent/20 transition-colors"
                   >
                     <div className="flex items-start justify-between mb-3">
@@ -174,7 +174,7 @@ export default async function OrgProjectsPage({ params }: Props) {
                   projects.map((project) => (
                     <Link
                       key={project.id}
-                      href={`/dashboard/org/${orgId}/projects/${project.id}`}
+                      href={`/dashboard/project/${project.id}`}
                       className="group relative flex flex-col p-4 rounded-md border border-border bg-card hover:border-border/80 hover:bg-accent/20 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-3">

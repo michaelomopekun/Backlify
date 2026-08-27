@@ -66,7 +66,7 @@ export async function triggerRestore(formData: FormData) {
       RESTORE_JOB_STATUS.QUEUED as RestoreJobStatusType
     );
 
-    if (projectId) revalidatePath(`/dashboard/projects/${projectId}/restore`);
+    if (projectId) revalidatePath(`/dashboard/project/${projectId}/restores`);
 
     return { success: true, jobId };
   } catch (error) {

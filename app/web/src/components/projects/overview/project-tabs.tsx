@@ -23,7 +23,7 @@ const TABS = [
 
 export function ProjectTabs({ projectId }: { projectId: string }) {
   const pathname = usePathname();
-  const base = `/dashboard/projects/${projectId}`;
+  const base = `/dashboard/project/${projectId}`;
 
   // Everything after the project id, first segment only — a deeper path (a
   // single backup, say) should still light up the tab it lives under.

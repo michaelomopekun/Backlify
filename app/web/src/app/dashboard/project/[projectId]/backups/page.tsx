@@ -1,4 +1,5 @@
 import { BackupsPageClient } from "@/components/projects/backups/backups-page-client";
+import { ProjectRepository } from "db";
 
 export const metadata = {
   title: "Backups | Backlify",
@@ -8,9 +9,16 @@ export const metadata = {
 export default async function BackupsPage({
   params,
 }: {
-  params: Promise<{ orgId: string; projectId: string }>;
+  params: Promise<{ projectId: string }>;
 }) {
-  const { orgId, projectId } = await params;
+  const { projectId } = await params;
+
+  let project: { id: string; orgId?: string | null } | null = null;
+  try {
+    project = await ProjectRepository.getProjectById(projectId);
+  } catch {}
+
+  const orgId = project?.orgId ?? "default-org";
 
   return <BackupsPageClient orgId={orgId} projectId={projectId} />;
 }

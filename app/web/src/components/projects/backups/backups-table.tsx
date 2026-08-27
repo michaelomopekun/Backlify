@@ -48,7 +48,7 @@ export function BackupsTable({
               {showProject && (
                 <Td>
                   <Link
-                    href={`/dashboard/projects/${row.projectId}`}
+                    href={`/dashboard/project/${row.projectId}`}
                     className="font-medium text-foreground underline-offset-4 hover:underline focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                   >
                     {row.projectName ?? row.projectId}

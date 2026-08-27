@@ -38,7 +38,7 @@ export function NewProjectForm() {
       }
       formRef.current?.reset();
       setOpen(false);
-      if (result?.projectId) router.push(`/dashboard/projects/${result.projectId}`);
+      if (result?.projectId) router.push(`/dashboard/project/${result.projectId}`);
     });
   }
 

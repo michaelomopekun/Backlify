@@ -1,23 +1,22 @@
-import { ProjectRepository, BackupRepository } from "db";
-import { getCurrentUser } from "@/lib/current-user";
+import { ProjectRepository } from "db";
 import { ProjectOverviewHeader } from "@/components/projects/overview/project-overview-client";
 
 export const dynamic = "force-dynamic";
 
 interface Props {
-  params: Promise<{ orgId: string; projectId: string }>;
+  params: Promise<{ projectId: string }>;
 }
 
 export default async function ProjectOverviewPage({ params }: Props) {
-  const { orgId, projectId } = await params;
-  const user = await getCurrentUser();
+  const { projectId } = await params;
 
-  let project: { id: string; name: string; databaseUrl: string } | null = null;
+  let project: { id: string; name: string; databaseUrl: string; orgId?: string | null } | null = null;
 
   try {
     project = await ProjectRepository.getProjectById(projectId);
   } catch {}
 
+  const orgId = project?.orgId ?? "default-org";
   const projectName = project?.name ?? "roadly's Project";
   const databaseUrl = project?.databaseUrl ?? "postgresql://:postgres@host:5432";
 

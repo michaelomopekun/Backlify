@@ -66,7 +66,7 @@ export async function createSchedule(formData: FormData) {
       isActive: true,
     });
 
-    revalidatePath(`/dashboard/projects/${projectId}/schedules`);
+    revalidatePath(`/dashboard/project/${projectId}/schedules`);
     revalidatePath("/dashboard");
 
     return { success: true };
@@ -102,7 +102,7 @@ export async function setScheduleActive(
 
     await ScheduleRepository.updateSchedule(scheduleId, { isActive });
 
-    revalidatePath(`/dashboard/projects/${projectId}/schedules`);
+    revalidatePath(`/dashboard/project/${projectId}/schedules`);
     revalidatePath("/dashboard");
 
     return { success: true };
@@ -121,7 +121,7 @@ export async function deleteSchedule(scheduleId: string, projectId: string) {
 
     await ScheduleRepository.deleteSchedule(scheduleId);
 
-    revalidatePath(`/dashboard/projects/${projectId}/schedules`);
+    revalidatePath(`/dashboard/project/${projectId}/schedules`);
     revalidatePath("/dashboard");
 
     return { success: true };

@@ -5,34 +5,34 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { ProjectSidebar } from "@/components/layout/app-sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   IconSearch,
   IconHelp,
   IconBell,
   IconPlugConnected,
-  IconChevronDown,
   IconSelector,
 } from "@tabler/icons-react";
 
 interface Props {
   children: React.ReactNode;
-  params: Promise<{ orgId: string; projectId: string }>;
+  params: Promise<{ projectId: string }>;
 }
 
 export default async function ProjectLayout({ children, params }: Props) {
-  const { orgId, projectId } = await params;
+  const { projectId } = await params;
   const user = await getCurrentUser();
 
+  let project: { id: string; name: string; databaseUrl: string; orgId?: string | null } | null = null;
   let org: { id: string; name: string; slug: string } | null = null;
-  let project: { id: string; name: string; databaseUrl: string } | null = null;
-
-  try {
-    org = await OrganizationRepository.getOrganizationById(orgId);
-  } catch {}
 
   try {
     project = await ProjectRepository.getProjectById(projectId);
+  } catch {}
+
+  const orgId = project?.orgId ?? "default-org";
+
+  try {
+    org = await OrganizationRepository.getOrganizationById(orgId);
   } catch {}
 
   const orgName = org?.name ?? `${user.name}'s Org`;
@@ -69,7 +69,7 @@ export default async function ProjectLayout({ children, params }: Props) {
 
           {/* Project Selector */}
           <Link
-            href={`/dashboard/org/${orgId}/projects/${projectId}`}
+            href={`/dashboard/project/${projectId}`}
             className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium truncate max-w-[180px]"
           >
             <span className="truncate">{projectName}</span>

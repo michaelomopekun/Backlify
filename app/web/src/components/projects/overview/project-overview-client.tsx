@@ -246,7 +246,7 @@ function TopPanelContent({
             <DropdownMenuContent align="start" className="w-72 border-border bg-card p-3.5 space-y-2.5 shadow-xl">
               <div className="flex items-center justify-between pb-2 border-b border-border">
                 <span className="text-xs font-semibold text-foreground">Service Health</span>
-                <Link href={`/dashboard/org/${orgId}/projects/${projectId}/backups`} className="text-[11px] text-primary hover:underline">
+                <Link href={`/dashboard/project/${projectId}/backups`} className="text-[11px] text-primary hover:underline">
                   View jobs →
                 </Link>
               </div>

@@ -38,7 +38,7 @@ export function UpcomingBackupCard({
         {/* Top row: Project Name & Cadence badge */}
         <div className="flex items-center justify-between gap-3">
           <Link
-            href={`/dashboard/projects/${projectId}`}
+            href={`/dashboard/project/${projectId}`}
             className="truncate font-['JetBrains_Mono',monospace] text-xl font-bold tracking-tight text-white hover:text-[#FFB31F] transition-colors"
           >
             {projectName ?? projectId}

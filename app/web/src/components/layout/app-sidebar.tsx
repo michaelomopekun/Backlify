@@ -170,7 +170,7 @@ export function ProjectSidebar({
   projectName,
 }: ProjectSidebarProps) {
   const pathname = usePathname();
-  const base = `/dashboard/org/${orgId}/projects/${projectId}`;
+  const base = `/dashboard/project/${projectId}`;
 
   return (
     <Sidebar collapsible="offcanvas" className="border-r border-border">

@@ -54,8 +54,8 @@ export async function triggerBackup(projectId: string) {
     );
 
     revalidatePath("/dashboard");
-    revalidatePath("/dashboard/backups");
-    revalidatePath(`/dashboard/projects/${projectId}`);
+    revalidatePath(`/dashboard/project/${projectId}/backups`);
+    revalidatePath(`/dashboard/project/${projectId}`);
 
     return { success: true, jobId };
   } catch (error) {
@@ -82,7 +82,7 @@ export async function createProject(formData: FormData) {
       databaseUrl,
     });
 
-    revalidatePath("/dashboard/projects");
+    revalidatePath(`/dashboard/project/${project.id}`);
     revalidatePath("/dashboard");
 
     return { success: true, projectId: project.id };
@@ -99,7 +99,7 @@ export async function updateRetention(projectId: string, retentionCount: number)
 
   try {
     await ProjectRepository.updateProject(projectId, { retentionCount });
-    revalidatePath(`/dashboard/projects/${projectId}`);
+    revalidatePath(`/dashboard/project/${projectId}`);
     return { success: true };
   } catch (error) {
     console.error("Failed to update retention:", error);
