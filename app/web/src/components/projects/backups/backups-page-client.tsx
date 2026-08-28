@@ -277,7 +277,7 @@ function TriggerPanel({ onClose }: { onClose: () => void }) {
             <div className="flex gap-3">
               <Button
                 onClick={handleTrigger}
-                className="flex-1 bg-white text-black hover:bg-white/90 text-[13px] font-medium h-9"
+                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 text-[13px] font-semibold h-9 shadow-xs"
               >
                 <IconBolt className="size-3.5 mr-1.5" />
                 Run Backup Now
@@ -341,7 +341,7 @@ export function BackupsPageClient({
         </div>
         <Button
           onClick={() => setShowPanel(true)}
-          className="bg-white text-black hover:bg-white/90 text-[13px] font-medium h-9 px-4"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 text-[13px] font-semibold h-9 px-4 shadow-xs"
         >
           <IconBolt className="size-3.5 mr-1.5" />
           Trigger Manual Backup

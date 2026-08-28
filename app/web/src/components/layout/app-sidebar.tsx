@@ -24,7 +24,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -79,46 +78,45 @@ export function OrgSidebar({ user, orgId, orgName }: OrgSidebarProps) {
   const base = `/dashboard/org/${orgId}`;
 
   return (
-    <Sidebar collapsible="offcanvas" className="border-r border-border">
+    <Sidebar collapsible="icon" className="border-r border-border bg-[#0d0d0d]">
       {/* Header */}
-      <SidebarHeader className="h-12 flex flex-row items-center gap-3 px-4 border-b border-border">
+      <SidebarHeader className="h-12 flex flex-row items-center gap-3 px-3.5 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center border-b border-border shrink-0">
         <Link href="/dashboard/org" className="flex items-center gap-2.5 min-w-0">
           <BrandMark />
-          <span className="text-sm font-semibold text-foreground truncate">
+          <span className="text-sm font-semibold text-foreground truncate group-data-[collapsible=icon]:hidden">
             {orgName}
           </span>
         </Link>
-        <span className="ml-auto shrink-0 text-[10px] font-medium text-muted-foreground border border-border rounded px-1.5 py-0.5 uppercase tracking-wide">
+        <span className="ml-auto shrink-0 text-[10px] font-medium text-muted-foreground border border-border rounded px-1.5 py-0.5 uppercase tracking-wide group-data-[collapsible=icon]:hidden">
           Free
         </span>
       </SidebarHeader>
 
       {/* Nav */}
-      <SidebarContent className="pt-2">
-        <SidebarGroup>
-          <SidebarMenu>
+      <SidebarContent className="pt-2 px-2 group-data-[collapsible=icon]:px-1.5">
+        <SidebarGroup className="p-0">
+          <SidebarMenu className="gap-1">
             {orgNav.map((item) => {
               const href = `${base}${item.href}`;
               const isActive =
-                item.href === ""
-                  ? pathname === base || pathname.startsWith(`${base}/projects`)
-                  : pathname.startsWith(href);
+                item.href === "" ? pathname === base : pathname.startsWith(href);
 
               return (
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton
                     asChild
                     isActive={isActive}
+                    tooltip={item.label}
                     className={cn(
-                      "text-sm gap-3 h-9 rounded-md transition-colors",
+                      "text-sm gap-3 h-9 rounded-md transition-all group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center",
                       isActive
-                        ? "bg-accent text-foreground font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                        ? "bg-[#202020] text-white font-medium border border-[#2c2c2c] shadow-xs"
+                        : "text-[#777777] hover:text-white hover:bg-[#161616]"
                     )}
                   >
                     <Link href={href}>
                       <item.icon className="size-4 shrink-0" />
-                      {item.label}
+                      <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -129,14 +127,14 @@ export function OrgSidebar({ user, orgId, orgName }: OrgSidebarProps) {
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="border-t border-border p-3">
-        <div className="flex items-center gap-3 px-1">
+      <SidebarFooter className="border-t border-border p-2.5 group-data-[collapsible=icon]:p-1.5">
+        <div className="flex items-center gap-3 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <Avatar className="size-7 shrink-0">
             <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
               {user.initials}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col min-w-0">
+          <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-medium text-foreground truncate">
               {user.name}
             </span>
@@ -144,7 +142,7 @@ export function OrgSidebar({ user, orgId, orgName }: OrgSidebarProps) {
               {user.email}
             </span>
           </div>
-          <IconChevronRight className="ml-auto size-4 text-muted-foreground shrink-0" />
+          <IconChevronRight className="ml-auto size-4 text-muted-foreground shrink-0 group-data-[collapsible=icon]:hidden" />
         </div>
       </SidebarFooter>
       <SidebarRail />
@@ -167,35 +165,34 @@ export function ProjectSidebar({
   orgId,
   orgName,
   projectId,
-  projectName,
 }: ProjectSidebarProps) {
   const pathname = usePathname();
   const base = `/dashboard/project/${projectId}`;
 
   return (
-    <Sidebar collapsible="offcanvas" className="border-r border-border">
+    <Sidebar collapsible="icon" className="border-r border-border bg-[#0d0d0d]">
       {/* Header — logo + org breadcrumb */}
-      <SidebarHeader className="h-12 flex flex-row items-center gap-2 px-4 border-b border-border">
-        <Link href="/dashboard/org" className="shrink-0">
+      <SidebarHeader className="h-12 flex flex-row items-center gap-2 px-3.5 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center border-b border-border shrink-0">
+        <Link href="/dashboard/org" className="shrink-0 flex items-center justify-center">
           <BrandMark />
         </Link>
-        <span className="text-muted-foreground text-sm">/</span>
+        <span className="text-muted-foreground text-sm group-data-[collapsible=icon]:hidden">/</span>
         <Link
           href={`/dashboard/org/${orgId}`}
-          className="text-muted-foreground text-sm hover:text-foreground transition-colors flex items-center gap-1.5 min-w-0"
+          className="text-muted-foreground text-sm hover:text-foreground transition-colors flex items-center gap-1.5 min-w-0 group-data-[collapsible=icon]:hidden"
         >
           <IconBuilding className="size-3.5 shrink-0" />
           <span className="truncate">{orgName}</span>
         </Link>
-        <span className="ml-1 shrink-0 text-[10px] font-medium text-muted-foreground border border-border rounded px-1.5 py-0.5 uppercase tracking-wide">
+        <span className="ml-1 shrink-0 text-[10px] font-medium text-muted-foreground border border-border rounded px-1.5 py-0.5 uppercase tracking-wide group-data-[collapsible=icon]:hidden">
           Free
         </span>
       </SidebarHeader>
 
       {/* Nav */}
-      <SidebarContent className="pt-2">
-        <SidebarGroup>
-          <SidebarMenu>
+      <SidebarContent className="pt-2 px-2 group-data-[collapsible=icon]:px-1.5">
+        <SidebarGroup className="p-0">
+          <SidebarMenu className="gap-1">
             {projectNav.map((item) => {
               const href = `${base}${item.href}`;
               const isActive =
@@ -206,16 +203,17 @@ export function ProjectSidebar({
                   <SidebarMenuButton
                     asChild
                     isActive={isActive}
+                    tooltip={item.label}
                     className={cn(
-                      "text-sm gap-3 h-9 rounded-md transition-colors",
+                      "text-sm gap-3 h-9 rounded-md transition-all group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center",
                       isActive
-                        ? "bg-accent text-foreground font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                        ? "bg-[#202020] text-white font-medium border border-[#2c2c2c] shadow-xs"
+                        : "text-[#777777] hover:text-white hover:bg-[#161616]"
                     )}
                   >
                     <Link href={href}>
                       <item.icon className="size-4 shrink-0" />
-                      {item.label}
+                      <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -224,24 +222,25 @@ export function ProjectSidebar({
           </SidebarMenu>
         </SidebarGroup>
 
-        <SidebarSeparator />
+        <SidebarSeparator className="my-2" />
 
-        <SidebarGroup>
-          <SidebarMenu>
+        <SidebarGroup className="p-0">
+          <SidebarMenu className="gap-1">
             <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
                 isActive={pathname.startsWith(`${base}/settings`)}
+                tooltip="Project Settings"
                 className={cn(
-                  "text-sm gap-3 h-9 rounded-md transition-colors",
+                  "text-sm gap-3 h-9 rounded-md transition-all group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center",
                   pathname.startsWith(`${base}/settings`)
-                    ? "bg-accent text-foreground font-medium"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                    ? "bg-[#202020] text-white font-medium border border-[#2c2c2c] shadow-xs"
+                    : "text-[#777777] hover:text-white hover:bg-[#161616]"
                 )}
               >
                 <Link href={`${base}/settings`}>
                   <IconSettings className="size-4 shrink-0" />
-                  Project Settings
+                  <span className="group-data-[collapsible=icon]:hidden">Project Settings</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -250,14 +249,14 @@ export function ProjectSidebar({
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="border-t border-border p-3">
-        <div className="flex items-center gap-3 px-1">
+      <SidebarFooter className="border-t border-border p-2.5 group-data-[collapsible=icon]:p-1.5">
+        <div className="flex items-center gap-3 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
           <Avatar className="size-7 shrink-0">
             <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
               {user.initials}
             </AvatarFallback>
           </Avatar>
-          <div className="flex flex-col min-w-0">
+          <div className="flex flex-col min-w-0 group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-medium text-foreground truncate">
               {user.name}
             </span>
@@ -265,7 +264,7 @@ export function ProjectSidebar({
               {user.email}
             </span>
           </div>
-          <IconChevronRight className="ml-auto size-4 text-muted-foreground shrink-0" />
+          <IconChevronRight className="ml-auto size-4 text-muted-foreground shrink-0 group-data-[collapsible=icon]:hidden" />
         </div>
       </SidebarFooter>
       <SidebarRail />
