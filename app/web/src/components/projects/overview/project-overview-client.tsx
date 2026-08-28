@@ -225,7 +225,7 @@ function TopPanelContent({
         </div>
 
         {/* Left Metric Items: 2 Columns */}
-        <div className="grid grid-cols-2 gap-y-6 gap-x-4 pt-1">
+        <div className="grid grid-cols-2 gap-y-6 gap-x-1 pt-1">
           {/* Status */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
