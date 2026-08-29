@@ -4,34 +4,24 @@ import { useState, useEffect, useRef } from "react";
 import {
   IconShieldCheck,
   IconClock,
-  IconPlayerPlay,
-  IconRotateClockwise,
   IconTerminal2,
   IconCheck,
   IconX,
   IconAlertTriangle,
   IconDatabase,
   IconSearch,
-  IconFilter,
-  IconDownload,
   IconCopy,
-  IconChevronRight,
   IconBolt,
   IconDotsVertical,
-  IconCalendarTime,
-  IconServer,
-  IconCpu,
-  IconFileCode,
-  IconChecklist,
-  IconAlertOctagon,
+  IconRotateClockwise,
   IconRefresh,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/shared/stat-card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -45,7 +35,7 @@ type DrillStatus = "passed" | "running" | "failed" | "complete";
 interface IntegrityCheck {
   name: string;
   passed: boolean;
-  details: string;
+  details?: string;
 }
 
 interface RestoreDrill {
@@ -70,16 +60,16 @@ const MOCK_DRILLS: RestoreDrill[] = [
     status: "passed",
     targetDb: "ephemeral-sandbox-drill-104",
     sourceSnapshot: "Daily Production Snapshot (bk-001)",
-    sourceTimestamp: "Aug 28, 2026 · 14:00 UTC",
+    sourceTimestamp: "Aug 28 · 14:00 UTC",
     executedAt: "Today at 04:00 UTC",
     durationSec: 68,
     sizeMb: 142,
     initiatedBy: "Automated Cron Scheduler",
     integrityChecks: [
-      { name: "Schema Structure Parity", passed: true, details: "42/42 tables, 18 views matched" },
-      { name: "Row Count Validation", passed: true, details: "124,800 rows verified (0 drift)" },
-      { name: "SHA-256 Checksum", passed: true, details: "Full table hash match (100%)" },
-      { name: "Foreign Key Constraints", passed: true, details: "36 constraints tested & valid" },
+      { name: "Schema Parity", passed: true },
+      { name: "Row Counts", passed: true },
+      { name: "SHA-256", passed: true },
+      { name: "Foreign Keys", passed: true },
     ],
     logs: [
       "[04:00:01 UTC] [INFO] Initiating automated disaster recovery drill #104",
@@ -104,15 +94,16 @@ const MOCK_DRILLS: RestoreDrill[] = [
     status: "complete",
     targetDb: "postgres://staging-clone.internal:5432/staging_db",
     sourceSnapshot: "Pre-deploy Snapshot (bk-002)",
-    sourceTimestamp: "Aug 26, 2026 · 09:14 UTC",
+    sourceTimestamp: "Aug 26 · 09:14 UTC",
     executedAt: "Aug 26 at 18:30 UTC",
     durationSec: 74,
     sizeMb: 141,
     initiatedBy: "michael@backlify.dev",
     integrityChecks: [
-      { name: "Schema Structure Parity", passed: true, details: "42/42 tables restored" },
-      { name: "Row Count Validation", passed: true, details: "124,100 rows verified" },
-      { name: "Database Online", passed: true, details: "Staging ready for E2E testing" },
+      { name: "Schema Parity", passed: true },
+      { name: "Row Counts", passed: true },
+      { name: "DB Online", passed: true },
+      { name: "Sequences", passed: true },
     ],
     logs: [
       "[18:30:00 UTC] [INFO] Staging clone requested by user michael@backlify.dev",
@@ -129,15 +120,16 @@ const MOCK_DRILLS: RestoreDrill[] = [
     status: "passed",
     targetDb: "ephemeral-sandbox-drill-102",
     sourceSnapshot: "Daily Production Snapshot (bk-003)",
-    sourceTimestamp: "Aug 25, 2026 · 14:00 UTC",
+    sourceTimestamp: "Aug 25 · 14:00 UTC",
     executedAt: "Aug 25 at 04:00 UTC",
     durationSec: 65,
     sizeMb: 139,
     initiatedBy: "Automated Cron Scheduler",
     integrityChecks: [
-      { name: "Schema Structure Parity", passed: true, details: "42/42 tables verified" },
-      { name: "Row Count Validation", passed: true, details: "123,400 rows verified" },
-      { name: "SHA-256 Checksum", passed: true, details: "Checksum verified" },
+      { name: "Schema Parity", passed: true },
+      { name: "Row Counts", passed: true },
+      { name: "SHA-256", passed: true },
+      { name: "Foreign Keys", passed: true },
     ],
     logs: [
       "[04:00:00 UTC] [INFO] Daily automated disaster recovery drill #102 started",
@@ -153,14 +145,16 @@ const MOCK_DRILLS: RestoreDrill[] = [
     status: "complete",
     targetDb: "postgres://prod-recovery-mirror.internal:5432/main",
     sourceSnapshot: "Hotfix Snapshot (bk-004)",
-    sourceTimestamp: "Aug 24, 2026 · 18:32 UTC",
+    sourceTimestamp: "Aug 24 · 18:32 UTC",
     executedAt: "Aug 24 at 19:10 UTC",
     durationSec: 69,
     sizeMb: 138,
     initiatedBy: "michael@backlify.dev",
     integrityChecks: [
-      { name: "Schema Structure Parity", passed: true, details: "42/42 tables verified" },
-      { name: "Row Count Validation", passed: true, details: "122,900 rows verified" },
+      { name: "Schema Parity", passed: true },
+      { name: "Row Counts", passed: true },
+      { name: "Tablespaces", passed: true },
+      { name: "Indexes", passed: true },
     ],
     logs: [
       "[19:10:00 UTC] [INFO] Production recovery mirror restore triggered",
@@ -180,45 +174,7 @@ const PITR_POINTS = [
 ];
 
 /* ─────────────────────────────────────────────────────────────────
-   Sub-components
-───────────────────────────────────────────────────────────────────*/
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  accent,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  sub: string;
-  accent?: string;
-}) {
-  return (
-    <div className="rounded-xl border border-[#1a1a1a] bg-[#0f0f0f] p-5 flex items-start gap-4">
-      <div
-        className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg"
-        style={{ background: accent ? `${accent}18` : "#ffffff0d" }}
-      >
-        <Icon className="size-4.5" style={{ color: accent ?? "#888888" }} />
-      </div>
-      <div>
-        <p className="text-[11px] font-mono uppercase tracking-widest text-[#555555] mb-1">
-          {label}
-        </p>
-        <p className="text-[22px] font-semibold tracking-tight text-white leading-none">
-          {value}
-        </p>
-        <p className="text-[11px] text-[#666666] mt-1">{sub}</p>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────────────────────────────────────────────
-   PITR Timeline Scrubber
+   Clean, De-noised PITR Scrubber
 ───────────────────────────────────────────────────────────────────*/
 
 function PitrScrubber({
@@ -228,107 +184,124 @@ function PitrScrubber({
 }) {
   const [selectedIndex, setSelectedIndex] = useState(PITR_POINTS.length - 1);
   const current = PITR_POINTS[selectedIndex];
+  const percent = (selectedIndex / (PITR_POINTS.length - 1)) * 100;
 
   return (
-    <div className="rounded-xl border border-[#1a1a1a] bg-[#0f0f0f] p-5 space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+    <div className="rounded-lg border border-[#1e1e1e] bg-[#111111] p-5 space-y-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-[13px] font-medium text-white flex items-center gap-2">
-            <span>Point-in-Time Recovery (PITR) Scrubber</span>
-            <span className="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-              Continuous WAL Archive Active
+          <h2 className="text-[13.5px] font-medium text-white flex items-center gap-2">
+            <span>Point-in-Time Recovery</span>
+            <span className="text-[10px] font-mono text-primary bg-primary/10 border border-primary/20 rounded px-1.5 py-0.5">
+              Drag scrubber
             </span>
           </h2>
-          <p className="text-[11px] text-[#555555] mt-0.5 font-mono">
-            Select any verified snapshot checkpoint across the last 7 days to restore
+          <p className="text-[11.5px] text-[#666666] font-mono mt-0.5">
+            Drag the handle or click any checkpoint below to select a recovery target
           </p>
         </div>
-        <span className="text-[10px] font-mono text-[#555555] border border-[#222222] rounded px-2 py-0.5 self-start sm:self-auto">
-          Retention: 7 Days (AES-256)
+        <span className="text-[11px] font-mono text-[#555555]">
+          7-Day Window
         </span>
       </div>
 
-      {/* Timeline Slider Track */}
-      <div className="space-y-3 pt-2">
-        <div className="relative">
-          {/* Background Bar */}
-          <div className="h-2 w-full bg-[#161616] rounded-full overflow-hidden border border-[#222222]">
+      {/* Timeline Slider Track with Centered Handle & Inset Margins (No Overflow) */}
+      <div className="space-y-3 pt-6 pb-2 px-6">
+        {/* Rail & Draggable Handle Container */}
+        <div className="relative h-6 flex items-center">
+          {/* Horizontal Background Rail */}
+          <div className="h-2 w-full bg-[#1c1c1c] rounded-full overflow-hidden border border-[#262626]">
             <div
-              className="h-full bg-primary/70 transition-all"
-              style={{ width: `${(selectedIndex / (PITR_POINTS.length - 1)) * 100}%` }}
+              className="h-full bg-primary transition-all duration-75"
+              style={{ width: `${percent}%` }}
             />
           </div>
 
-          {/* Interactive Range Input */}
+          {/* Draggable Physical Handle directly centered ON TOP of the horizontal bar */}
+          <div
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none transition-all duration-75 z-20 flex flex-col items-center"
+            style={{ left: `${percent}%` }}
+          >
+            {/* Floating Live Scrubber Bubble */}
+            <div className="absolute -top-8 flex items-center px-2 py-0.5 rounded-md bg-[#161616] border border-primary/40 text-primary font-mono text-[11px] shadow-lg whitespace-nowrap">
+              <span>{current.day} {current.time.split(" ")[0]}</span>
+            </div>
+
+            {/* Draggable Physical Thumb sitting directly on the horizontal rail */}
+            <div className="size-5 rounded-full bg-white border-2 border-primary shadow-[0_0_14px_rgba(255,179,31,0.7)] flex items-center justify-center">
+              <div className="size-1.5 rounded-full bg-[#111111]" />
+            </div>
+          </div>
+
+          {/* Interactive Range Input overlay */}
           <input
             type="range"
             min={0}
             max={PITR_POINTS.length - 1}
             value={selectedIndex}
-            onChange={(e) => {
-              const idx = Number(e.target.value);
-              setSelectedIndex(idx);
-            }}
-            className="absolute inset-0 w-full opacity-0 cursor-pointer"
+            onChange={(e) => setSelectedIndex(Number(e.target.value))}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-grab active:cursor-grabbing z-30"
           />
+        </div>
 
-          {/* Ticks */}
-          <div className="flex justify-between mt-3">
-            {PITR_POINTS.map((pt, idx) => (
+        {/* Checkpoint Ticks & Labels with zero edge overflow */}
+        <div className="relative w-full h-8">
+          {PITR_POINTS.map((pt, idx) => {
+            const ptPercent = (idx / (PITR_POINTS.length - 1)) * 100;
+            const isSelected = idx === selectedIndex;
+            return (
               <button
                 key={pt.id}
                 type="button"
                 onClick={() => setSelectedIndex(idx)}
-                className="flex flex-col items-center group cursor-pointer focus:outline-none"
+                className="absolute top-0 -translate-x-1/2 flex flex-col items-center group cursor-pointer focus:outline-none z-10"
+                style={{ left: `${ptPercent}%` }}
               >
+                {/* Vertical tick connecting to the rail */}
                 <div
-                  className={`size-2 rounded-full mb-1 transition-all ${
-                    idx === selectedIndex
-                      ? "bg-primary scale-125 ring-2 ring-primary/30"
-                      : "bg-[#333333] group-hover:bg-[#666666]"
+                  className={`w-0.5 h-2 mb-1 transition-colors ${
+                    isSelected ? "bg-primary" : "bg-[#333333] group-hover:bg-[#666666]"
                   }`}
                 />
                 <span
-                  className={`text-[10px] font-mono transition-colors ${
-                    idx === selectedIndex ? "text-white font-semibold" : "text-[#555555]"
+                  className={`text-[10.5px] font-mono whitespace-nowrap transition-colors ${
+                    isSelected ? "text-primary font-semibold" : "text-[#555555] group-hover:text-[#888888]"
                   }`}
                 >
                   {pt.day} {pt.time.split(" ")[0]}
                 </span>
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
+      </div>
 
-        {/* Selected Info & Action Row */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg border border-[#1e1e1e] bg-[#121212] mt-4">
-          <div className="flex items-center gap-3">
-            <div className="size-2 rounded-full bg-emerald-400 shrink-0" />
-            <div className="space-y-0.5">
-              <p className="text-[12px] font-mono text-white">
-                Selected: <span className="text-primary font-semibold">{current.date} · {current.time}</span> ({current.size})
-              </p>
-              <p className="text-[11px] text-[#666666] font-mono">
-                Snapshot ID: {current.snapshotId} · Checksum verified · Ready for instant restore
-              </p>
-            </div>
+        {/* Selected Info & Action Strip */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#1a1a1a]">
+          <div className="flex items-center gap-3 text-[12px] font-mono">
+            <span className="size-1.5 rounded-full bg-emerald-400" />
+            <span className="text-white">
+              <span className="text-primary font-semibold">{current.date} · {current.time}</span> ({current.size})
+            </span>
+            <span className="text-[#555555]">·</span>
+            <span className="text-[#666666]">Snapshot: {current.snapshotId}</span>
           </div>
+
           <Button
             onClick={() => onSelectPoint(current)}
             size="sm"
-            className="h-8 px-3 text-[12px] bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-xs shrink-0"
+            className="h-8 px-3.5 text-[12px] bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-xs shrink-0 self-start sm:self-auto"
           >
             <IconBolt className="size-3.5 mr-1" />
             Restore from this point
           </Button>
         </div>
-      </div>
     </div>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   Drill & Restore Card
+   Clean, De-noised Recovery Drill Card
 ───────────────────────────────────────────────────────────────────*/
 
 function DrillCard({
@@ -340,7 +313,6 @@ function DrillCard({
   onViewLogs: (d: RestoreDrill) => void;
   onRerun: (d: RestoreDrill) => void;
 }) {
-  const isAutomated = drill.type === "automated_drill";
   const typeLabel =
     drill.type === "automated_drill"
       ? "Automated DR Drill"
@@ -349,105 +321,81 @@ function DrillCard({
       : "Production Restore";
 
   return (
-    <div className="rounded-xl border border-[#1a1a1a] bg-[#0f0f0f] p-5 space-y-4 hover:border-[#262626] transition-colors">
-      {/* Top row */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
-            <span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#22c55e]" />
-            <h3 className="text-[14px] font-medium text-white">{typeLabel}</h3>
-            <span className="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-              PASSED
+    <div className="rounded-lg border border-[#1e1e1e] bg-[#111111] p-5 transition-colors hover:border-[#262626]">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Left: Type, target, and checks */}
+        <div className="space-y-1.5 min-w-0">
+          <div className="flex items-center gap-2.5">
+            <span className="size-1.5 rounded-full bg-emerald-400 shrink-0" />
+            <h3 className="text-[13.5px] font-medium text-white">{typeLabel}</h3>
+            <span className="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Passed
             </span>
             <span className="text-[11px] text-[#555555] font-mono">
               #{drill.id}
             </span>
           </div>
 
-          <p className="text-[12px] text-[#777777] font-mono">
-            Target: <span className="text-[#cccccc]">{drill.targetDb}</span>
-          </p>
+          <div className="flex flex-wrap items-center gap-2 text-[12px] font-mono text-[#666666]">
+            <span>Target: <span className="text-[#aaaaaa]">{drill.targetDb}</span></span>
+            <span>·</span>
+            <span>{drill.sourceSnapshot}</span>
+            <span>·</span>
+            <span className="text-emerald-400/90 flex items-center gap-1">
+              <IconCheck className="size-3 text-emerald-400" />
+              4/4 checks verified
+            </span>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="text-[11px] text-[#555555] font-mono">
-            {drill.executedAt}
-          </span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="p-1 rounded text-[#555555] hover:text-white hover:bg-[#1a1a1a] transition-colors"
-              >
-                <IconDotsVertical className="size-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-44 bg-[#111111] border-[#222222] text-white text-[12px]"
+        {/* Right: Timestamp, duration, and actions */}
+        <div className="flex items-center gap-4 text-[12px] font-mono text-[#666666] shrink-0">
+          <div className="text-right hidden sm:block">
+            <p className="text-[#888888]">{drill.executedAt}</p>
+            <p className="text-[11px] text-[#555555]">Duration: {drill.durationSec}s</p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => onViewLogs(drill)}
+              variant="outline"
+              size="sm"
+              className="h-8 px-2.5 border-[#262626] bg-[#141414] text-[#aaaaaa] hover:text-white text-[11.5px]"
             >
-              <DropdownMenuItem
-                onClick={() => onViewLogs(drill)}
-                className="gap-2 text-[#aaaaaa] hover:text-white focus:bg-[#1a1a1a] focus:text-white cursor-pointer"
+              <IconTerminal2 className="size-3.5 mr-1" />
+              Logs
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="p-1.5 rounded text-[#555555] hover:text-white hover:bg-[#1a1a1a] transition-colors"
+                >
+                  <IconDotsVertical className="size-3.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="w-40 bg-[#141414] border-[#262626] text-white text-[12px]"
               >
-                <IconTerminal2 className="size-3.5" />
-                View logs
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onRerun(drill)}
-                className="gap-2 text-[#aaaaaa] hover:text-white focus:bg-[#1a1a1a] focus:text-white cursor-pointer"
-              >
-                <IconRefresh className="size-3.5" />
-                Re-run drill
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-
-      {/* Middle: Integrity Verification Checklist Badges */}
-      <div className="p-3 rounded-lg bg-[#0a0a0a] border border-[#161616] space-y-2">
-        <p className="text-[10px] font-mono uppercase tracking-widest text-[#555555]">
-          Integrity Verification Suite
-        </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
-          {drill.integrityChecks.map((chk) => (
-            <div key={chk.name} className="flex items-center gap-1.5 text-[11px] font-mono">
-              <IconCheck className="size-3.5 text-emerald-400 shrink-0" />
-              <span className="text-[#888888] truncate">{chk.name}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Bottom meta row */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pt-1 text-[11px] font-mono text-[#666666]">
-        <div className="flex items-center gap-4">
-          <span>Source: {drill.sourceSnapshot}</span>
-          <span>·</span>
-          <span>Size: {drill.sizeMb} MB</span>
-          <span>·</span>
-          <span>Duration: <strong className="text-white font-normal">{drill.durationSec}s</strong></span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => onViewLogs(drill)}
-            className="flex items-center gap-1 text-[11px] font-mono text-primary hover:underline"
-          >
-            <IconTerminal2 className="size-3.5" />
-            <span>View Logs</span>
-          </button>
-          <span>·</span>
-          <button
-            type="button"
-            onClick={() => onRerun(drill)}
-            className="flex items-center gap-1 text-[11px] font-mono text-[#888888] hover:text-white"
-          >
-            <IconRotateClockwise className="size-3" />
-            <span>Re-run</span>
-          </button>
+                <DropdownMenuItem
+                  onClick={() => onViewLogs(drill)}
+                  className="gap-2 text-[#aaaaaa] hover:text-white focus:bg-[#1a1a1a] focus:text-white cursor-pointer"
+                >
+                  <IconTerminal2 className="size-3.5" />
+                  View full logs
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onRerun(drill)}
+                  className="gap-2 text-[#aaaaaa] hover:text-white focus:bg-[#1a1a1a] focus:text-white cursor-pointer"
+                >
+                  <IconRotateClockwise className="size-3.5" />
+                  Re-run drill
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     </div>
@@ -504,17 +452,17 @@ function RestoreWizardDrawer({
     setLiveLogs(["[00:00:01] [INFO] Initializing Disaster Recovery Drill engine..."]);
 
     const steps = [
-      { delay: 1000, log: "[00:00:02] [SANDBOX] Provisioning isolated ephemeral PostgreSQL 16 instance on eu-central-1...", step: 1 },
-      { delay: 2200, log: "[00:00:05] [SANDBOX] Ephemeral sandbox database ready: ephemeral-sandbox-live-drill", step: 2 },
-      { delay: 3200, log: "[00:00:08] [S3] Fetching snapshot dump (142 MB, AES-256 encrypted)...", step: 2 },
-      { delay: 4200, log: "[00:00:11] [KMS] Decrypted payload with KMS key alias/backlify-prod-key [OK]", step: 3 },
-      { delay: 5200, log: "[00:00:15] [RESTORE] Executing pg_restore --clean --if-exists (42 tables, 124.8k rows)...", step: 3 },
-      { delay: 6200, log: "[00:00:25] [RESTORE] Restored public.users (48,200 rows) ... [OK]", step: 3 },
-      { delay: 7200, log: "[00:00:35] [RESTORE] Restored public.transactions (182,410 rows) ... [OK]", step: 3 },
-      { delay: 8200, log: "[00:00:48] [VERIFY] Running SHA-256 checksum integrity verification suite...", step: 4 },
-      { delay: 9200, log: "[00:00:55] [VERIFY] Schema Parity: 100% | Row Count: 124,800/124,800 | Checksum: MATCH", step: 4 },
-      { delay: 10200, log: "[00:01:02] [TEARDOWN] Dropping ephemeral sandbox database cleanly...", step: 5 },
-      { delay: 11000, log: "[00:01:08] [SUCCESS] DR Drill completed successfully with 100% integrity score.", step: 5 },
+      { delay: 800, log: "[00:00:02] [SANDBOX] Provisioning isolated ephemeral PostgreSQL 16 instance on eu-central-1...", step: 1 },
+      { delay: 1800, log: "[00:00:05] [SANDBOX] Ephemeral sandbox database ready: ephemeral-sandbox-live-drill", step: 2 },
+      { delay: 2800, log: "[00:00:08] [S3] Fetching snapshot dump (142 MB, AES-256 encrypted)...", step: 2 },
+      { delay: 3800, log: "[00:00:11] [KMS] Decrypted payload with KMS key alias/backlify-prod-key [OK]", step: 3 },
+      { delay: 4800, log: "[00:00:15] [RESTORE] Executing pg_restore --clean --if-exists (42 tables, 124.8k rows)...", step: 3 },
+      { delay: 5800, log: "[00:00:25] [RESTORE] Restored public.users (48,200 rows) ... [OK]", step: 3 },
+      { delay: 6800, log: "[00:00:35] [RESTORE] Restored public.transactions (182,410 rows) ... [OK]", step: 3 },
+      { delay: 7800, log: "[00:00:48] [VERIFY] Running SHA-256 checksum integrity verification suite...", step: 4 },
+      { delay: 8800, log: "[00:00:55] [VERIFY] Schema Parity: 100% | Row Count: 124,800/124,800 | Checksum: MATCH", step: 4 },
+      { delay: 9600, log: "[00:01:02] [TEARDOWN] Dropping ephemeral sandbox database cleanly...", step: 5 },
+      { delay: 10200, log: "[00:01:08] [SUCCESS] DR Drill completed successfully with 100% integrity score.", step: 5 },
     ];
 
     steps.forEach((s) => {
@@ -544,7 +492,7 @@ function RestoreWizardDrawer({
             <h2 className="text-[15px] font-medium text-white">
               {isExecuting ? "Executing Recovery Process" : mode === "drill" ? "Run Disaster Recovery Drill" : "New Database Restore"}
             </h2>
-            <p className="text-[11px] text-[#555555] mt-0.5">
+            <p className="text-[11px] text-[#555555] mt-0.5 font-mono">
               {isExecuting ? "Real-time streaming console logs" : "Configure source snapshot, target environment, and safety verification"}
             </p>
           </div>
@@ -850,20 +798,15 @@ export function RestoresPageClient({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 pb-16">
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
           <h1 className="text-[28px] font-normal tracking-tight text-white">
-            Restores & Disaster Recovery
+            Restores
           </h1>
-          <p className="text-[13px] text-[#555555] mt-1 font-mono flex items-center gap-2">
-            <span>Automated recovery drills & point-in-time restores</span>
-            <span>·</span>
-            <span className="text-emerald-400 font-semibold flex items-center gap-1">
-              <span className="size-1.5 rounded-full bg-emerald-400" />
-              100% DR Verified
-            </span>
+          <p className="text-[13px] text-[#555555] mt-1 font-mono">
+            Automated recovery drills & point-in-time database restores
           </p>
         </div>
 
@@ -871,10 +814,10 @@ export function RestoresPageClient({
           <Button
             onClick={handleOpenDrill}
             variant="outline"
-            className="h-9 px-3.5 border-[#2a2a2a] bg-[#111111] text-white hover:bg-[#1a1a1a] text-[12px] font-medium"
+            className="h-9 px-3.5 border-[#262626] bg-[#111111] text-white hover:bg-[#1a1a1a] text-[12px] font-medium"
           >
             <IconShieldCheck className="size-3.5 mr-1.5 text-emerald-400" />
-            Run DR Drill (Dry Run)
+            Run DR Drill
           </Button>
           <Button
             onClick={handleOpenRestore}
@@ -886,63 +829,60 @@ export function RestoresPageClient({
         </div>
       </div>
 
-      {/* ── 4 Stat Cards ── */}
+      {/* ── 4 Stat Cards (Standard Card 1) ── */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           icon={IconClock}
-          label="RPO (Data Loss Window)"
+          label="Recovery Point (RPO)"
           value="2h 14m"
           sub="Max data loss based on last snapshot"
-          accent="#FFB31F"
+          accent="text-amber-400"
         />
         <StatCard
           icon={IconBolt}
           label="Estimated RTO"
           value="1m 08s"
           sub="Calculated recovery spin-up duration"
-          accent="#818cf8"
+          accent="text-indigo-400"
         />
         <StatCard
           icon={IconShieldCheck}
           label="Last Verified Drill"
           value="Today, 04:00"
-          sub="Passed with 0 drift"
-          accent="#22c55e"
+          sub="Passed with 0 schema drift"
+          accent="text-emerald-400"
         />
         <StatCard
           icon={IconRefresh}
           label="DR Readiness Score"
           value="100%"
           sub="14 of 14 drills passed"
-          accent="#22c55e"
+          accent="text-emerald-400"
         />
       </div>
 
-      {/* ── PITR Timeline Scrubber ── */}
+      {/* ── PITR Timeline Scrubber (Clean & Quiet) ── */}
       <PitrScrubber onSelectPoint={handleSelectPoint} />
 
-      {/* ── Drill & Restore History Section ── */}
-      <div className="space-y-4 pt-2">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <h2 className="text-[14px] font-medium text-white">Recent Recovery Drills & Restores</h2>
-            <span className="text-[11px] font-mono text-[#555555]">{drills.length} events</span>
-          </div>
+      {/* ── Recent Recovery Events ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-[14px] font-medium text-white">Recent Recovery Drills & Restores</h2>
 
           <div className="relative">
-            <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-[#555555]" />
+            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-[#555555]" />
             <input
               type="text"
               placeholder="Search drills..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8 pr-3 w-52 bg-[#111111] border border-[#222222] rounded-md text-[12px] text-white placeholder-[#555555] focus:outline-none focus:border-[#333333]"
+              className="h-8 pl-8.5 pr-3 w-52 bg-[#111111] border border-[#222222] rounded-md text-[12px] text-white placeholder-[#555555] focus:outline-none focus:border-[#333333]"
             />
           </div>
         </div>
 
-        {/* Drill Cards */}
-        <div className="space-y-3">
+        {/* Clean Drill Cards */}
+        <div className="space-y-3.5">
           {filteredDrills.map((d) => (
             <DrillCard
               key={d.id}
@@ -970,7 +910,7 @@ export function RestoresPageClient({
             <div className="flex items-center justify-between px-6 py-5 border-b border-[#1a1a1a]">
               <div>
                 <h3 className="text-[14px] font-medium text-white">
-                  Logs for Drill #{viewingLogsDrill.id}
+                  Logs for Drill #{viewingLogsDrill.id.replace("drill-", "")}
                 </h3>
                 <p className="text-[11px] text-[#666666] font-mono">
                   {viewingLogsDrill.executedAt} · Duration: {viewingLogsDrill.durationSec}s

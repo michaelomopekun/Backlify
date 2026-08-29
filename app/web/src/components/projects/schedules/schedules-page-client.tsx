@@ -19,6 +19,7 @@ import {
   IconCircleCheck,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { StatCard, StatCardVariant2 } from "@/components/shared/stat-card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -127,46 +128,7 @@ function fmtDuration(sec: number) {
   return `${m}m ${s}s`;
 }
 
-/* ─────────────────────────────────────────────────────────────────
-   StatCard
-───────────────────────────────────────────────────────────────────*/
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  accent,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  sub: string;
-  accent?: string;
-}) {
-  return (
-    <div className="rounded-xl border border-[#1a1a1a] bg-[#0f0f0f] p-5 flex items-start gap-4">
-      <div
-        className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg"
-        style={{ background: accent ? `${accent}18` : "#ffffff0d" }}
-      >
-        <Icon
-          className="size-4.5"
-          style={{ color: accent ?? "#888888" }}
-        />
-      </div>
-      <div>
-        <p className="text-[11px] font-mono uppercase tracking-widest text-[#555555] mb-1">
-          {label}
-        </p>
-        <p className="text-[22px] font-semibold tracking-tight text-white leading-none">
-          {value}
-        </p>
-        <p className="text-[11px] text-[#666666] mt-1">{sub}</p>
-      </div>
-    </div>
-  );
-}
 
 /* ─────────────────────────────────────────────────────────────────
    24h Timeline Rail
@@ -754,7 +716,7 @@ export function SchedulesPageClient({
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10 pb-16">
       {/* ── Header ── */}
       <div className="flex items-start justify-between gap-4">
         <div>
@@ -772,61 +734,63 @@ export function SchedulesPageClient({
         </Button>
       </div>
 
-      {/* ── Stat Cards ── */}
+      {/* ── Stat Cards (Card 1 Style) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard
           icon={IconCalendarTime}
           label="Active Schedules"
           value={`${activeCount} / ${schedules.length}`}
           sub={failingCount > 0 ? `${failingCount} failing` : "All healthy"}
-          accent={failingCount > 0 ? "#ef4444" : "#22c55e"}
+          accent={failingCount > 0 ? "text-red-400" : "text-emerald-400"}
         />
         <StatCard
           icon={IconClock}
           label="Next Run In"
           value={nextRun}
           sub="Daily Production Snapshot"
-          accent="#FFB31F"
+          accent="text-amber-400"
         />
         <StatCard
           icon={IconRefresh}
           label="Avg Backup Duration"
           value={fmtDuration(avgDuration)}
           sub="Across all schedules"
-          accent="#818cf8"
+          accent="text-indigo-400"
         />
       </div>
 
       {/* ── 24h Timeline Rail ── */}
       <TimelineRail schedules={schedules} />
 
-      {/* ── Schedules Section Header ── */}
-      <div className="flex items-center justify-between pt-2">
-        <h2 className="text-[13px] font-medium text-white">All Schedules</h2>
-        <span className="text-[11px] text-[#555555] font-mono">{schedules.length} schedules</span>
-      </div>
+      {/* ── Schedules Section ── */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-[13px] font-medium text-white">All Schedules</h2>
+          <span className="text-[11px] text-[#555555] font-mono">{schedules.length} schedules</span>
+        </div>
 
-      {/* ── Schedule Cards ── */}
-      <div className="space-y-3">
-        {schedules.map((s) => (
-          <div key={s.id} className="relative">
-            {/* "Running now" flash overlay */}
-            {runningId === s.id && (
-              <div className="absolute inset-0 rounded-xl border border-primary/40 bg-primary/5 z-10 flex items-center justify-center pointer-events-none">
-                <span className="text-[12px] font-mono text-primary animate-pulse">
-                  ⚡ Backup triggered — running…
-                </span>
-              </div>
-            )}
-            <ScheduleCard
-              schedule={s}
-              onEdit={handleEdit}
-              onToggle={handleToggle}
-              onDelete={handleDelete}
-              onRunNow={handleRunNow}
-            />
-          </div>
-        ))}
+        {/* ── Schedule Cards ── */}
+        <div className="space-y-3.5">
+          {schedules.map((s) => (
+            <div key={s.id} className="relative">
+              {/* "Running now" flash overlay */}
+              {runningId === s.id && (
+                <div className="absolute inset-0 rounded-xl border border-primary/40 bg-primary/5 z-10 flex items-center justify-center pointer-events-none">
+                  <span className="text-[12px] font-mono text-primary animate-pulse">
+                    ⚡ Backup triggered — running…
+                  </span>
+                </div>
+              )}
+              <ScheduleCard
+                schedule={s}
+                onEdit={handleEdit}
+                onToggle={handleToggle}
+                onDelete={handleDelete}
+                onRunNow={handleRunNow}
+              />
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* ── Empty State (if all deleted) ── */}

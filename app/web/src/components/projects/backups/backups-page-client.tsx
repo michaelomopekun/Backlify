@@ -19,6 +19,7 @@ import {
   IconFilter,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { StatCard } from "@/components/shared/stat-card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,32 +74,7 @@ const ACTIVITY_DAYS = [
    Sub-components
 ───────────────────────────────────────────────────────────────────*/
 
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  accent,
-}: {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  sub?: string;
-  accent?: string;
-}) {
-  return (
-    <div className="flex items-center gap-4 p-5 rounded-lg border border-[#1e1e1e] bg-[#111111]">
-      <div className="size-[52px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
-        <Icon className={`size-5 ${accent ?? "text-white/80"}`} stroke={1.3} />
-      </div>
-      <div>
-        <p className="text-[11px] uppercase font-mono tracking-wider text-[#666666]">{label}</p>
-        <p className="text-[22px] font-normal text-white leading-tight">{value}</p>
-        {sub && <p className="text-[11px] text-[#555555] font-mono mt-0.5">{sub}</p>}
-      </div>
-    </div>
-  );
-}
+
 
 function TypeBadge({ type }: { type: BackupType }) {
   return type === "scheduled" ? (
