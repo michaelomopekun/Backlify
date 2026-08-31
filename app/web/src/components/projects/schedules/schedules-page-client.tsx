@@ -644,14 +644,42 @@ function CronEditorDrawer({
    Main Page
 ───────────────────────────────────────────────────────────────────*/
 
+import {
+  createSchedule,
+  setScheduleActive,
+  deleteSchedule,
+} from "@/app/actions/schedule.actions";
+import { triggerBackup } from "@/app/actions/backup.actions";
+
 export function SchedulesPageClient({
   orgId,
   projectId,
+  initialSchedules,
 }: {
   orgId: string;
   projectId: string;
+  initialSchedules?: any[];
 }) {
-  const [schedules, setSchedules] = useState<Schedule[]>(MOCK_SCHEDULES);
+  const [schedules, setSchedules] = useState<Schedule[]>(() => {
+    if (initialSchedules && initialSchedules.length > 0) {
+      return initialSchedules.map((s) => ({
+        id: s.id,
+        name: s.name,
+        cron: s.cron,
+        humanReadable: s.frequency,
+        status: s.status,
+        nextRunUtc: "14:00",
+        nextRunLabel: s.nextRunRel || "in ~3h",
+        lastRunLabel: s.lastRun || "Never",
+        lastRunOk: s.lastRunStatus === "success",
+        retentionDays: s.retentionDays || 14,
+        avgDurationSec: 72,
+        totalRuns: 42,
+      }));
+    }
+    return MOCK_SCHEDULES;
+  });
+
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const [runningId, setRunningId] = useState<string | null>(null);
@@ -663,22 +691,29 @@ export function SchedulesPageClient({
   const nextRun = schedules.find((s) => s.status === "active")?.nextRunLabel ?? "—";
 
   // Avg duration across all schedules
-  const avgDuration = Math.round(
-    schedules.reduce((sum, s) => sum + s.avgDurationSec, 0) / schedules.length
-  );
+  const avgDuration = schedules.length > 0
+    ? Math.round(schedules.reduce((sum, s) => sum + s.avgDurationSec, 0) / schedules.length)
+    : 0;
 
-  function handleToggle(id: string) {
+  async function handleToggle(id: string) {
+    const current = schedules.find((s) => s.id === id);
+    if (!current) return;
+    const nextActive = current.status !== "active";
+
     setSchedules((prev) =>
       prev.map((s) =>
         s.id === id
-          ? { ...s, status: s.status === "paused" ? "active" : "paused" }
+          ? { ...s, status: nextActive ? "active" : "paused" }
           : s
       )
     );
+
+    await setScheduleActive(id, projectId, nextActive);
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     setSchedules((prev) => prev.filter((s) => s.id !== id));
+    await deleteSchedule(id, projectId);
   }
 
   function handleEdit(s: Schedule) {
@@ -686,17 +721,25 @@ export function SchedulesPageClient({
     setDrawerOpen(true);
   }
 
-  function handleRunNow(id: string) {
+  async function handleRunNow(id: string) {
     setRunningId(id);
-    setTimeout(() => setRunningId(null), 3000);
+    await triggerBackup(projectId);
+    setTimeout(() => setRunningId(null), 2500);
   }
 
-  function handleSave(data: Partial<Schedule>) {
+  async function handleSave(data: Partial<Schedule>) {
+    const cron = data.cron ?? "0 14 * * *";
+    const formData = new FormData();
+    formData.append("projectId", projectId);
+    formData.append("cronExpression", cron);
+    formData.append("timezone", "UTC");
+
     if (editingSchedule) {
       setSchedules((prev) =>
         prev.map((s) => (s.id === editingSchedule.id ? { ...s, ...data } : s))
       );
     } else {
+      const res = await createSchedule(formData);
       const newSchedule: Schedule = {
         id: `sch-${Date.now()}`,
         name: data.name ?? "New Schedule",

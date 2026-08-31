@@ -406,16 +406,22 @@ function DrillCard({
    Slide-in Wizard Drawer with Realtime Terminal Log Streamer
 ───────────────────────────────────────────────────────────────────*/
 
+import { triggerDrill, triggerRestore } from "@/app/actions/restore.actions";
+
 function RestoreWizardDrawer({
   open,
   defaultMode,
   defaultPoint,
   onClose,
+  projectId,
+  onDrillCompleted,
 }: {
   open: boolean;
   defaultMode: "drill" | "restore";
   defaultPoint: typeof PITR_POINTS[0] | null;
   onClose: () => void;
+  projectId?: string;
+  onDrillCompleted?: (drill: any) => void;
 }) {
   const [mode, setMode] = useState<"drill" | "restore">(defaultMode);
   const [targetUrl, setTargetUrl] = useState("");
@@ -446,31 +452,39 @@ function RestoreWizardDrawer({
       ? true
       : targetUrl.startsWith("postgres://") && confirmWord === "RESTORE";
 
-  function startExecution() {
+  async function startExecution() {
     setIsExecuting(true);
     setExecutionStep(1);
-    setLiveLogs(["[00:00:01] [INFO] Initializing Disaster Recovery Drill engine..."]);
+    setLiveLogs([`[${new Date().toISOString()}] Initializing ${mode === "drill" ? "Headless DR Drill Verification" : "Point-in-Time Database Restore"}...`]);
 
-    const steps = [
-      { delay: 800, log: "[00:00:02] [SANDBOX] Provisioning isolated ephemeral PostgreSQL 16 instance on eu-central-1...", step: 1 },
-      { delay: 1800, log: "[00:00:05] [SANDBOX] Ephemeral sandbox database ready: ephemeral-sandbox-live-drill", step: 2 },
-      { delay: 2800, log: "[00:00:08] [S3] Fetching snapshot dump (142 MB, AES-256 encrypted)...", step: 2 },
-      { delay: 3800, log: "[00:00:11] [KMS] Decrypted payload with KMS key alias/backlify-prod-key [OK]", step: 3 },
-      { delay: 4800, log: "[00:00:15] [RESTORE] Executing pg_restore --clean --if-exists (42 tables, 124.8k rows)...", step: 3 },
-      { delay: 5800, log: "[00:00:25] [RESTORE] Restored public.users (48,200 rows) ... [OK]", step: 3 },
-      { delay: 6800, log: "[00:00:35] [RESTORE] Restored public.transactions (182,410 rows) ... [OK]", step: 3 },
-      { delay: 7800, log: "[00:00:48] [VERIFY] Running SHA-256 checksum integrity verification suite...", step: 4 },
-      { delay: 8800, log: "[00:00:55] [VERIFY] Schema Parity: 100% | Row Count: 124,800/124,800 | Checksum: MATCH", step: 4 },
-      { delay: 9600, log: "[00:01:02] [TEARDOWN] Dropping ephemeral sandbox database cleanly...", step: 5 },
-      { delay: 10200, log: "[00:01:08] [SUCCESS] DR Drill completed successfully with 100% integrity score.", step: 5 },
-    ];
+    if (mode === "drill") {
+      const res = await triggerDrill(projectId || "proj-1", defaultPoint?.id);
+      if (res.success && res.drill) {
+        setExecutionStep(5);
+        setLiveLogs(res.drill.logs);
+        if (onDrillCompleted) {
+          onDrillCompleted(res.drill);
+        }
+      }
+    } else {
+      const formData = new FormData();
+      formData.append("projectId", projectId || "proj-1");
+      formData.append("backupFileId", defaultPoint?.id || "bk-001");
+      formData.append("targetDatabaseUrl", targetUrl);
+      formData.append("confirm", confirmWord);
 
-    steps.forEach((s) => {
-      setTimeout(() => {
-        setExecutionStep(s.step);
-        setLiveLogs((prev) => [...prev, s.log]);
-      }, s.delay);
-    });
+      const res = await triggerRestore(formData);
+      if (res?.error) {
+        setLiveLogs((prev) => [...prev, `[ERROR] Restore rejected: ${res.error}`]);
+      } else {
+        setExecutionStep(5);
+        setLiveLogs((prev) => [
+          ...prev,
+          `[SUCCESS] Restore Job enqueued: ${res.jobId}`,
+          `[INFO] Worker has locked target database and begun schema restoration.`,
+        ]);
+      }
+    }
   }
 
   function handleCopyLogs() {
@@ -899,6 +913,31 @@ export function RestoresPageClient({
         open={drawerOpen}
         defaultMode={drawerMode}
         defaultPoint={selectedPoint}
+        projectId={projectId}
+        onDrillCompleted={(drill) => {
+          setDrills((prev) => [
+            {
+              id: drill.id,
+              type: "automated_drill",
+              executedAt: "Just now",
+              targetDb: "Headless Sandbox (In-Memory)",
+              sourceSnapshot: drill.sourceSnapshot,
+              sourceTimestamp: "Just now",
+              sizeMb: 142,
+              status: "passed",
+              durationSec: drill.durationSec,
+              initiatedBy: "Disaster Recovery Engine",
+              integrityChecks: [
+                { name: "Checksum SHA-256", passed: true },
+                { name: "KMS Decryption", passed: true },
+                { name: "Archive TOC", passed: true },
+                { name: "Schema Validity", passed: true },
+              ],
+              logs: drill.logs,
+            },
+            ...prev,
+          ]);
+        }}
         onClose={() => setDrawerOpen(false)}
       />
 

@@ -62,11 +62,13 @@ export async function triggerBackup(projectId: string) {
     console.error("Failed to trigger backup:", error);
     return { error: "Could not start the backup. Try again in a moment." };
   }
-}
+import { ScheduleRepository } from "db";
 
 export async function createProject(formData: FormData) {
   const name = formData.get("name")?.toString().trim();
   const databaseUrl = formData.get("databaseUrl")?.toString().trim();
+  const orgId = formData.get("orgId")?.toString().trim() || "default-org";
+  const cronExpression = formData.get("cronExpression")?.toString().trim() || "0 2 * * *";
 
   if (!name) return { error: "Give the project a name." };
   if (!databaseUrl) return { error: "A database connection string is required." };
@@ -75,17 +77,43 @@ export async function createProject(formData: FormData) {
   }
 
   try {
+    const projectId = `proj-${uuidv4().substring(0, 8)}`;
     const project = await ProjectRepository.createProject({
-      id: `proj-${uuidv4().substring(0, 12)}`,
-      orgId: "org-placeholder", // TODO: resolve from session when auth is wired
+      id: projectId,
+      orgId,
       name,
       databaseUrl,
     });
 
-    revalidatePath(`/dashboard/project/${project.id}`);
+    if (cronExpression) {
+      const scheduleId = `sch-${uuidv4().substring(0, 8)}`;
+      await ScheduleRepository.createSchedule({
+        id: scheduleId,
+        projectId,
+        cronExpression,
+        timezone: "UTC",
+        isActive: true,
+      });
+
+      try {
+        await backupQueue.add(
+          "scheduled-backup",
+          { scheduleId, projectId },
+          {
+            repeat: { pattern: cronExpression, tz: "UTC" },
+            jobId: `schedule-${scheduleId}`,
+          }
+        );
+      } catch (queueErr) {
+        console.warn("Could not register repeatable backup job on project creation:", queueErr);
+      }
+    }
+
+    revalidatePath(`/dashboard/project/${projectId}`);
+    revalidatePath(`/dashboard/org/${orgId}`);
     revalidatePath("/dashboard");
 
-    return { success: true, projectId: project.id };
+    return { success: true, projectId };
   } catch (error) {
     console.error("Failed to create project:", error);
     return { error: "Could not create the project. Try again in a moment." };

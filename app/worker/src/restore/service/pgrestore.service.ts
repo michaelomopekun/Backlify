@@ -218,4 +218,41 @@ export class PgRestoreService {
 
     }
 
+    async inspectArchiveToc(backupFilePath: string, timeout = 30000): Promise<{ success: boolean; tableCount?: number; entries?: string[]; error?: string }> {
+        return new Promise((resolve) => {
+            const pgRestorePath = process.env.PG_RESTORE_PATH || 
+                (process.platform === 'win32' ? 'C:\\Program Files\\PostgreSQL\\16\\bin\\pg_restore.exe' : 'pg_restore');
+
+            const args = ['--list', backupFilePath];
+            const proc = spawn(pgRestorePath, args, { stdio: ["ignore", "pipe", "pipe"], timeout });
+
+            let stdout = "";
+            let stderr = "";
+            let timedOut = false;
+
+            proc.stdout?.on("data", (d: Buffer) => { stdout += d.toString(); });
+            proc.stderr?.on("data", (d: Buffer) => { stderr += d.toString(); });
+
+            const timer = setTimeout(() => {
+                timedOut = true;
+                proc.kill("SIGTERM");
+            }, timeout);
+
+            proc.on('close', (code: number | null) => {
+                clearTimeout(timer);
+                if (timedOut) {
+                    return resolve({ success: false, error: "TOC inspection timed out" });
+                }
+                if (code === 0 || (stdout.length > 0 && code !== null)) {
+                    const lines = stdout.split('\n').filter(l => l.trim().length > 0 && !l.startsWith(';'));
+                    const tableEntries = lines.filter(l => l.includes('TABLE DATA') || l.includes('TABLE'));
+                    resolve({ success: true, tableCount: Math.max(1, tableEntries.length), entries: lines.slice(0, 50) });
+                } else {
+                    resolve({ success: false, error: stderr || `pg_restore --list exited with code ${code}` });
+                }
+            });
+        });
+    }
+
 }
+

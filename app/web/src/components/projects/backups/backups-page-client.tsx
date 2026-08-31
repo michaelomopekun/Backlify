@@ -171,13 +171,37 @@ function ActivityBar({
    Trigger Backup Side Panel
 ───────────────────────────────────────────────────────────────────*/
 
-function TriggerPanel({ onClose }: { onClose: () => void }) {
+import { triggerBackup } from "@/app/actions/backup.actions";
+
+function TriggerPanel({
+  projectId,
+  onClose,
+  onSuccess,
+}: {
+  projectId: string;
+  onClose: () => void;
+  onSuccess?: (jobId: string, label?: string) => void;
+}) {
   const [label, setLabel] = useState("");
   const [triggered, setTriggered] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleTrigger = () => {
+  const handleTrigger = async () => {
     setTriggered(true);
-    setTimeout(onClose, 1800);
+    setErrorMessage(null);
+
+    const res = await triggerBackup(projectId);
+    if (res?.error) {
+      setErrorMessage(res.error);
+      setTriggered(false);
+      return;
+    }
+
+    if (res?.jobId && onSuccess) {
+      onSuccess(res.jobId, label || undefined);
+    }
+
+    setTimeout(onClose, 1200);
   };
 
   return (
@@ -206,7 +230,7 @@ function TriggerPanel({ onClose }: { onClose: () => void }) {
           <div className="p-4 rounded-lg border border-[#1e1e1e] bg-[#111111] space-y-1.5">
             <p className="text-[11px] uppercase font-mono tracking-wider text-[#555555]">Target Database</p>
             <p className="text-[14px] text-white font-medium">Primary Database</p>
-            <p className="text-[12px] text-[#666666] font-mono">eu-central-1 · Postgres 16</p>
+            <p className="text-[12px] text-[#666666] font-mono">Project: {projectId} · Postgres 16</p>
           </div>
 
           {/* Optional label */}
@@ -223,6 +247,12 @@ function TriggerPanel({ onClose }: { onClose: () => void }) {
             />
           </div>
 
+          {errorMessage && (
+            <div className="p-3 rounded border border-red-500/20 bg-red-500/10 text-red-400 text-xs font-mono">
+              {errorMessage}
+            </div>
+          )}
+
           {/* Estimated info */}
           <div className="space-y-2.5">
             <p className="text-[11px] uppercase font-mono tracking-wider text-[#555555]">Snapshot Details</p>
@@ -231,7 +261,7 @@ function TriggerPanel({ onClose }: { onClose: () => void }) {
                 ["Estimated Size", "~142 MB"],
                 ["Est. Duration", "~1m 12s"],
                 ["Encryption", "AES-256"],
-                ["Destination", "S3 / eu-central-1"],
+                ["Destination", "S3 / us-east-1"],
               ].map(([k, v]) => (
                 <div key={k} className="p-3 rounded border border-[#1e1e1e] bg-[#0f0f0f]">
                   <p className="text-[10px] font-mono text-[#555555] uppercase tracking-wider">{k}</p>
@@ -247,7 +277,7 @@ function TriggerPanel({ onClose }: { onClose: () => void }) {
           {triggered ? (
             <div className="flex items-center gap-2 text-emerald-400 text-[13px]">
               <IconLoader2 className="size-4 animate-spin" />
-              Backup triggered — running now…
+              Backup enqueued — worker executing…
             </div>
           ) : (
             <div className="flex gap-3">
@@ -280,16 +310,32 @@ function TriggerPanel({ onClose }: { onClose: () => void }) {
 export function BackupsPageClient({
   orgId,
   projectId,
+  initialBackups,
 }: {
   orgId: string;
   projectId: string;
+  initialBackups?: Backup[];
 }) {
+  const [backupsList, setBackupsList] = useState<Backup[]>(initialBackups ?? MOCK_BACKUPS);
   const [showPanel, setShowPanel] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | BackupType>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | BackupStatus>("all");
 
-  const filtered = MOCK_BACKUPS.filter((b) => {
+  const handleBackupSuccess = (jobId: string, label?: string) => {
+    const newEntry: Backup = {
+      id: jobId,
+      timestamp: "Just now",
+      type: "manual",
+      status: "in_progress",
+      sizeMb: 0,
+      durationSec: 0,
+      label: label ?? "manual-trigger",
+    };
+    setBackupsList((prev) => [newEntry, ...prev]);
+  };
+
+  const filtered = backupsList.filter((b) => {
     const matchSearch =
       b.timestamp.toLowerCase().includes(search.toLowerCase()) ||
       (b.label ?? "").toLowerCase().includes(search.toLowerCase());
@@ -298,12 +344,13 @@ export function BackupsPageClient({
     return matchSearch && matchType && matchStatus;
   });
 
-  const totalMb = MOCK_BACKUPS.filter((b) => b.status === "complete").reduce(
+  const totalMb = backupsList.filter((b) => b.status === "complete").reduce(
     (sum, b) => sum + b.sizeMb,
     0
   );
-  const successCount = MOCK_BACKUPS.filter((b) => b.status === "complete").length;
-  const successRate = Math.round((successCount / MOCK_BACKUPS.length) * 100);
+  const successCount = backupsList.filter((b) => b.status === "complete").length;
+  const successRate = backupsList.length > 0 ? Math.round((successCount / backupsList.length) * 100) : 100;
+
 
   return (
     <div className="space-y-10">
@@ -546,7 +593,13 @@ export function BackupsPageClient({
       </div>
 
       {/* Trigger backup panel */}
-      {showPanel && <TriggerPanel onClose={() => setShowPanel(false)} />}
+      {showPanel && (
+        <TriggerPanel
+          projectId={projectId}
+          onClose={() => setShowPanel(false)}
+          onSuccess={handleBackupSuccess}
+        />
+      )}
     </div>
   );
 }
