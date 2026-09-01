@@ -495,10 +495,10 @@ export function BackupsPageClient({
         </div>
 
         {/* Table wrapper with overflow scroll on mobile */}
-        <div className="rounded-lg border border-[#1a1a1a] overflow-hidden overflow-x-auto">
+        <div className="rounded-lg border border-[#1a1a1a] bg-[#0c0c0c] overflow-hidden overflow-x-auto">
           <div className="min-w-[620px]">
             {/* Col headers */}
-            <div className="grid grid-cols-[1fr_100px_80px_90px_72px_44px] gap-4 px-5 py-3 border-b border-[#1a1a1a] bg-[#0d0d0d]">
+            <div className="grid grid-cols-[minmax(180px,1fr)_100px_80px_95px_80px_48px] gap-3 px-5 py-3 border-b border-[#1a1a1a] bg-[#0d0d0d]">
               {["Timestamp", "Type", "Size", "Status", "Duration", ""].map((h, i) => (
                 <span key={i} className="text-[11px] font-mono uppercase tracking-wider text-[#444444]">
                   {h}
@@ -515,8 +515,8 @@ export function BackupsPageClient({
               filtered.map((backup, idx) => (
                 <div
                   key={backup.id}
-                  className={`group grid grid-cols-[1fr_100px_80px_90px_72px_44px] gap-4 px-5 py-3.5 items-center hover:bg-[#111111] transition-colors ${
-                    idx !== filtered.length - 1 ? "border-b border-[#141414]" : ""
+                  className={`group grid grid-cols-[minmax(180px,1fr)_100px_80px_95px_80px_48px] gap-3 px-5 py-3.5 items-center hover:bg-[#121212] transition-colors ${
+                    idx !== filtered.length - 1 ? "border-b border-[#161616]" : ""
                   }`}
                 >
                   {/* Timestamp + label */}
@@ -532,7 +532,7 @@ export function BackupsPageClient({
                     />
                     <span className="text-[13px] text-white font-mono truncate">{backup.timestamp}</span>
                     {backup.label && (
-                      <span className="text-[10.5px] font-mono px-1.5 py-0.5 rounded bg-[#1a1a1a] text-[#666666] border border-[#242424] shrink-0">
+                      <span className="text-[10.5px] font-mono px-1.5 py-0.5 rounded bg-[#1a1a1a] text-[#777777] border border-[#262626] shrink-0">
                         {backup.label}
                       </span>
                     )}
@@ -556,23 +556,34 @@ export function BackupsPageClient({
                       : "—"}
                   </span>
 
-                  {/* Row actions */}
+                  {/* Row actions (Always visible, prominent on mobile & desktop) */}
                   <div className="flex justify-end">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-[#1e1e1e] text-[#666666] hover:text-white">
-                          <IconDotsVertical className="size-3.5" />
+                        <button
+                          type="button"
+                          aria-label="Backup actions"
+                          className="size-8 rounded-md bg-[#161616] sm:bg-transparent border border-[#262626] sm:border-transparent hover:border-[#383838] hover:bg-[#202020] text-[#aaaaaa] hover:text-white transition-all shadow-xs flex items-center justify-center cursor-pointer"
+                        >
+                          <IconDotsVertical className="size-4" />
                         </button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
                         align="end"
                         className="w-44 bg-[#111111] border-[#222222] text-[12px]"
                       >
-                        <DropdownMenuItem className="gap-2 cursor-pointer">
-                          <IconDownload className="size-3.5" /> Download dump
+                        <DropdownMenuItem className="gap-2 cursor-pointer text-white">
+                          <IconDownload className="size-3.5 text-[#888888]" /> Download dump
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 cursor-pointer">
-                          <IconRotateClockwise className="size-3.5" /> Restore to this point
+                        <DropdownMenuItem
+                          onClick={() => {
+                            window.dispatchEvent(
+                              new CustomEvent("backlify:open-modal", { detail: "restore" })
+                            );
+                          }}
+                          className="gap-2 cursor-pointer text-white"
+                        >
+                          <IconRotateClockwise className="size-3.5 text-[#888888]" /> Restore database
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-[#1e1e1e]" />
                         <DropdownMenuItem className="gap-2 cursor-pointer text-red-400 focus:text-red-400">

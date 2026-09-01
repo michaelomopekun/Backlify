@@ -140,85 +140,98 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
   const nowPercent = ((11 * 60 + 46) / (24 * 60)) * 100;
 
   return (
-    <div className="rounded-xl border border-[#1a1a1a] bg-[#0f0f0f] p-5 space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="rounded-xl border border-[#1a1a1a] bg-[#0f0f0f] p-4 sm:p-5 space-y-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h2 className="text-[13px] font-medium text-white">Next 24h Timeline</h2>
-          <p className="text-[11px] text-[#555555] mt-0.5 font-mono">Scheduled fires — UTC</p>
+          <h2 className="text-[13.5px] font-medium text-white">Next 24h Timeline</h2>
+          <p className="text-[11px] text-[#666666] font-mono mt-0.5">Scheduled fires — UTC</p>
         </div>
-        <span className="text-[10px] font-mono text-[#444444] border border-[#222222] rounded px-2 py-0.5">
+        <span className="text-[10px] font-mono text-[#888888] bg-[#141414] border border-[#222222] rounded px-2 py-0.5 self-start sm:self-auto">
           Now: 11:46 UTC
         </span>
       </div>
 
-      {/* Rail */}
-      <div className="relative h-12 select-none">
-        {/* Track */}
-        <div className="absolute top-5 left-0 right-0 h-px bg-[#1e1e1e]" />
-
-        {/* Hour tick marks */}
-        {[0, 6, 12, 18, 24].map((h) => (
+      {/* Rail Container */}
+      <div className="relative pt-6 pb-6 select-none px-3">
+        {/* Horizontal Track */}
+        <div className="relative h-2 w-full bg-[#181818] rounded-full overflow-hidden border border-[#242424]">
+          {/* Progress fill up to Now */}
           <div
-            key={h}
-            className="absolute top-3 flex flex-col items-center"
-            style={{ left: `${(h / 24) * 100}%` }}
-          >
-            <div className="w-px h-3 bg-[#2a2a2a]" />
-            <span className="text-[9px] font-mono text-[#444444] mt-1">
-              {String(h).padStart(2, "0")}:00
-            </span>
-          </div>
-        ))}
+            className="h-full bg-primary/20"
+            style={{ width: `${nowPercent}%` }}
+          />
+        </div>
 
-        {/* "Now" cursor */}
+        {/* "Now" indicator line & badge */}
         <div
-          className="absolute top-2 flex flex-col items-center z-10"
+          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20"
           style={{ left: `${nowPercent}%` }}
         >
-          <div className="w-px h-5 bg-primary/70" />
-          <div className="size-1.5 rounded-full bg-primary mt-0.5" />
+          <div className="size-3.5 rounded-full bg-[#111111] border-2 border-primary shadow-sm flex items-center justify-center">
+            <div className="size-1 rounded-full bg-primary" />
+          </div>
         </div>
 
         {/* Schedule pins */}
         {active.map((s) => {
           const pct = utcHourToPercent(s.nextRunUtc);
-          const color =
-            s.status === "failing" ? "#ef4444" : "#FFB31F";
+          const color = s.status === "failing" ? "#ef4444" : "#FFB31F";
           return (
             <div
               key={s.id}
-              className="absolute top-3 flex flex-col items-center group cursor-default"
+              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center group cursor-pointer z-30"
               style={{ left: `${pct}%` }}
-              title={`${s.name} · ${s.nextRunUtc} UTC`}
             >
+              {/* Event Bubble / Pin */}
               <div
-                className="w-0.5 h-5 rounded-full"
+                className="size-4 rounded-full border-2 border-[#111111] shadow-md flex items-center justify-center transition-transform group-hover:scale-125"
                 style={{ background: color }}
               />
-              <div
-                className="size-2 rounded-full mt-0.5 ring-2 ring-[#0f0f0f]"
-                style={{ background: color }}
-              />
-              {/* Hover label */}
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-7 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#1a1a1a] border border-[#2a2a2a] text-white text-[10px] font-mono px-2 py-1 rounded z-20 pointer-events-none">
-                {s.nextRunUtc} UTC
+
+              {/* Hover Tooltip */}
+              <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 whitespace-nowrap bg-[#1a1a1a] border border-[#2e2e2e] text-white text-[10px] font-mono px-2 py-0.5 rounded shadow-lg pointer-events-none">
+                {s.name}: {s.nextRunUtc} UTC
               </div>
             </div>
           );
         })}
+
+        {/* Hour tick marks & labels safely BELOW the track */}
+        <div className="relative w-full h-4 mt-3">
+          {[
+            { h: 0, label: "00:00" },
+            { h: 6, label: "06:00", hideMobile: true },
+            { h: 12, label: "12:00" },
+            { h: 18, label: "18:00", hideMobile: true },
+            { h: 24, label: "24:00" },
+          ].map((item) => (
+            <div
+              key={item.h}
+              className={`absolute top-0 -translate-x-1/2 flex flex-col items-center ${
+                item.hideMobile ? "hidden sm:flex" : "flex"
+              }`}
+              style={{ left: `${(item.h / 24) * 100}%` }}
+            >
+              <div className="w-px h-1.5 bg-[#2a2a2a] mb-1" />
+              <span className="text-[10px] font-mono text-[#555555]">
+                {item.label}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-5 pt-1">
+      <div className="flex flex-wrap items-center gap-4 pt-1 border-t border-[#141414]">
         {active.map((s) => (
-          <div key={s.id} className="flex items-center gap-1.5 text-[11px] text-[#666666]">
+          <div key={s.id} className="flex items-center gap-1.5 text-[11px] text-[#777777]">
             <span
-              className="size-1.5 rounded-full"
+              className="size-2 rounded-full shrink-0"
               style={{ background: s.status === "failing" ? "#ef4444" : "#FFB31F" }}
             />
-            <span className="font-mono">{s.name.split(" ")[0]}</span>
-            <span className="text-[#444444]">·</span>
-            <span className="text-[#555555]">{s.nextRunUtc} UTC</span>
+            <span className="font-mono text-white">{s.name}</span>
+            <span className="text-[#555555]">·</span>
+            <span className="font-mono text-[#888888]">{s.nextRunUtc} UTC</span>
           </div>
         ))}
       </div>
