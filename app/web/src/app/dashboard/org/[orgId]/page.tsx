@@ -17,6 +17,7 @@ import { ProjectRepository, OrganizationRepository } from "db";
 import { getCurrentUser } from "@/lib/current-user";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { OrgSidebar } from "@/components/layout/app-sidebar";
+import { OrgPickerClientActions } from "@/components/layout/org-picker-client-actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
@@ -76,37 +77,8 @@ export default async function OrgProjectsPage({ params }: Props) {
           </Link>
 
           {/* Right Topbar actions */}
-          <div className="ml-auto flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground text-xs h-7 hidden lg:flex"
-            >
-              Feedback
-            </Button>
-
-            <button
-              type="button"
-              className="hidden md:flex items-center gap-2 h-7 px-2.5 rounded-md border border-border/80 bg-muted/30 text-xs text-muted-foreground hover:bg-muted/60 transition-colors"
-            >
-              <IconSearch className="size-3" />
-              <span>Search...</span>
-              <kbd className="ml-1 text-[9px] border border-border/80 rounded px-1">Ctrl K</kbd>
-            </button>
-
-            <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground">
-              <IconHelp className="size-3.5" />
-            </Button>
-
-            <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground">
-              <IconBell className="size-3.5" />
-            </Button>
-
-            <Avatar className="size-6 cursor-pointer">
-              <AvatarFallback className="bg-primary text-primary-foreground text-[10px] font-bold">
-                {user.initials}
-              </AvatarFallback>
-            </Avatar>
+          <div className="ml-auto">
+            <OrgPickerClientActions userInitials={user.initials} />
           </div>
         </header>
 

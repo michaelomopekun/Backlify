@@ -258,7 +258,7 @@ function SidebarTrigger({
   onClick,
   ...props
 }: React.ComponentProps<typeof Button>) {
-  const { toggleSidebar } = useSidebar()
+  const { toggleSidebar, isMobile } = useSidebar()
 
   return (
     <Button
@@ -269,7 +269,13 @@ function SidebarTrigger({
       className={cn(className)}
       onClick={(event) => {
         onClick?.(event)
-        toggleSidebar()
+        if (isMobile) {
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("backlify:open-modal", { detail: "sidebar" }))
+          }
+        } else {
+          toggleSidebar()
+        }
       }}
       {...props}
     >

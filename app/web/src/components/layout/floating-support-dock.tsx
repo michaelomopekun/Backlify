@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   IconSearch,
   IconHelp,
@@ -19,6 +19,16 @@ import {
   IconCalendar,
   IconShieldCheck,
   IconPlus,
+  IconMenu2,
+  IconFolder,
+  IconUsers,
+  IconLayoutDashboard,
+  IconChartBar,
+  IconCreditCard,
+  IconSettings,
+  IconDatabaseImport,
+  IconCalendarClock,
+  IconRestore,
 } from "@tabler/icons-react";
 
 interface SearchItem {
@@ -35,7 +45,8 @@ interface SearchGroup {
 
 export function FloatingSupportDock() {
   const router = useRouter();
-  const [activeModal, setActiveModal] = useState<"none" | "search" | "help" | "feedback">("none");
+  const pathname = usePathname();
+  const [activeModal, setActiveModal] = useState<"none" | "search" | "help" | "feedback" | "sidebar">("none");
   const [searchQuery, setSearchQuery] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
@@ -52,7 +63,7 @@ export function FloatingSupportDock() {
     };
 
     const handleCustomModal = (e: Event) => {
-      const customEvent = e as CustomEvent<"none" | "search" | "help" | "feedback">;
+      const customEvent = e as CustomEvent<"none" | "search" | "help" | "feedback" | "sidebar">;
       if (customEvent.detail) {
         setActiveModal(customEvent.detail);
       }
@@ -68,7 +79,36 @@ export function FloatingSupportDock() {
 
   const closeAll = () => setActiveModal("none");
 
-  // Navigation search items
+  // Determine current org or project ID from pathname
+  const orgMatch = pathname.match(/\/dashboard\/org\/([^/]+)/);
+  const orgId = orgMatch ? orgMatch[1] : "default-org";
+
+  const projectMatch = pathname.match(/\/dashboard\/project\/([^/]+)/);
+  const projectId = projectMatch ? projectMatch[1] : "proj-1";
+
+  const isProjectRoute = pathname.startsWith("/dashboard/project") && !pathname.endsWith("/new");
+
+  // Navigation items for the sidebar drawer
+  const orgNavItems = [
+    { label: "Projects", href: `/dashboard/org/${orgId}`, icon: IconFolder, exact: true },
+    { label: "Team", href: `/dashboard/org/${orgId}/team`, icon: IconUsers },
+    { label: "Integrations", href: `/dashboard/org/${orgId}/integrations`, icon: IconLayoutDashboard },
+    { label: "Usage", href: `/dashboard/org/${orgId}/usage`, icon: IconChartBar },
+    { label: "Billing", href: `/dashboard/org/${orgId}/billing`, icon: IconCreditCard },
+    { label: "Organization settings", href: `/dashboard/org/${orgId}/settings`, icon: IconSettings },
+  ];
+
+  const projectNavItems = [
+    { label: "Project Overview", href: `/dashboard/project/${projectId}`, icon: IconLayoutDashboard, exact: true },
+    { label: "Backups", href: `/dashboard/project/${projectId}/backups`, icon: IconDatabaseImport },
+    { label: "Schedules", href: `/dashboard/project/${projectId}/schedules`, icon: IconCalendarClock },
+    { label: "Restores", href: `/dashboard/project/${projectId}/restores`, icon: IconRestore },
+    { label: "Project Settings", href: `/dashboard/project/${projectId}/settings`, icon: IconSettings },
+  ];
+
+  const activeNavList = isProjectRoute ? projectNavItems : orgNavItems;
+
+  // Search items
   const searchItems: SearchGroup[] = [
     {
       title: "Projects",
@@ -105,18 +145,28 @@ export function FloatingSupportDock() {
     }))
     .filter((group) => group.items.length > 0);
 
+  const isOrgSelection = pathname === "/dashboard/org" || pathname === "/dashboard/org/";
+  const isNewOrg = pathname === "/dashboard/org/new";
+  const isNewProject = pathname === "/dashboard/project/new";
+
+  const hasSidebar =
+    !isOrgSelection &&
+    !isNewOrg &&
+    !isNewProject &&
+    (pathname.startsWith("/dashboard/org/") || pathname.startsWith("/dashboard/project/"));
+
   return (
     <>
       {/* ── Floating Bottom Pill Dock (MOBILE ONLY: sm:hidden) ── */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex sm:hidden items-center gap-1.5 p-1.5 rounded-full border border-[#2a2a2a] bg-[#111111]/90 backdrop-blur-md shadow-2xl shadow-black/80 transition-all hover:border-[#3a3a3a]">
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex sm:hidden items-center gap-1.5 p-1.5 rounded-full border border-[#2a2a2a] bg-[#111111]/95 backdrop-blur-md shadow-2xl shadow-black/90 transition-all">
         {/* Search button */}
         <button
           type="button"
-          aria-label="Search and command menu"
+          aria-label="Search"
           onClick={() => setActiveModal((prev) => (prev === "search" ? "none" : "search"))}
           className={`size-8 rounded-full flex items-center justify-center transition-all ${
             activeModal === "search"
-              ? "bg-[#252525] text-white shadow-xs"
+              ? "bg-white text-black font-semibold shadow-xs"
               : "text-[#888888] hover:text-white hover:bg-[#1a1a1a]"
           }`}
         >
@@ -126,11 +176,11 @@ export function FloatingSupportDock() {
         {/* Help button */}
         <button
           type="button"
-          aria-label="Help and support"
+          aria-label="Help"
           onClick={() => setActiveModal((prev) => (prev === "help" ? "none" : "help"))}
           className={`size-8 rounded-full flex items-center justify-center transition-all ${
             activeModal === "help"
-              ? "bg-[#252525] text-white shadow-xs"
+              ? "bg-white text-black font-semibold shadow-xs"
               : "text-[#888888] hover:text-white hover:bg-[#1a1a1a]"
           }`}
         >
@@ -140,16 +190,32 @@ export function FloatingSupportDock() {
         {/* Feedback button */}
         <button
           type="button"
-          aria-label="Feedback and changelog"
+          aria-label="Feedback"
           onClick={() => setActiveModal((prev) => (prev === "feedback" ? "none" : "feedback"))}
           className={`size-8 rounded-full flex items-center justify-center transition-all ${
             activeModal === "feedback"
-              ? "bg-[#252525] text-white shadow-xs"
+              ? "bg-white text-black font-semibold shadow-xs"
               : "text-[#888888] hover:text-white hover:bg-[#1a1a1a]"
           }`}
         >
           <IconBulb className="size-4" />
         </button>
+
+        {/* Sidebar Navigation Menu Button — only on pages with sidebar */}
+        {hasSidebar && (
+          <button
+            type="button"
+            aria-label="Toggle sidebar menu"
+            onClick={() => setActiveModal((prev) => (prev === "sidebar" ? "none" : "sidebar"))}
+            className={`size-8 rounded-full flex items-center justify-center transition-all ${
+              activeModal === "sidebar"
+                ? "bg-white text-black font-semibold shadow-xs"
+                : "text-[#888888] hover:text-white hover:bg-[#1a1a1a]"
+            }`}
+          >
+            <IconMenu2 className="size-4" />
+          </button>
+        )}
 
         {/* Active close button if any modal is open */}
         {activeModal !== "none" && (
@@ -157,7 +223,7 @@ export function FloatingSupportDock() {
             type="button"
             aria-label="Close modal"
             onClick={closeAll}
-            className="size-8 rounded-full flex items-center justify-center bg-[#252525] text-white hover:bg-[#333333] transition-all ml-0.5"
+            className="size-8 rounded-full flex items-center justify-center bg-[#222222] text-white hover:bg-[#333333] transition-all ml-0.5"
           >
             <IconX className="size-4" />
           </button>
@@ -172,7 +238,37 @@ export function FloatingSupportDock() {
         />
       )}
 
-      {/* ── 1. HELP & SUPPORT DRAWER ── */}
+      {/* ── 1. SIDEBAR NAVIGATION DRAWER (Slide-Up Menu) ── */}
+      {activeModal === "sidebar" && (
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-sm z-50 rounded-xl border border-[#222222] bg-[#111111] shadow-2xl p-2 animate-in zoom-in-95 fade-in duration-150">
+          <div className="space-y-1">
+            {activeNavList.map((item) => {
+              const Icon = item.icon;
+              const isActive = item.exact
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
+
+              return (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  onClick={closeAll}
+                  className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
+                    isActive
+                      ? "bg-[#202020] text-white shadow-xs"
+                      : "text-[#888888] hover:text-white hover:bg-[#161616]"
+                  }`}
+                >
+                  <Icon className={`size-4.5 shrink-0 ${isActive ? "text-primary" : "text-[#777777]"}`} />
+                  <span>{item.label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── 2. HELP & SUPPORT DRAWER ── */}
       {activeModal === "help" && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-lg z-50 rounded-xl border border-[#222222] bg-[#111111] shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-150">
           {/* Header */}
@@ -270,7 +366,7 @@ export function FloatingSupportDock() {
         </div>
       )}
 
-      {/* ── 2. SEARCH & COMMAND PALETTE ── */}
+      {/* ── 3. SEARCH & COMMAND PALETTE ── */}
       {activeModal === "search" && (
         <div className="fixed top-24 left-1/2 -translate-x-1/2 w-[92vw] max-w-xl z-50 rounded-xl border border-[#222222] bg-[#111111] shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-150">
           {/* Search input bar */}
@@ -334,7 +430,7 @@ export function FloatingSupportDock() {
         </div>
       )}
 
-      {/* ── 3. FEEDBACK & CHANGELOG MODAL ── */}
+      {/* ── 4. FEEDBACK & CHANGELOG MODAL ── */}
       {activeModal === "feedback" && (
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-md z-50 rounded-xl border border-[#222222] bg-[#111111] shadow-2xl p-5 space-y-4 animate-in zoom-in-95 fade-in duration-150">
           <div className="flex items-center justify-between">
