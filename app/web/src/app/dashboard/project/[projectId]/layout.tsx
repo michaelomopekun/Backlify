@@ -13,6 +13,8 @@ import {
   IconSelector,
 } from "@tabler/icons-react";
 
+import { ProjectHeader } from "@/components/layout/project-header";
+
 interface Props {
   children: React.ReactNode;
   params: Promise<{ projectId: string }>;
@@ -49,90 +51,17 @@ export default async function ProjectLayout({ children, params }: Props) {
       />
 
       <SidebarInset>
-        {/* Supabase-faithful Topbar */}
-        <header className="flex h-12 items-center gap-2.5 px-4 border-b border-border/80 shrink-0 bg-[#0e0e0e] text-xs">
-          <SidebarTrigger className="-ml-1 size-7 text-muted-foreground hover:text-foreground" />
+        {/* Responsive Project Topbar */}
+        <ProjectHeader
+          orgId={orgId}
+          orgName={orgName}
+          projectId={projectId}
+          projectName={projectName}
+          userInitials={user.initials}
+        />
 
-          {/* Org Selector */}
-          <Link
-            href={`/dashboard/org/${orgId}`}
-            className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium"
-          >
-            <span>{orgName}</span>
-            <span className="text-[10px] px-1 py-0.2 rounded border border-border bg-muted/40 text-muted-foreground font-mono uppercase">
-              FREE
-            </span>
-            <IconSelector className="size-3 text-muted-foreground" />
-          </Link>
-
-          <span className="text-muted-foreground/60 text-sm">/</span>
-
-          {/* Project Selector */}
-          <Link
-            href={`/dashboard/project/${projectId}`}
-            className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium truncate max-w-[180px]"
-          >
-            <span className="truncate">{projectName}</span>
-            <IconSelector className="size-3 text-muted-foreground shrink-0" />
-          </Link>
-
-          <span className="text-muted-foreground/60 text-sm hidden sm:inline">/</span>
-
-          {/* Branch / Env Selector */}
-          <div className="hidden sm:flex items-center gap-1.5 text-foreground">
-            <span className="text-muted-foreground">main</span>
-            <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 uppercase font-mono tracking-wider">
-              PRODUCTION
-            </span>
-            <IconSelector className="size-3 text-muted-foreground" />
-          </div>
-
-          {/* Connect CTA Pill */}
-          <button
-            type="button"
-            className="hidden md:flex items-center gap-1.5 h-7 px-3 rounded-full border border-border bg-[#181818] hover:border-border/80 hover:bg-[#202020] text-foreground transition-colors ml-1 font-medium"
-          >
-            <IconPlugConnected className="size-3.5 text-muted-foreground" />
-            <span>Connect</span>
-          </button>
-
-          {/* Right Topbar actions */}
-          <div className="ml-auto flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground text-xs h-7 hidden lg:flex"
-            >
-              Feedback
-            </Button>
-
-            <button
-              type="button"
-              className="hidden md:flex items-center gap-2 h-7 px-2.5 rounded-md border border-border/80 bg-muted/30 text-xs text-muted-foreground hover:bg-muted/60 transition-colors"
-            >
-              <IconSearch className="size-3" />
-              <span>Search...</span>
-              <kbd className="ml-1 text-[9px] border border-border/80 rounded px-1">Ctrl K</kbd>
-            </button>
-
-            <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground">
-              <IconHelp className="size-3.5" />
-            </Button>
-
-            <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground">
-              <IconBell className="size-3.5" />
-            </Button>
-
-            <Avatar className="size-6 cursor-pointer">
-              <AvatarFallback className="bg-primary text-primary-foreground text-[10px] font-bold">
-                {user.initials}
-              </AvatarFallback>
-            </Avatar>
-          </div>
-        </header>
-
-        {/* Main Content Area with Generous Whitespace & Cushion from Header */}
-        <main className="flex-1 px-10 pt-10 pb-16 bg-[#0c0c0c] max-w-[1600px] w-full">
+        {/* Main Content Area */}
+        <main className="flex-1 px-4 sm:px-8 lg:px-10 pt-6 sm:pt-8 pb-16 bg-[#0c0c0c] max-w-[1600px] w-full">
           {children}
         </main>
       </SidebarInset>

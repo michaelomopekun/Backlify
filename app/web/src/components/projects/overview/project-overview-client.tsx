@@ -165,15 +165,15 @@ function TopPanelContent({
       </div>
 
       {/* Left Column */}
-      <div className="xl:col-span-6 flex flex-col space-y-8 pt-12 xl:pt-23">
+      <div className="xl:col-span-6 flex flex-col space-y-6 sm:space-y-8 pt-5 sm:pt-4 xl:pt-16">
         {/* Title & Connection Header */}
         <div>
-          <h1 className="text-[32px] font-normal tracking-tight text-foreground font-sans">
+          <h1 className="text-2xl sm:text-[32px] font-semibold tracking-tight text-foreground font-sans">
             {projectName}
           </h1>
 
-          <div className="mt-2.5 flex flex-wrap items-center gap-2.5 text-xs text-muted-foreground font-mono">
-            <span className="text-[#888888] font-mono text-[13.5px]">
+          <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-mono">
+            <span className="text-[#888888] font-mono text-xs sm:text-[13px] break-all">
               {maskedUrl}
             </span>
 
@@ -224,22 +224,22 @@ function TopPanelContent({
           </div>
         </div>
 
-        {/* Left Metric Items: 2 Columns */}
-        <div className="grid grid-cols-2 gap-y-6 gap-x-1 pt-1">
+        {/* Left Metric Items: Responsive 1 col on mobile, 2 cols on tablet/desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 sm:gap-y-6 gap-x-3 pt-1">
           {/* Status */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <div className="group/metric flex items-center gap-4 cursor-pointer text-left select-none">
-                <div className="size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0 group-hover/metric:border-[#383838] transition-colors">
+              <div className="group/metric flex items-center gap-3.5 sm:gap-4 cursor-pointer text-left select-none p-2 sm:p-0 rounded-lg hover:bg-[#141414] sm:hover:bg-transparent transition-colors">
+                <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0 group-hover/metric:border-[#383838] transition-colors">
                   <div className="grid grid-cols-3 gap-1">
                     {[...Array(6)].map((_, i) => (
-                      <div key={i} className="size-[6px] rounded-full bg-emerald-400" />
+                      <div key={i} className="size-[5px] sm:size-[6px] rounded-full bg-emerald-400" />
                     ))}
                   </div>
                 </div>
                 <div>
-                  <p className="text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">STATUS</p>
-                  <p className="text-[17px] font-normal text-white">Healthy</p>
+                  <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">STATUS</p>
+                  <p className="text-base sm:text-[17px] font-normal text-white">Healthy</p>
                 </div>
               </div>
             </DropdownMenuTrigger>
@@ -265,60 +265,60 @@ function TopPanelContent({
           </DropdownMenu>
 
           {/* Retention */}
-          <div className="flex items-center gap-4">
-            <div className="size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-3.5 sm:gap-4 p-2 sm:p-0">
+            <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
               <IconShieldLock className="size-5 text-white/90" stroke={1.25} />
             </div>
             <div>
-              <p className="text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">RETENTION</p>
+              <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">RETENTION</p>
               <div className="flex items-center gap-2">
-                <p className="text-[17px] font-normal text-white">7 Snapshots</p>
-                <span className="text-[9.5px] uppercase font-mono px-1.5 py-0.2 rounded bg-[#202020] text-[#999999] border border-[#2e2e2e]">FIFO</span>
+                <p className="text-base sm:text-[17px] font-normal text-white">7 Snapshots</p>
+                <span className="text-[9px] sm:text-[9.5px] uppercase font-mono px-1.5 py-0.2 rounded bg-[#202020] text-[#999999] border border-[#2e2e2e]">FIFO</span>
               </div>
             </div>
           </div>
 
           {/* Storage Vault */}
-          <div className="flex items-center gap-4">
-            <div className="size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-3.5 sm:gap-4 p-2 sm:p-0">
+            <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
               <IconCloudUpload className="size-5 text-white/90" stroke={1.25} />
             </div>
             <div>
-              <p className="text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">STORAGE VAULT</p>
-              <p className="text-[17px] font-normal text-white">AES-256 S3</p>
+              <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">STORAGE VAULT</p>
+              <p className="text-base sm:text-[17px] font-normal text-white">AES-256 S3</p>
             </div>
           </div>
 
           {/* Active Schedule */}
-          <div className="flex items-center gap-4">
-            <div className="size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-3.5 sm:gap-4 p-2 sm:p-0">
+            <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
               <IconCalendarEvent className="size-5 text-white/90" stroke={1.25} />
             </div>
             <div>
-              <p className="text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">ACTIVE SCHEDULE</p>
-              <p className="text-[17px] font-normal text-white">Daily @ 14:00 UTC</p>
+              <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">ACTIVE SCHEDULE</p>
+              <p className="text-base sm:text-[17px] font-normal text-white">Daily @ 14:00 UTC</p>
             </div>
           </div>
 
           {/* Last Backup */}
-          <div className="flex items-center gap-4">
-            <div className="size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-3.5 sm:gap-4 p-2 sm:p-0">
+            <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
               <IconHistory className="size-5 text-white/90" stroke={1.25} />
             </div>
             <div>
-              <p className="text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">LAST BACKUP</p>
-              <p className="text-[17px] font-normal text-white">2h ago · 142 MB</p>
+              <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">LAST BACKUP</p>
+              <p className="text-base sm:text-[17px] font-normal text-white">2h ago · 142 MB</p>
             </div>
           </div>
 
           {/* Restore Readiness */}
-          <div className="flex items-center gap-4">
-            <div className="size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-3.5 sm:gap-4 p-2 sm:p-0">
+            <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
               <IconRotateClockwise className="size-5 text-white/90" stroke={1.25} />
             </div>
             <div>
-              <p className="text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">RESTORE READINESS</p>
-              <p className="text-[17px] font-normal text-white">Verified</p>
+              <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">RESTORE READINESS</p>
+              <p className="text-base sm:text-[17px] font-normal text-white">Verified</p>
             </div>
           </div>
         </div>
