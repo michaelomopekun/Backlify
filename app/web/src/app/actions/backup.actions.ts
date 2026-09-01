@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
-import { BackupRepository, ProjectRepository } from "db";
+import { BackupRepository, ProjectRepository, ScheduleRepository } from "db";
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 import type { BackupJobStatusType } from "shared/constants/backupJobStatus";
 
@@ -62,7 +62,7 @@ export async function triggerBackup(projectId: string) {
     console.error("Failed to trigger backup:", error);
     return { error: "Could not start the backup. Try again in a moment." };
   }
-import { ScheduleRepository } from "db";
+}
 
 export async function createProject(formData: FormData) {
   const name = formData.get("name")?.toString().trim();

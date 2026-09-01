@@ -159,7 +159,7 @@ export default async function OrgProjectsPage({ params }: Props) {
                   </div>
 
                   <Link
-                    href={`/dashboard/org/new`}
+                    href={`/dashboard/project/new`}
                     className="flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-[12px] transition-colors shadow-xs"
                   >
                     <IconPlus className="size-3.5 stroke-[2.5]" />
