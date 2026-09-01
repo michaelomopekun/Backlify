@@ -51,8 +51,19 @@ export function FloatingSupportDock() {
       }
     };
 
+    const handleCustomModal = (e: Event) => {
+      const customEvent = e as CustomEvent<"none" | "search" | "help" | "feedback">;
+      if (customEvent.detail) {
+        setActiveModal(customEvent.detail);
+      }
+    };
+
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("backlify:open-modal", handleCustomModal);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("backlify:open-modal", handleCustomModal);
+    };
   }, []);
 
   const closeAll = () => setActiveModal("none");
@@ -96,8 +107,8 @@ export function FloatingSupportDock() {
 
   return (
     <>
-      {/* ── Floating Bottom Pill Dock ── */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-1.5 p-1.5 rounded-full border border-[#2a2a2a] bg-[#111111]/90 backdrop-blur-md shadow-2xl shadow-black/80 transition-all hover:border-[#3a3a3a]">
+      {/* ── Floating Bottom Pill Dock (MOBILE ONLY: sm:hidden) ── */}
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex sm:hidden items-center gap-1.5 p-1.5 rounded-full border border-[#2a2a2a] bg-[#111111]/90 backdrop-blur-md shadow-2xl shadow-black/80 transition-all hover:border-[#3a3a3a]">
         {/* Search button */}
         <button
           type="button"
