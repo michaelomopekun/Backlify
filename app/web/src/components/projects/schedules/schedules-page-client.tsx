@@ -465,12 +465,12 @@ function CronEditorDrawer({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-40"
+        className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-[60]"
         onClick={onClose}
       />
 
       {/* Panel */}
-      <div className="fixed top-0 right-0 h-full w-full max-w-md bg-[#0d0d0d] border-l border-[#1a1a1a] z-50 flex flex-col shadow-2xl">
+      <div className="fixed top-0 right-0 h-full w-full max-w-md bg-[#0d0d0d] border-l border-[#1a1a1a] z-[70] flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#1a1a1a] shrink-0">
           <div>

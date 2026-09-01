@@ -158,7 +158,11 @@ export function FloatingSupportDock() {
   return (
     <>
       {/* ── Floating Bottom Pill Dock (MOBILE ONLY: sm:hidden) ── */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex sm:hidden items-center gap-1 p-1.5 rounded-full border border-[#3e3e3e] bg-[#222222]/95 backdrop-blur-x1 shadow-2xl shadow-black/95 ring-1 ring-white/10 transition-all hover:border-[#505050]">
+      <div
+        className={`fixed bottom-5 left-1/2 -translate-x-1/2 flex sm:hidden items-center gap-1 p-1.5 rounded-full border border-[#3e3e3e] bg-[#222222]/95 backdrop-blur-xl shadow-2xl shadow-black/95 ring-1 ring-white/10 transition-all hover:border-[#505050] ${
+          activeModal !== "none" ? "z-[90]" : "z-40"
+        }`}
+      >
         {/* Search button */}
         <button
           type="button"
@@ -234,13 +238,13 @@ export function FloatingSupportDock() {
       {activeModal !== "none" && (
         <div
           onClick={closeAll}
-          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-40 animate-in fade-in duration-150"
+          className="fixed inset-0 bg-black/60 backdrop-blur-xs z-[80] animate-in fade-in duration-150"
         />
       )}
 
       {/* ── 1. SIDEBAR NAVIGATION DRAWER (Slide-Up Menu) ── */}
       {activeModal === "sidebar" && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-sm z-50 rounded-xl border border-[#222222] bg-[#111111] shadow-2xl p-2 animate-in zoom-in-95 fade-in duration-150">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-sm z-[90] rounded-xl border border-[#222222] bg-[#111111] shadow-2xl p-2 animate-in zoom-in-95 fade-in duration-150">
           <div className="space-y-1">
             {activeNavList.map((item) => {
               const Icon = item.icon;
@@ -270,7 +274,7 @@ export function FloatingSupportDock() {
 
       {/* ── 2. HELP & SUPPORT DRAWER ── */}
       {activeModal === "help" && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-lg z-50 rounded-xl border border-[#222222] bg-[#111111] shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-150">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-lg z-[90] rounded-xl border border-[#222222] bg-[#111111] shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-150">
           {/* Header */}
           <div className="px-5 py-4 border-b border-[#1e1e1e] flex items-center justify-between">
             <h3 className="text-sm font-semibold text-white tracking-tight">Help & Support</h3>
@@ -368,7 +372,7 @@ export function FloatingSupportDock() {
 
       {/* ── 3. SEARCH & COMMAND PALETTE ── */}
       {activeModal === "search" && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 w-[92vw] max-w-xl z-50 rounded-xl border border-[#222222] bg-[#111111] shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-150">
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 w-[92vw] max-w-xl z-[90] rounded-xl border border-[#222222] bg-[#111111] shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in duration-150">
           {/* Search input bar */}
           <div className="p-3 border-b border-[#1e1e1e] flex items-center gap-2.5">
             <IconSearch className="size-4 text-[#666666] ml-1.5 shrink-0" />
@@ -432,7 +436,7 @@ export function FloatingSupportDock() {
 
       {/* ── 4. FEEDBACK & CHANGELOG MODAL ── */}
       {activeModal === "feedback" && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-md z-50 rounded-xl border border-[#222222] bg-[#111111] shadow-2xl p-5 space-y-4 animate-in zoom-in-95 fade-in duration-150">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-md z-[90] rounded-xl border border-[#222222] bg-[#111111] shadow-2xl p-5 space-y-4 animate-in zoom-in-95 fade-in duration-150">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <IconBulb className="size-4 text-primary" />

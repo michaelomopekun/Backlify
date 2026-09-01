@@ -206,11 +206,11 @@ function PitrScrubber({
       </div>
 
       {/* Timeline Slider Track with Centered Handle & Inset Margins (No Overflow) */}
-      <div className="space-y-3 pt-6 pb-2 px-6">
+      <div className="space-y-3 pt-6 pb-2 px-2 sm:px-6">
         {/* Rail & Draggable Handle Container */}
         <div className="relative h-6 flex items-center">
           {/* Horizontal Background Rail */}
-          <div className="h-2 w-full bg-[#1c1c1c] rounded-full overflow-hidden border border-[#262626]">
+          <div className="h-1.5 w-full bg-[#1c1c1c] rounded-full overflow-hidden border border-[#262626]">
             <div
               className="h-full bg-primary transition-all duration-75"
               style={{ width: `${percent}%` }}
@@ -222,14 +222,14 @@ function PitrScrubber({
             className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none transition-all duration-75 z-20 flex flex-col items-center"
             style={{ left: `${percent}%` }}
           >
-            {/* Floating Live Scrubber Bubble */}
-            <div className="absolute -top-8 flex items-center px-2 py-0.5 rounded-md bg-[#161616] border border-primary/40 text-primary font-mono text-[11px] shadow-lg whitespace-nowrap">
+            {/* Floating Live Scrubber Bubble (clean, subtle border) */}
+            <div className="absolute -top-8 flex items-center px-2 py-0.5 rounded-md bg-[#161616] border border-[#2a2a2a] text-primary font-mono text-[10.5px] shadow-md whitespace-nowrap">
               <span>{current.day} {current.time.split(" ")[0]}</span>
             </div>
 
-            {/* Draggable Physical Thumb sitting directly on the horizontal rail */}
-            <div className="size-5 rounded-full bg-white border-2 border-primary shadow-[0_0_14px_rgba(255,179,31,0.7)] flex items-center justify-center">
-              <div className="size-1.5 rounded-full bg-[#111111]" />
+            {/* Draggable Physical Thumb without excessive neon glow */}
+            <div className="size-4.5 rounded-full bg-white border-2 border-primary shadow-sm shadow-black/80 flex items-center justify-center">
+              <div className="size-1 rounded-full bg-[#111111]" />
             </div>
           </div>
 
@@ -244,11 +244,15 @@ function PitrScrubber({
           />
         </div>
 
-        {/* Checkpoint Ticks & Labels with zero edge overflow */}
+        {/* Checkpoint Ticks & Labels with no mobile text overlap */}
         <div className="relative w-full h-8">
           {PITR_POINTS.map((pt, idx) => {
             const ptPercent = (idx / (PITR_POINTS.length - 1)) * 100;
             const isSelected = idx === selectedIndex;
+            const isFirst = idx === 0;
+            const isLast = idx === PITR_POINTS.length - 1;
+            const showOnMobile = isSelected || isFirst || isLast;
+
             return (
               <button
                 key={pt.id}
@@ -259,13 +263,17 @@ function PitrScrubber({
               >
                 {/* Vertical tick connecting to the rail */}
                 <div
-                  className={`w-0.5 h-2 mb-1 transition-colors ${
+                  className={`w-0.5 h-1.5 mb-1 transition-colors ${
                     isSelected ? "bg-primary" : "bg-[#333333] group-hover:bg-[#666666]"
                   }`}
                 />
                 <span
-                  className={`text-[10.5px] font-mono whitespace-nowrap transition-colors ${
-                    isSelected ? "text-primary font-semibold" : "text-[#555555] group-hover:text-[#888888]"
+                  className={`text-[10px] sm:text-[10.5px] font-mono whitespace-nowrap transition-colors ${
+                    showOnMobile ? "block" : "hidden sm:block"
+                  } ${
+                    isSelected
+                      ? "text-primary font-semibold"
+                      : "text-[#555555] group-hover:text-[#888888]"
                   }`}
                 >
                   {pt.day} {pt.time.split(" ")[0]}
@@ -276,26 +284,26 @@ function PitrScrubber({
         </div>
       </div>
 
-        {/* Selected Info & Action Strip */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#1a1a1a]">
-          <div className="flex items-center gap-3 text-[12px] font-mono">
-            <span className="size-1.5 rounded-full bg-emerald-400" />
-            <span className="text-white">
-              <span className="text-primary font-semibold">{current.date} · {current.time}</span> ({current.size})
-            </span>
-            <span className="text-[#555555]">·</span>
-            <span className="text-[#666666]">Snapshot: {current.snapshotId}</span>
-          </div>
-
-          <Button
-            onClick={() => onSelectPoint(current)}
-            size="sm"
-            className="h-8 px-3.5 text-[12px] bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-xs shrink-0 self-start sm:self-auto"
-          >
-            <IconBolt className="size-3.5 mr-1" />
-            Restore from this point
-          </Button>
+      {/* Selected Info & Action Strip */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#1a1a1a]">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-mono">
+          <span className="size-1.5 rounded-full bg-emerald-400 shrink-0" />
+          <span className="text-white">
+            <span className="text-primary font-semibold">{current.date} · {current.time}</span> ({current.size})
+          </span>
+          <span className="text-[#555555] hidden sm:inline">·</span>
+          <span className="text-[#666666] text-[11px]">Snapshot: {current.snapshotId}</span>
         </div>
+
+        <Button
+          onClick={() => onSelectPoint(current)}
+          size="sm"
+          className="h-8 px-3.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-xs shrink-0 self-start sm:self-auto"
+        >
+          <IconBolt className="size-3.5 mr-1" />
+          Restore from this point
+        </Button>
+      </div>
     </div>
   );
 }
@@ -497,9 +505,9 @@ function RestoreWizardDrawer({
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-40" onClick={onClose} />
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-[60]" onClick={onClose} />
 
-      <div className="fixed top-0 right-0 h-full w-full max-w-xl bg-[#0d0d0d] border-l border-[#1a1a1a] z-50 flex flex-col shadow-2xl">
+      <div className="fixed top-0 right-0 h-full w-full max-w-xl bg-[#0d0d0d] border-l border-[#1a1a1a] z-[70] flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#1a1a1a] shrink-0">
           <div>

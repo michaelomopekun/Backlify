@@ -208,11 +208,11 @@ function TriggerPanel({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/50 z-40 backdrop-blur-[2px]"
+        className="fixed inset-0 bg-black/50 z-[60] backdrop-blur-[2px]"
         onClick={onClose}
       />
       {/* Panel */}
-      <div className="fixed right-0 top-0 h-full w-full sm:w-[420px] max-w-full bg-[#0d0d0d] border-l border-[#1e1e1e] z-50 flex flex-col shadow-2xl">
+      <div className="fixed right-0 top-0 h-full w-full sm:w-[420px] max-w-full bg-[#0d0d0d] border-l border-[#1e1e1e] z-[70] flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#1a1a1a]">
           <div>
