@@ -1,6 +1,7 @@
 import { getCurrentUser } from "@/lib/current-user";
 import { OrganizationRepository } from "db";
-import { NewProjectWizard } from "@/components/projects/new/new-project-wizard";
+import { OrgPickerHeader } from "@/components/layout/org-picker-header";
+import { NewProjectForm } from "@/components/projects/new/new-project-form";
 
 export const metadata = {
   title: "New Project | Backlify",
@@ -19,8 +20,13 @@ export default async function NewProjectPage() {
   const orgName = org?.name ?? `${user.name}'s Org`;
 
   return (
-    <div className="min-h-screen bg-[#0c0c0c] text-foreground p-6 sm:p-12">
-      <NewProjectWizard orgId={orgId} orgName={orgName} />
+    <div className="min-h-screen flex flex-col bg-background">
+      <OrgPickerHeader title="New project" />
+
+      <main className="flex-1 flex items-center justify-center p-6">
+        <NewProjectForm orgId={orgId} orgName={orgName} />
+      </main>
     </div>
   );
 }
+
