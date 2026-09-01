@@ -1,5 +1,3 @@
-"use client";
-
 import { useState, useEffect } from "react";
 import {
   IconCalendarTime,
@@ -19,7 +17,18 @@ import {
   IconCircleCheck,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
-import { StatCard, StatCardVariant2 } from "@/components/shared/stat-card";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { StatCard } from "@/components/shared/stat-card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -128,10 +137,8 @@ function fmtDuration(sec: number) {
   return `${m}m ${s}s`;
 }
 
-
-
 /* ─────────────────────────────────────────────────────────────────
-   24h Timeline Rail
+   24h Timeline Rail (shadcn Card)
 ───────────────────────────────────────────────────────────────────*/
 
 function TimelineRail({ schedules }: { schedules: Schedule[] }) {
@@ -140,107 +147,111 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
   const nowPercent = ((11 * 60 + 46) / (24 * 60)) * 100;
 
   return (
-    <div className="rounded-xl border border-[#1a1a1a] bg-[#0f0f0f] p-4 sm:p-5 space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div>
-          <h2 className="text-[13.5px] font-medium text-white">Next 24h Timeline</h2>
-          <p className="text-[11px] text-[#666666] font-mono mt-0.5">Scheduled fires — UTC</p>
+    <Card className="border-border bg-card py-0 gap-0 overflow-hidden shadow-xs">
+      <CardHeader className="p-4 sm:p-5 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="space-y-0.5">
+          <CardTitle className="text-[13.5px] font-medium text-foreground">Next 24h Timeline</CardTitle>
+          <CardDescription className="text-[11px] text-muted-foreground font-mono">
+            Scheduled fires — UTC
+          </CardDescription>
         </div>
-        <span className="text-[10px] font-mono text-[#888888] bg-[#141414] border border-[#222222] rounded px-2 py-0.5 self-start sm:self-auto">
+        <span className="text-[10.5px] font-mono text-muted-foreground bg-muted/40 border border-border rounded px-2 py-0.5 self-start sm:self-auto">
           Now: 11:46 UTC
         </span>
-      </div>
+      </CardHeader>
 
-      {/* Rail Container */}
-      <div className="relative pt-6 pb-6 select-none px-3">
-        {/* Horizontal Track */}
-        <div className="relative h-2 w-full bg-[#181818] rounded-full overflow-hidden border border-[#242424]">
-          {/* Progress fill up to Now */}
+      <CardContent className="p-4 sm:p-5 space-y-4">
+        {/* Rail Container */}
+        <div className="relative pt-6 pb-6 select-none px-3">
+          {/* Horizontal Track */}
+          <div className="relative h-2 w-full bg-[#181818] rounded-full overflow-hidden border border-[#242424]">
+            {/* Progress fill up to Now */}
+            <div
+              className="h-full bg-primary/20"
+              style={{ width: `${nowPercent}%` }}
+            />
+          </div>
+
+          {/* "Now" indicator line & badge */}
           <div
-            className="h-full bg-primary/20"
-            style={{ width: `${nowPercent}%` }}
-          />
-        </div>
+            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20"
+            style={{ left: `${nowPercent}%` }}
+          >
+            <div className="size-3.5 rounded-full bg-[#111111] border-2 border-primary shadow-sm flex items-center justify-center">
+              <div className="size-1 rounded-full bg-primary" />
+            </div>
+          </div>
 
-        {/* "Now" indicator line & badge */}
-        <div
-          className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20"
-          style={{ left: `${nowPercent}%` }}
-        >
-          <div className="size-3.5 rounded-full bg-[#111111] border-2 border-primary shadow-sm flex items-center justify-center">
-            <div className="size-1 rounded-full bg-primary" />
+          {/* Schedule pins */}
+          {active.map((s) => {
+            const pct = utcHourToPercent(s.nextRunUtc);
+            const color = s.status === "failing" ? "#ef4444" : "#FFB31F";
+            return (
+              <div
+                key={s.id}
+                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center group cursor-pointer z-30"
+                style={{ left: `${pct}%` }}
+              >
+                {/* Event Bubble / Pin */}
+                <div
+                  className="size-4 rounded-full border-2 border-[#111111] shadow-md flex items-center justify-center transition-transform group-hover:scale-125"
+                  style={{ background: color }}
+                />
+
+                {/* Hover Tooltip */}
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 whitespace-nowrap bg-[#1a1a1a] border border-[#2e2e2e] text-white text-[10px] font-mono px-2 py-0.5 rounded shadow-lg pointer-events-none">
+                  {s.name}: {s.nextRunUtc} UTC
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Hour tick marks & labels safely BELOW the track */}
+          <div className="relative w-full h-4 mt-3">
+            {[
+              { h: 0, label: "00:00" },
+              { h: 6, label: "06:00", hideMobile: true },
+              { h: 12, label: "12:00" },
+              { h: 18, label: "18:00", hideMobile: true },
+              { h: 24, label: "24:00" },
+            ].map((item) => (
+              <div
+                key={item.h}
+                className={`absolute top-0 -translate-x-1/2 flex flex-col items-center ${
+                  item.hideMobile ? "hidden sm:flex" : "flex"
+                }`}
+                style={{ left: `${(item.h / 24) * 100}%` }}
+              >
+                <div className="w-px h-1.5 bg-[#2a2a2a] mb-1" />
+                <span className="text-[10px] font-mono text-muted-foreground">
+                  {item.label}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Schedule pins */}
-        {active.map((s) => {
-          const pct = utcHourToPercent(s.nextRunUtc);
-          const color = s.status === "failing" ? "#ef4444" : "#FFB31F";
-          return (
-            <div
-              key={s.id}
-              className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center group cursor-pointer z-30"
-              style={{ left: `${pct}%` }}
-            >
-              {/* Event Bubble / Pin */}
-              <div
-                className="size-4 rounded-full border-2 border-[#111111] shadow-md flex items-center justify-center transition-transform group-hover:scale-125"
-                style={{ background: color }}
+        {/* Legend */}
+        <div className="flex flex-wrap items-center gap-4 pt-1 border-t border-border/50">
+          {active.map((s) => (
+            <div key={s.id} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span
+                className="size-2 rounded-full shrink-0"
+                style={{ background: s.status === "failing" ? "#ef4444" : "#FFB31F" }}
               />
-
-              {/* Hover Tooltip */}
-              <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 whitespace-nowrap bg-[#1a1a1a] border border-[#2e2e2e] text-white text-[10px] font-mono px-2 py-0.5 rounded shadow-lg pointer-events-none">
-                {s.name}: {s.nextRunUtc} UTC
-              </div>
-            </div>
-          );
-        })}
-
-        {/* Hour tick marks & labels safely BELOW the track */}
-        <div className="relative w-full h-4 mt-3">
-          {[
-            { h: 0, label: "00:00" },
-            { h: 6, label: "06:00", hideMobile: true },
-            { h: 12, label: "12:00" },
-            { h: 18, label: "18:00", hideMobile: true },
-            { h: 24, label: "24:00" },
-          ].map((item) => (
-            <div
-              key={item.h}
-              className={`absolute top-0 -translate-x-1/2 flex flex-col items-center ${
-                item.hideMobile ? "hidden sm:flex" : "flex"
-              }`}
-              style={{ left: `${(item.h / 24) * 100}%` }}
-            >
-              <div className="w-px h-1.5 bg-[#2a2a2a] mb-1" />
-              <span className="text-[10px] font-mono text-[#555555]">
-                {item.label}
-              </span>
+              <span className="font-mono text-foreground font-medium">{s.name}</span>
+              <span className="text-muted-foreground/40">·</span>
+              <span className="font-mono text-muted-foreground">{s.nextRunUtc} UTC</span>
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 pt-1 border-t border-[#141414]">
-        {active.map((s) => (
-          <div key={s.id} className="flex items-center gap-1.5 text-[11px] text-[#777777]">
-            <span
-              className="size-2 rounded-full shrink-0"
-              style={{ background: s.status === "failing" ? "#ef4444" : "#FFB31F" }}
-            />
-            <span className="font-mono text-white">{s.name}</span>
-            <span className="text-[#555555]">·</span>
-            <span className="font-mono text-[#888888]">{s.nextRunUtc} UTC</span>
-          </div>
-        ))}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   Schedule Card
+   Schedule Card (100% shadcn Card & Switch)
 ───────────────────────────────────────────────────────────────────*/
 
 function ScheduleCard({
@@ -256,155 +267,124 @@ function ScheduleCard({
   onDelete: (id: string) => void;
   onRunNow: (id: string) => void;
 }) {
-  const statusColor =
-    schedule.status === "active"
-      ? "#22c55e"
-      : schedule.status === "failing"
-      ? "#ef4444"
-      : "#555555";
-
-  const statusLabel =
-    schedule.status === "active"
-      ? "Active"
-      : schedule.status === "failing"
-      ? "Failing"
-      : "Paused";
+  const isFailing = schedule.status === "failing";
+  const isPaused = schedule.status === "paused";
+  const isActive = schedule.status === "active";
 
   return (
-    <div className="rounded-xl border border-[#1a1a1a] bg-[#0f0f0f] p-5 space-y-4 group hover:border-[#252525] transition-colors">
-      {/* Header row */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2.5 mb-1">
-            {/* Status dot */}
+    <Card className="border-border bg-card py-0 gap-0 overflow-hidden shadow-xs hover:border-[#2e2e2e] transition-colors">
+      <CardHeader className="p-5 border-b border-border/50 flex flex-row items-start justify-between gap-4">
+        <div className="flex-1 min-w-0 space-y-1">
+          <div className="flex items-center gap-2.5">
             <span
-              className="size-2 rounded-full shrink-0 shadow-[0_0_6px_currentColor]"
-              style={{ color: statusColor, background: statusColor }}
-            />
-            <h3 className="text-[14px] font-medium text-white truncate">{schedule.name}</h3>
-          </div>
-          <p className="text-[12px] text-[#555555] font-mono">
-            <span className="text-[#888888]">{schedule.cron}</span>
-            <span className="text-[#333333] mx-2">·</span>
-            {schedule.humanReadable}
-          </p>
-        </div>
-
-        {/* Actions */}
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Toggle switch */}
-          <button
-            type="button"
-            onClick={() => onToggle(schedule.id)}
-            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-              schedule.status === "active" ? "bg-primary" : "bg-[#2a2a2a]"
-            }`}
-          >
-            <span
-              className={`inline-block size-3.5 rounded-full bg-black transition-transform ${
-                schedule.status === "active" ? "translate-x-4" : "translate-x-0.5"
+              className={`size-2 rounded-full shrink-0 ${
+                isActive
+                  ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"
+                  : isFailing
+                  ? "bg-destructive shadow-[0_0_6px_rgba(239,68,68,0.8)]"
+                  : "bg-muted-foreground/40"
               }`}
             />
-          </button>
+            <CardTitle className="text-sm font-medium text-foreground truncate">
+              {schedule.name}
+            </CardTitle>
+          </div>
+          <CardDescription className="text-xs text-muted-foreground font-mono">
+            <span className="text-foreground/90 font-semibold">{schedule.cron}</span>
+            <span className="mx-2 text-muted-foreground/40">·</span>
+            {schedule.humanReadable}
+          </CardDescription>
+        </div>
 
-          {/* Kebab menu */}
+        {/* Actions & Official shadcn Switch */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <Switch
+            checked={isActive}
+            onCheckedChange={() => onToggle(schedule.id)}
+            aria-label={`Toggle ${schedule.name}`}
+          />
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="p-1 rounded text-[#555555] hover:text-white hover:bg-[#1a1a1a] transition-colors"
+              <Button
+                variant="ghost"
+                size="sm"
+                className="size-8 p-0 text-muted-foreground hover:text-foreground"
               >
-                <IconDotsVertical className="size-3.5" />
-              </button>
+                <IconDotsVertical className="size-4" />
+              </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="w-44 bg-[#111111] border-[#222222] text-white text-[12px]"
-            >
-              <DropdownMenuItem
-                onClick={() => onEdit(schedule)}
-                className="gap-2 text-[#aaaaaa] hover:text-white focus:bg-[#1a1a1a] focus:text-white cursor-pointer"
-              >
-                <IconEdit className="size-3.5" />
-                Edit schedule
+            <DropdownMenuContent align="end" className="w-44 bg-[#111111] border-[#222222] text-xs">
+              <DropdownMenuItem onClick={() => onEdit(schedule)} className="gap-2 cursor-pointer text-white">
+                <IconEdit className="size-3.5 text-muted-foreground" /> Edit schedule
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onRunNow(schedule.id)}
-                className="gap-2 text-[#aaaaaa] hover:text-white focus:bg-[#1a1a1a] focus:text-white cursor-pointer"
-              >
-                <IconBolt className="size-3.5" />
-                Run now
+              <DropdownMenuItem onClick={() => onRunNow(schedule.id)} className="gap-2 cursor-pointer text-white">
+                <IconBolt className="size-3.5 text-muted-foreground" /> Run now
               </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onToggle(schedule.id)}
-                className="gap-2 text-[#aaaaaa] hover:text-white focus:bg-[#1a1a1a] focus:text-white cursor-pointer"
-              >
-                {schedule.status === "paused" ? (
-                  <><IconPlayerPlay className="size-3.5" />Resume</>
+              <DropdownMenuItem onClick={() => onToggle(schedule.id)} className="gap-2 cursor-pointer text-white">
+                {isPaused ? (
+                  <><IconPlayerPlay className="size-3.5 text-muted-foreground" /> Resume</>
                 ) : (
-                  <><IconPlayerPause className="size-3.5" />Pause</>
+                  <><IconPlayerPause className="size-3.5 text-muted-foreground" /> Pause</>
                 )}
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-[#1e1e1e]" />
-              <DropdownMenuItem
-                onClick={() => onDelete(schedule.id)}
-                className="gap-2 text-red-400 hover:text-red-300 focus:bg-[#1a1a1a] focus:text-red-300 cursor-pointer"
-              >
-                <IconTrash className="size-3.5" />
-                Delete
+              <DropdownMenuItem onClick={() => onDelete(schedule.id)} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
+                <IconTrash className="size-3.5" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-      </div>
+      </CardHeader>
 
-      {/* Meta row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div className="space-y-0.5">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[#444444]">Next Run</p>
-          <p className={`text-[12px] font-medium ${schedule.status === "paused" ? "text-[#555555]" : "text-white"}`}>
-            {schedule.nextRunLabel}
-          </p>
-        </div>
-        <div className="space-y-0.5">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[#444444]">Last Run</p>
-          <div className="flex items-center gap-1.5">
-            {schedule.lastRunOk ? (
-              <IconCircleCheck className="size-3 text-emerald-400 shrink-0" />
-            ) : (
-              <IconAlertTriangle className="size-3 text-red-400 shrink-0" />
-            )}
-            <p className="text-[12px] text-[#888888]">{schedule.lastRunLabel}</p>
+      <CardContent className="p-5 space-y-4">
+        {/* Meta row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+          <div className="space-y-0.5">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Next Run</p>
+            <p className={`font-medium ${isPaused ? "text-muted-foreground" : "text-foreground"}`}>
+              {schedule.nextRunLabel}
+            </p>
+          </div>
+
+          <div className="space-y-0.5">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Last Run</p>
+            <div className="flex items-center gap-1.5">
+              {schedule.lastRunOk ? (
+                <IconCircleCheck className="size-3 text-emerald-400 shrink-0" />
+              ) : (
+                <IconAlertTriangle className="size-3 text-destructive shrink-0" />
+              )}
+              <p className="text-muted-foreground">{schedule.lastRunLabel}</p>
+            </div>
+          </div>
+
+          <div className="space-y-0.5">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Retention</p>
+            <p className="text-muted-foreground">Keep last {schedule.retentionDays}d</p>
+          </div>
+
+          <div className="space-y-0.5">
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Avg Duration</p>
+            <p className="text-muted-foreground">{fmtDuration(schedule.avgDurationSec)}</p>
           </div>
         </div>
-        <div className="space-y-0.5">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[#444444]">Retention</p>
-          <p className="text-[12px] text-[#888888]">Keep last {schedule.retentionDays}d</p>
-        </div>
-        <div className="space-y-0.5">
-          <p className="text-[10px] font-mono uppercase tracking-widest text-[#444444]">Avg Duration</p>
-          <p className="text-[12px] text-[#888888]">{fmtDuration(schedule.avgDurationSec)}</p>
-        </div>
-      </div>
 
-      {/* Status badge row */}
-      <div className="flex items-center gap-2 pt-1 border-t border-[#141414]">
-        <span
-          className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded border tracking-wider"
-          style={{
-            borderColor: `${statusColor}40`,
-            color: statusColor,
-            background: `${statusColor}10`,
-          }}
-        >
-          {statusLabel}
-        </span>
-        <span className="text-[10px] font-mono text-[#444444]">·</span>
-        <span className="text-[11px] font-mono text-[#555555]">
-          {schedule.totalRuns} total runs
-        </span>
-      </div>
-    </div>
+        {/* Status footer strip with shadcn Badge */}
+        <div className="flex items-center gap-2 pt-3 border-t border-border/50">
+          <Badge
+            variant={isActive ? "default" : isFailing ? "destructive" : "secondary"}
+            className="text-[10px] font-mono uppercase px-2 py-0.5"
+          >
+            {isActive ? "Active" : isFailing ? "Failing" : "Paused"}
+          </Badge>
+          <span className="text-muted-foreground/40 text-[10px]">·</span>
+          <span className="text-[11px] font-mono text-muted-foreground">
+            {schedule.totalRuns} total runs
+          </span>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
