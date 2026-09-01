@@ -158,16 +158,16 @@ export function FloatingSupportDock() {
   return (
     <>
       {/* ── Floating Bottom Pill Dock (MOBILE ONLY: sm:hidden) ── */}
-      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex sm:hidden items-center gap-1.5 p-1.5 rounded-full border border-[#2a2a2a] bg-[#111111]/95 backdrop-blur-md shadow-2xl shadow-black/90 transition-all">
+      <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex sm:hidden items-center gap-1 p-1.5 rounded-full border border-[#3e3e3e] bg-[#222222]/95 backdrop-blur-x1 shadow-2xl shadow-black/95 ring-1 ring-white/10 transition-all hover:border-[#505050]">
         {/* Search button */}
         <button
           type="button"
           aria-label="Search"
           onClick={() => setActiveModal((prev) => (prev === "search" ? "none" : "search"))}
-          className={`size-8 rounded-full flex items-center justify-center transition-all ${
+          className={`size-8.5 rounded-full flex items-center justify-center transition-all ${
             activeModal === "search"
               ? "bg-white text-black font-semibold shadow-xs"
-              : "text-[#888888] hover:text-white hover:bg-[#1a1a1a]"
+              : "text-[#d1d1d1] hover:text-white hover:bg-white/10"
           }`}
         >
           <IconSearch className="size-4" />
@@ -178,10 +178,10 @@ export function FloatingSupportDock() {
           type="button"
           aria-label="Help"
           onClick={() => setActiveModal((prev) => (prev === "help" ? "none" : "help"))}
-          className={`size-8 rounded-full flex items-center justify-center transition-all ${
+          className={`size-8.5 rounded-full flex items-center justify-center transition-all ${
             activeModal === "help"
               ? "bg-white text-black font-semibold shadow-xs"
-              : "text-[#888888] hover:text-white hover:bg-[#1a1a1a]"
+              : "text-[#d1d1d1] hover:text-white hover:bg-white/10"
           }`}
         >
           <IconHelp className="size-4" />
@@ -192,10 +192,10 @@ export function FloatingSupportDock() {
           type="button"
           aria-label="Feedback"
           onClick={() => setActiveModal((prev) => (prev === "feedback" ? "none" : "feedback"))}
-          className={`size-8 rounded-full flex items-center justify-center transition-all ${
+          className={`size-8.5 rounded-full flex items-center justify-center transition-all ${
             activeModal === "feedback"
               ? "bg-white text-black font-semibold shadow-xs"
-              : "text-[#888888] hover:text-white hover:bg-[#1a1a1a]"
+              : "text-[#d1d1d1] hover:text-white hover:bg-white/10"
           }`}
         >
           <IconBulb className="size-4" />
@@ -207,10 +207,10 @@ export function FloatingSupportDock() {
             type="button"
             aria-label="Toggle sidebar menu"
             onClick={() => setActiveModal((prev) => (prev === "sidebar" ? "none" : "sidebar"))}
-            className={`size-8 rounded-full flex items-center justify-center transition-all ${
+            className={`size-8.5 rounded-full flex items-center justify-center transition-all ${
               activeModal === "sidebar"
                 ? "bg-white text-black font-semibold shadow-xs"
-                : "text-[#888888] hover:text-white hover:bg-[#1a1a1a]"
+                : "text-[#d1d1d1] hover:text-white hover:bg-white/10"
             }`}
           >
             <IconMenu2 className="size-4" />
@@ -223,7 +223,7 @@ export function FloatingSupportDock() {
             type="button"
             aria-label="Close modal"
             onClick={closeAll}
-            className="size-8 rounded-full flex items-center justify-center bg-[#222222] text-white hover:bg-[#333333] transition-all ml-0.5"
+            className="size-8.5 rounded-full flex items-center justify-center bg-[#333333] text-white hover:bg-[#444444] border border-white/10 transition-all ml-0.5 shadow-xs"
           >
             <IconX className="size-4" />
           </button>
