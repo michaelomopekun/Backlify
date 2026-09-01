@@ -759,18 +759,18 @@ export function SchedulesPageClient({
   }
 
   return (
-    <div className="space-y-10 pb-16">
+    <div className="space-y-8 sm:space-y-10 pb-24 sm:pb-16">
       {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-normal tracking-tight text-white">Schedules</h1>
-          <p className="text-[13px] text-[#555555] mt-1 font-mono">
+          <h1 className="text-2xl sm:text-[28px] font-semibold sm:font-normal tracking-tight text-white">Schedules</h1>
+          <p className="text-xs sm:text-[13px] text-[#777777] mt-1 font-mono">
             {activeCount} active &middot; {schedules.length} total &middot; Next run {nextRun}
           </p>
         </div>
         <Button
           onClick={() => { setEditingSchedule(null); setDrawerOpen(true); }}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 text-[13px] font-semibold h-9 px-4 shadow-xs"
+          className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-[13px] font-semibold h-9 px-4 shadow-xs shrink-0"
         >
           <IconPlus className="size-3.5 mr-1.5" />
           New Schedule

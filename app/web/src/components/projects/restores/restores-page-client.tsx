@@ -812,30 +812,30 @@ export function RestoresPageClient({
   );
 
   return (
-    <div className="space-y-10 pb-16">
+    <div className="space-y-8 sm:space-y-10 pb-24 sm:pb-16">
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="text-[28px] font-normal tracking-tight text-white">
+          <h1 className="text-2xl sm:text-[28px] font-semibold sm:font-normal tracking-tight text-white">
             Restores
           </h1>
-          <p className="text-[13px] text-[#555555] mt-1 font-mono">
+          <p className="text-xs sm:text-[13px] text-[#777777] mt-1 font-mono">
             Automated recovery drills & point-in-time database restores
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
           <Button
             onClick={handleOpenDrill}
             variant="outline"
-            className="h-9 px-3.5 border-[#262626] bg-[#111111] text-white hover:bg-[#1a1a1a] text-[12px] font-medium"
+            className="flex-1 sm:flex-none h-9 px-3.5 border-[#262626] bg-[#111111] text-white hover:bg-[#1a1a1a] text-xs font-medium"
           >
             <IconShieldCheck className="size-3.5 mr-1.5 text-emerald-400" />
             Run DR Drill
           </Button>
           <Button
             onClick={handleOpenRestore}
-            className="h-9 px-3.5 bg-primary text-primary-foreground hover:bg-primary/90 text-[12px] font-semibold shadow-xs"
+            className="flex-1 sm:flex-none h-9 px-3.5 bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold shadow-xs"
           >
             <IconBolt className="size-3.5 mr-1.5" />
             New Restore
@@ -844,7 +844,7 @@ export function RestoresPageClient({
       </div>
 
       {/* ── 4 Stat Cards (Standard Card 1) ── */}
-      <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <StatCard
           icon={IconClock}
           label="Recovery Point (RPO)"

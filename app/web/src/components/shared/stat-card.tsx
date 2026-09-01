@@ -26,22 +26,22 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "flex items-center gap-4 p-5 rounded-lg border border-[#1e1e1e] bg-[#111111] transition-colors hover:border-[#282828]",
+        "flex items-center gap-3.5 sm:gap-4 p-4 sm:p-5 rounded-lg border border-[#1e1e1e] bg-[#111111] transition-colors hover:border-[#282828] min-w-0",
         className
       )}
     >
-      <div className="size-[52px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
-        <Icon className={cn("size-5", accent ?? "text-white/80")} stroke={1.3} />
+      <div className="size-[46px] sm:size-[52px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+        <Icon className={cn("size-4.5 sm:size-5", accent ?? "text-white/80")} stroke={1.3} />
       </div>
-      <div className="min-w-0">
-        <p className="text-[11px] uppercase font-mono tracking-wider text-[#666666]">
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#666666] truncate">
           {label}
         </p>
-        <p className="text-[22px] font-normal text-white leading-tight">
+        <p className="text-[19px] sm:text-[22px] font-normal text-white leading-tight mt-0.5">
           {value}
         </p>
         {sub && (
-          <p className="text-[11px] text-[#555555] font-mono mt-0.5 truncate">
+          <p className="text-[10.5px] sm:text-[11px] text-[#666666] font-mono mt-0.5 truncate">
             {sub}
           </p>
         )}
