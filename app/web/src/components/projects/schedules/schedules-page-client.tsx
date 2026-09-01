@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, useEffect } from "react";
 import {
   IconCalendarTime,
@@ -138,7 +140,7 @@ function fmtDuration(sec: number) {
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   24h Timeline Rail (shadcn Card)
+   24h Timeline Rail (Sleek shadcn Stem-and-Dot Design)
 ───────────────────────────────────────────────────────────────────*/
 
 function TimelineRail({ schedules }: { schedules: Schedule[] }) {
@@ -155,59 +157,65 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
             Scheduled fires — UTC
           </CardDescription>
         </div>
-        <span className="text-[10.5px] font-mono text-muted-foreground bg-muted/40 border border-border rounded px-2 py-0.5 self-start sm:self-auto">
+        <span className="text-[10.5px] font-mono text-muted-foreground bg-muted/40 border border-border rounded px-2.5 py-0.5 self-start sm:self-auto">
           Now: 11:46 UTC
         </span>
       </CardHeader>
 
-      <CardContent className="p-4 sm:p-5 space-y-4">
-        {/* Rail Container */}
-        <div className="relative pt-6 pb-6 select-none px-3">
-          {/* Horizontal Track */}
-          <div className="relative h-2 w-full bg-[#181818] rounded-full overflow-hidden border border-[#242424]">
-            {/* Progress fill up to Now */}
+      <CardContent className="p-4 sm:p-5 space-y-5">
+        {/* Timeline Stem Track */}
+        <div className="relative pt-6 pb-6 select-none px-2 sm:px-4">
+          {/* Thin 1px Baseline */}
+          <div className="relative h-px w-full bg-[#262626]">
+            {/* Subtle progress highlight up to Now */}
             <div
-              className="h-full bg-primary/20"
+              className="absolute left-0 top-0 h-px bg-primary/40"
               style={{ width: `${nowPercent}%` }}
             />
           </div>
 
-          {/* "Now" indicator line & badge */}
+          {/* "Now" Marker Pin */}
           <div
-            className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20"
+            className="absolute top-6 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20"
             style={{ left: `${nowPercent}%` }}
           >
-            <div className="size-3.5 rounded-full bg-[#111111] border-2 border-primary shadow-sm flex items-center justify-center">
-              <div className="size-1 rounded-full bg-primary" />
-            </div>
+            {/* Vertical stem */}
+            <div className="w-px h-3.5 bg-primary/70" />
+            {/* Dot */}
+            <div className="size-2 rounded-full bg-primary ring-2 ring-primary/20 shadow-xs" />
           </div>
 
-          {/* Schedule pins */}
+          {/* Schedule Pins (Stems & Dots) */}
           {active.map((s) => {
             const pct = utcHourToPercent(s.nextRunUtc);
-            const color = s.status === "failing" ? "#ef4444" : "#FFB31F";
+            const isFailing = s.status === "failing";
+            const colorClass = isFailing ? "bg-red-500" : "bg-[#FFB31F]";
+            const stemClass = isFailing ? "bg-red-500/80" : "bg-[#FFB31F]/80";
+
             return (
               <div
                 key={s.id}
-                className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 flex flex-col items-center group cursor-pointer z-30"
+                className="absolute top-6 -translate-x-1/2 flex flex-col items-center group cursor-pointer z-30"
                 style={{ left: `${pct}%` }}
               >
-                {/* Event Bubble / Pin */}
+                {/* Vertical Stem */}
+                <div className={`w-0.5 h-3.5 ${stemClass}`} />
+
+                {/* Pin Dot */}
                 <div
-                  className="size-4 rounded-full border-2 border-[#111111] shadow-md flex items-center justify-center transition-transform group-hover:scale-125"
-                  style={{ background: color }}
+                  className={`size-2.5 rounded-full ${colorClass} shadow-sm transition-transform group-hover:scale-130`}
                 />
 
                 {/* Hover Tooltip */}
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 whitespace-nowrap bg-[#1a1a1a] border border-[#2e2e2e] text-white text-[10px] font-mono px-2 py-0.5 rounded shadow-lg pointer-events-none">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 whitespace-nowrap bg-[#161616] border border-[#2e2e2e] text-white text-[10px] font-mono px-2 py-0.5 rounded shadow-lg pointer-events-none">
                   {s.name}: {s.nextRunUtc} UTC
                 </div>
               </div>
             );
           })}
 
-          {/* Hour tick marks & labels safely BELOW the track */}
-          <div className="relative w-full h-4 mt-3">
+          {/* Hour Tick Marks & Labels safely below */}
+          <div className="relative w-full h-4 mt-4 pointer-events-none">
             {[
               { h: 0, label: "00:00" },
               { h: 6, label: "06:00", hideMobile: true },
@@ -222,8 +230,8 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
                 }`}
                 style={{ left: `${(item.h / 24) * 100}%` }}
               >
-                <div className="w-px h-1.5 bg-[#2a2a2a] mb-1" />
-                <span className="text-[10px] font-mono text-muted-foreground">
+                <div className="w-px h-1.5 bg-[#262626] mb-1" />
+                <span className="text-[10px] font-mono text-muted-foreground/70">
                   {item.label}
                 </span>
               </div>
@@ -232,16 +240,17 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 pt-1 border-t border-border/50">
+        <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-2 border-t border-border/50">
           {active.map((s) => (
-            <div key={s.id} className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <div key={s.id} className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
               <span
-                className="size-2 rounded-full shrink-0"
-                style={{ background: s.status === "failing" ? "#ef4444" : "#FFB31F" }}
+                className={`size-2 rounded-full shrink-0 ${
+                  s.status === "failing" ? "bg-red-500" : "bg-[#FFB31F]"
+                }`}
               />
-              <span className="font-mono text-foreground font-medium">{s.name}</span>
+              <span className="text-foreground/90 font-medium">{s.name.replace(" Production Snapshot", "").replace(" Backup", "").replace(" Long-term Archive", "")}</span>
               <span className="text-muted-foreground/40">·</span>
-              <span className="font-mono text-muted-foreground">{s.nextRunUtc} UTC</span>
+              <span className="text-muted-foreground">{s.nextRunUtc} UTC</span>
             </div>
           ))}
         </div>
