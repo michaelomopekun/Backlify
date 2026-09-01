@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
+import {
   Card,
   CardHeader,
   CardTitle,
@@ -159,16 +166,16 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
               <Label htmlFor="env-tier" className="text-xs font-medium text-muted-foreground">
                 Environment Tier
               </Label>
-              <select
-                id="env-tier"
-                value={environment}
-                onChange={(e) => setEnvironment(e.target.value)}
-                className="w-full h-8.5 px-3 bg-[#080808] border border-input rounded-md text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
-              >
-                <option value="production">Production (Continuous WAL + Automated Drills)</option>
-                <option value="staging">Staging (Snapshot Only)</option>
-                <option value="development">Development</option>
-              </select>
+              <Select value={environment} onValueChange={setEnvironment}>
+                <SelectTrigger id="env-tier" className="h-8.5 bg-[#080808]">
+                  <SelectValue placeholder="Select environment" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="production">Production (Continuous WAL + Automated Drills)</SelectItem>
+                  <SelectItem value="staging">Staging (Snapshot Only)</SelectItem>
+                  <SelectItem value="development">Development</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
         </CardContent>
@@ -306,16 +313,16 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
               <Label htmlFor="vault-provider" className="text-xs font-medium text-muted-foreground">
                 Provider
               </Label>
-              <select
-                id="vault-provider"
-                value={vaultProvider}
-                onChange={(e) => setVaultProvider(e.target.value)}
-                className="w-full h-8.5 px-3 bg-[#080808] border border-input rounded-md text-xs font-mono text-foreground focus:outline-none focus:ring-1 focus:ring-ring transition-colors"
-              >
-                <option value="s3">Amazon S3</option>
-                <option value="r2">Cloudflare R2</option>
-                <option value="minio">Self-Hosted MinIO</option>
-              </select>
+              <Select value={vaultProvider} onValueChange={setVaultProvider}>
+                <SelectTrigger id="vault-provider" className="h-8.5 bg-[#080808]">
+                  <SelectValue placeholder="Select provider" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="s3">Amazon S3</SelectItem>
+                  <SelectItem value="r2">Cloudflare R2</SelectItem>
+                  <SelectItem value="minio">Self-Hosted MinIO</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

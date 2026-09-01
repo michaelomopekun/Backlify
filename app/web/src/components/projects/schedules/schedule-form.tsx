@@ -4,6 +4,13 @@ import { useMemo, useState, useTransition } from "react";
 import { IconPlus, IconX } from "@tabler/icons-react";
 
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { cronToText, isRecognisedCron } from "@/lib/cron";
 import { createSchedule } from "@/app/actions/schedule.actions";
@@ -168,25 +175,25 @@ export function ScheduleForm({ projectId }: { projectId: string }) {
         </div>
       )}
 
-      <div className="mt-4 space-y-1.5">
+      <div className="mt-4 space-y-1.5 max-w-xs">
         <label
           htmlFor="timezone"
           className="block text-xs font-medium text-muted-foreground"
         >
           Timezone
         </label>
-        <select
-          id="timezone"
-          value={timezone}
-          onChange={(event) => setTimezone(event.target.value)}
-          className="h-9 w-full max-w-xs rounded-lg border border-input bg-background px-3 text-sm text-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-        >
-          {zones.map((zone) => (
-            <option key={zone} value={zone}>
-              {zone}
-            </option>
-          ))}
-        </select>
+        <Select value={timezone} onValueChange={setTimezone}>
+          <SelectTrigger id="timezone" className="h-8.5 bg-[#080808]">
+            <SelectValue placeholder="Select timezone" />
+          </SelectTrigger>
+          <SelectContent>
+            {zones.map((zone) => (
+              <SelectItem key={zone} value={zone}>
+                {zone}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {error && (
