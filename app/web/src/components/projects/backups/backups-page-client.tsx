@@ -352,26 +352,26 @@ export function BackupsPageClient({
   const successRate = backupsList.length > 0 ? Math.round((successCount / backupsList.length) * 100) : 100;
 
   return (
-    <div className="space-y-8 sm:space-y-10 pb-24 sm:pb-8">
+    <div className="space-y-16 sm:space-y-20 pb-28 sm:pb-24">
       {/* ── Page Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-[28px] font-semibold sm:font-normal tracking-tight text-white">Backups</h1>
-          <p className="text-xs sm:text-[13px] text-[#777777] mt-1 font-mono">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <div className="space-y-1.5">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Backups</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground font-normal">
             {totalMb} MB stored · Last run 2h ago · Next: today at 14:00 UTC
           </p>
         </div>
         <Button
           onClick={() => setShowPanel(true)}
-          className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-[13px] font-semibold h-9 px-4 shadow-xs shrink-0"
+          className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-sm font-semibold h-9.5 px-4 shadow-xs shrink-0 mt-1 sm:mt-0"
         >
-          <IconBolt className="size-3.5 mr-1.5" />
+          <IconBolt className="size-4 mr-1.5" />
           Trigger Manual Backup
         </Button>
       </div>
 
       {/* ── Stat Cards ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
         <StatCard
           icon={IconDatabaseImport}
           label="Total Snapshots"
@@ -403,14 +403,14 @@ export function BackupsPageClient({
       </div>
 
       {/* ── 7-Day Activity Chart ── */}
-      <div className="rounded-lg border border-[#1a1a1a] bg-[#0f0f0f] p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+      <div className="rounded-xl border border-border/60 bg-card/60 p-5 sm:p-6 shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h2 className="text-[14px] font-medium text-white">Backup Activity</h2>
-            <p className="text-[12px] text-[#555555] mt-0.5 font-mono">Last 7 days</p>
+            <h2 className="text-sm sm:text-base font-semibold text-foreground">Backup Activity</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Last 7 days</p>
           </div>
           {/* Legend */}
-          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-[11px] font-mono text-[#666666]">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5"><span className="size-2 rounded-sm bg-emerald-400" />Scheduled</span>
             <span className="flex items-center gap-1.5"><span className="size-2 rounded-sm bg-blue-400" />Manual</span>
             <span className="flex items-center gap-1.5"><span className="size-2 rounded-sm bg-red-500" />Failed</span>
@@ -418,36 +418,47 @@ export function BackupsPageClient({
         </div>
 
         {/* Chart columns */}
-        <div className="grid grid-cols-7 gap-1.5 sm:gap-3">
+        <div className="grid grid-cols-7 gap-2 sm:gap-4 pt-2">
           {ACTIVITY_DAYS.map((day, i) => (
-            <div key={i} className="flex flex-col items-center gap-2">
+            <div key={i} className="flex flex-col items-center gap-2.5">
               <ActivityBar events={day.events} isToday={i === 6} />
               <div className="text-center">
-                <p className={`text-[11px] font-mono ${i === 6 ? "text-white" : "text-[#555555]"}`}>
+                <p className={`text-xs ${i === 6 ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
                   {day.label}
                 </p>
-                <p className="text-[10px] font-mono text-[#3a3a3a]">{day.date}</p>
+                <p className="text-[11px] text-muted-foreground/60 mt-0.5">{day.date}</p>
               </div>
             </div>
           ))}
         </div>
 
         {/* Summary strip */}
-        <div className="mt-5 pt-4 border-t border-[#1a1a1a] flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] sm:text-[11.5px] font-mono text-[#777777]">
-          <span><span className="text-white">11</span> total backups</span>
-          <span><span className="text-emerald-400">10</span> succeeded</span>
-          <span><span className="text-red-400">1</span> failed</span>
-          <span><span className="text-blue-400">4</span> manual</span>
-          <span><span className="text-amber-400">1</span> in progress</span>
+        <div className="pt-4 border-t border-border/50 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
+          <span><span className="text-foreground font-medium">11</span> total backups</span>
+          <span>·</span>
+          <span><span className="text-emerald-400 font-medium">10</span> succeeded</span>
+          <span>·</span>
+          <span><span className="text-red-400 font-medium">1</span> failed</span>
+          <span>·</span>
+          <span><span className="text-blue-400 font-medium">4</span> manual</span>
+          <span>·</span>
+          <span><span className="text-amber-400 font-medium">1</span> in progress</span>
         </div>
       </div>
 
       {/* ── Backups Table ── */}
-      <div className="space-y-3">
+      <div className="space-y-6 sm:space-y-8">
         {/* Table header with filters */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h2 className="text-[14px] font-medium text-white shrink-0">All Snapshots</h2>
-          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+              All Snapshots
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-normal">
+              Browse, download, or restore point-in-time PostgreSQL backup artifacts
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
             {/* Search */}
             <div className="relative flex-1 sm:flex-none">
               <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-[#444444]" />

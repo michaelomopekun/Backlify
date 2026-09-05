@@ -41,30 +41,32 @@ export default async function ProjectLayout({ children, params }: Props) {
   const projectName = project?.name ?? "roadRescue's Project";
 
   return (
-    <SidebarProvider>
-      <ProjectSidebar
-        user={user}
+    <SidebarProvider className="h-screen w-screen overflow-hidden flex flex-col bg-[#0c0c0c]">
+      {/* Responsive Project Topbar — full width across top (Supabase style) */}
+      <ProjectHeader
         orgId={orgId}
         orgName={orgName}
         projectId={projectId}
         projectName={projectName}
+        userInitials={user.initials}
       />
 
-      <SidebarInset>
-        {/* Responsive Project Topbar */}
-        <ProjectHeader
+      <div className="flex-1 flex w-full min-h-0 overflow-hidden">
+        <ProjectSidebar
+          user={user}
           orgId={orgId}
           orgName={orgName}
           projectId={projectId}
           projectName={projectName}
-          userInitials={user.initials}
         />
 
-        {/* Main Content Area */}
-        <main className="flex-1 px-4 sm:px-8 lg:px-10 pt-6 sm:pt-8 pb-16 bg-[#0c0c0c] max-w-[1600px] w-full">
-          {children}
-        </main>
-      </SidebarInset>
+        {/* Main Content Area — independent smooth scroll */}
+        <SidebarInset className="bg-[#0c0c0c] flex-1 min-w-0 h-full overflow-y-auto">
+          <div className="w-full max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-10 xl:px-12 pt-6 sm:pt-8 pb-16">
+            {children}
+          </div>
+        </SidebarInset>
+      </div>
     </SidebarProvider>
   );
 }

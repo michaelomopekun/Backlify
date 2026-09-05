@@ -34,7 +34,7 @@ export function ProjectHeader({
   const projectInitial = projectName ? projectName.charAt(0).toUpperCase() : "P";
 
   return (
-    <header className="flex h-13 items-center justify-between px-3.5 sm:px-4 border-b border-border/80 shrink-0 bg-[#0e0e0e] text-xs">
+    <header className="relative z-30 flex h-12 shrink-0 items-center justify-between px-3.5 sm:px-4 border-b border-border/80 bg-[#0e0e0e] text-xs w-full">
       {/* ── MOBILE HEADER (sm:hidden) ── */}
       <div className="flex sm:hidden items-center justify-between w-full">
         {/* Left: Project square avatar + Name + branch */}
@@ -87,46 +87,63 @@ export function ProjectHeader({
 
       {/* ── DESKTOP HEADER (hidden sm:flex) ── */}
       <div className="hidden sm:flex items-center gap-2.5 w-full">
-        <SidebarTrigger className="-ml-1 size-7 text-muted-foreground hover:text-foreground" />
+        {/* Brand Logo */}
+        <Link href="/dashboard/org" className="flex items-center shrink-0 pr-1 hover:opacity-85 transition-opacity">
+          <img
+            src="/backlify-logo.svg"
+            alt="Backlify"
+            className="size-5 object-contain"
+          />
+        </Link>
+
+        <span className="text-muted-foreground/40 font-light text-sm">/</span>
 
         {/* Org Selector */}
         <Link
           href={`/dashboard/org/${orgId}`}
-          className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium"
+          className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium text-sm"
         >
+          <span className="size-4 rounded flex items-center justify-center text-muted-foreground shrink-0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3.5">
+              <path d="M4 4h16v16H4z M9 9h6v6H9z" />
+            </svg>
+          </span>
           <span>{orgName}</span>
-          <span className="text-[10px] px-1 py-0.2 rounded border border-border bg-muted/40 text-muted-foreground font-mono uppercase">
+          <span className="text-[10px] px-1.5 py-0.5 rounded border border-border/80 bg-muted/40 text-muted-foreground font-mono uppercase tracking-wider">
             FREE
           </span>
-          <IconSelector className="size-3 text-muted-foreground" />
+          <IconSelector className="size-3 text-muted-foreground shrink-0" />
         </Link>
 
-        <span className="text-muted-foreground/60 text-sm">/</span>
+        <span className="text-muted-foreground/40 font-light text-sm">/</span>
 
         {/* Project Selector */}
         <Link
           href={`/dashboard/project/${projectId}`}
-          className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium truncate max-w-[180px]"
+          className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium text-sm truncate max-w-[200px]"
         >
           <span className="truncate">{projectName}</span>
           <IconSelector className="size-3 text-muted-foreground shrink-0" />
         </Link>
 
-        <span className="text-muted-foreground/60 text-sm">/</span>
+        <span className="text-muted-foreground/40 font-light text-sm">/</span>
 
         {/* Branch / Env Selector */}
-        <div className="flex items-center gap-1.5 text-foreground">
-          <span className="text-muted-foreground">main</span>
-          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-amber-500/15 border border-amber-500/30 text-amber-400 uppercase font-mono tracking-wider">
+        <div className="flex items-center gap-1.5 text-foreground text-sm">
+          <span className="text-muted-foreground text-xs font-mono">main</span>
+          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25 text-amber-400 uppercase font-mono tracking-wider">
             PRODUCTION
           </span>
-          <IconSelector className="size-3 text-muted-foreground" />
+          <IconSelector className="size-3 text-muted-foreground shrink-0" />
         </div>
+
+        {/* Sidebar Trigger */}
+        <SidebarTrigger className="size-7 text-muted-foreground hover:text-foreground ml-1" />
 
         {/* Connect CTA Pill */}
         <button
           type="button"
-          className="hidden md:flex items-center gap-1.5 h-7 px-3 rounded-full border border-border bg-[#181818] hover:border-border/80 hover:bg-[#202020] text-foreground transition-colors ml-1 font-medium"
+          className="hidden md:flex items-center gap-1.5 h-7 px-3 rounded-full border border-border bg-[#181818] hover:border-border/80 hover:bg-[#202020] text-foreground transition-colors ml-2 font-medium cursor-pointer"
         >
           <IconPlugConnected className="size-3.5 text-muted-foreground" />
           <span>Connect</span>

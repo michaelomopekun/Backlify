@@ -56,31 +56,50 @@ export default async function OrgProjectsPage({ params }: Props) {
   ];
 
   return (
-    <SidebarProvider>
-      <OrgSidebar user={user} orgId={orgId} orgName={orgName} />
+    <SidebarProvider className="flex flex-col min-h-screen">
+      {/* Topbar — full width across top (Supabase style) */}
+      <header className="flex h-12 items-center gap-2.5 px-3.5 sm:px-4 border-b border-border/80 shrink-0 bg-[#0e0e0e] text-xs z-30 sticky top-0 w-full">
+        {/* Brand Logo */}
+        <Link href="/dashboard/org" className="flex items-center shrink-0 pr-1 hover:opacity-85 transition-opacity">
+          <img
+            src="/backlify-logo.svg"
+            alt="Backlify"
+            className="size-5 object-contain"
+          />
+        </Link>
 
-      <SidebarInset className="bg-[#0c0c0c]">
-        {/* Topbar */}
-        <header className="flex h-12 items-center gap-2.5 px-4 border-b border-border/80 shrink-0 bg-[#0e0e0e] text-xs">
-          <SidebarTrigger className="-ml-1 size-7 text-muted-foreground hover:text-foreground" />
+        <span className="text-muted-foreground/40 font-light text-sm">/</span>
 
-          {/* Org Selector */}
-          <Link
-            href={`/dashboard/org/${orgId}`}
-            className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium"
-          >
-            <span>{orgName}</span>
-            <span className="text-[10px] px-1 py-0.2 rounded border border-border bg-muted/40 text-muted-foreground font-mono uppercase">
-              FREE
-            </span>
-            <IconSelector className="size-3 text-muted-foreground" />
-          </Link>
+        {/* Org Selector */}
+        <Link
+          href={`/dashboard/org/${orgId}`}
+          className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium text-sm"
+        >
+          <span className="size-4 rounded flex items-center justify-center text-muted-foreground shrink-0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3.5">
+              <path d="M4 4h16v16H4z M9 9h6v6H9z" />
+            </svg>
+          </span>
+          <span>{orgName}</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded border border-border/80 bg-muted/40 text-muted-foreground font-mono uppercase tracking-wider">
+            FREE
+          </span>
+          <IconSelector className="size-3 text-muted-foreground shrink-0" />
+        </Link>
 
-          {/* Right Topbar actions */}
-          <div className="ml-auto">
-            <OrgPickerClientActions userInitials={user.initials} />
-          </div>
-        </header>
+        {/* Sidebar Trigger */}
+        <SidebarTrigger className="size-7 text-muted-foreground hover:text-foreground ml-1" />
+
+        {/* Right Topbar actions */}
+        <div className="ml-auto">
+          <OrgPickerClientActions userInitials={user.initials} />
+        </div>
+      </header>
+
+      <div className="flex-1 flex w-full min-h-0">
+        <OrgSidebar user={user} orgId={orgId} orgName={orgName} />
+
+        <SidebarInset className="bg-[#0c0c0c] flex-1 min-w-0">
 
         {/* Page Content */}
         <main className="flex-1 px-8 lg:px-12 py-8 max-w-[1600px] w-full">
@@ -260,6 +279,7 @@ export default async function OrgProjectsPage({ params }: Props) {
           </div>
         </main>
       </SidebarInset>
+      </div>
     </SidebarProvider>
   );
 }

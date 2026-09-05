@@ -200,29 +200,31 @@ function PitrScrubber({
   const percent = (selectedIndex / (PITR_POINTS.length - 1)) * 100;
 
   return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between">
-        <div>
-          <CardTitle className="flex items-center gap-2">
-            Point-in-Time Recovery
-            <Badge variant="outline" className="text-[10px] font-mono">
+    <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
+      <CardHeader className="p-5 sm:p-6 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2.5">
+            <CardTitle className="text-sm sm:text-base font-semibold text-foreground">
+              Point-in-Time Recovery
+            </CardTitle>
+            <Badge variant="outline" className="text-xs font-medium">
               Drag scrubber
             </Badge>
-          </CardTitle>
-          <CardDescription className="font-mono text-[11.5px]">
+          </div>
+          <CardDescription className="text-xs text-muted-foreground font-normal">
             Drag the handle or click any checkpoint below to select a recovery target
           </CardDescription>
         </div>
-        <Badge variant="secondary" className="text-[11px] font-mono shrink-0">
+        <span className="text-xs font-medium text-muted-foreground bg-muted/40 border border-border/60 rounded-md px-3 py-1 self-start sm:self-auto">
           7-Day Window
-        </Badge>
+        </span>
       </CardHeader>
 
-      <CardContent className="space-y-3 pt-2 pb-2 px-4 sm:px-6">
+      <CardContent className="p-5 sm:p-6 space-y-6">
         {/* Rail & Draggable Handle Container */}
         <div className="relative h-6 flex items-center">
           {/* Horizontal Background Rail */}
-          <div className="h-1.5 w-full bg-[#1c1c1c] rounded-full overflow-hidden border border-border">
+          <div className="h-1.5 w-full bg-[#1c1c1c] rounded-full overflow-hidden border border-border/60">
             <div
               className="h-full bg-primary transition-all duration-75"
               style={{ width: `${percent}%` }}
@@ -235,7 +237,7 @@ function PitrScrubber({
             style={{ left: `${percent}%` }}
           >
             {/* Floating Live Scrubber Bubble */}
-            <div className="absolute -top-8 flex items-center px-2 py-0.5 rounded-md bg-card border border-border text-primary font-mono text-[10.5px] shadow-md whitespace-nowrap">
+            <div className="absolute -top-8 flex items-center px-2.5 py-1 rounded-md bg-card border border-border text-primary text-xs font-medium shadow-md whitespace-nowrap">
               <span>{current.day} {current.time.split(" ")[0]}</span>
             </div>
 
@@ -279,7 +281,7 @@ function PitrScrubber({
                   }`}
                 />
                 <span
-                  className={`text-[10px] sm:text-[10.5px] font-mono whitespace-nowrap transition-colors ${
+                  className={`text-[11px] whitespace-nowrap transition-colors ${
                     showOnMobile ? "block" : "hidden sm:block"
                   } ${
                     isSelected
@@ -296,22 +298,24 @@ function PitrScrubber({
       </CardContent>
 
       {/* Selected Info & Action Strip */}
-      <CardFooter className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-mono">
-          <span className="size-1.5 rounded-full bg-emerald-400 shrink-0" />
-          <span className="text-foreground">
+      <CardFooter className="p-5 sm:p-6 border-t border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-muted/10">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
+          <span className="size-2 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
+          <span className="text-foreground font-medium">
             <span className="text-primary font-semibold">{current.date} · {current.time}</span> ({current.size})
           </span>
-          <span className="text-muted-foreground hidden sm:inline">·</span>
-          <Badge variant="outline" className="text-[11px] font-mono">Snapshot: {current.snapshotId}</Badge>
+          <span className="text-muted-foreground/40 hidden sm:inline">·</span>
+          <code className="font-mono text-xs font-medium text-foreground/90 bg-muted/60 border border-border/50 px-2 py-0.5 rounded">
+            Snapshot: {current.snapshotId}
+          </code>
         </div>
 
         <Button
           onClick={() => onSelectPoint(current)}
           size="sm"
-          className="h-8 px-3.5 text-xs font-semibold shadow-xs shrink-0 self-start sm:self-auto"
+          className="h-9 px-4 text-xs sm:text-sm font-semibold shadow-xs shrink-0 self-start sm:self-auto"
         >
-          <IconBolt className="size-3.5 mr-1" />
+          <IconBolt className="size-4 mr-1.5" />
           Restore from this point
         </Button>
       </CardFooter>
@@ -339,76 +343,133 @@ function DrillCard({
       ? "Staging DB Clone"
       : "Production Restore";
 
+  const isPassed = drill.status === "passed";
+  const isFailed = drill.status === "failed";
+  const isRunning = drill.status === "running";
+  const passedChecksCount = drill.integrityChecks.filter((c) => c.passed).length;
+
   return (
-    <Card className="transition-colors hover:ring-foreground/20">
-      <CardContent className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4">
-        {/* Left: Type, target, and checks */}
-        <div className="space-y-1.5 min-w-0">
+    <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs hover:border-border hover:bg-card transition-colors">
+      <CardHeader className="p-5 sm:p-6 border-b border-border/50 flex flex-row items-start justify-between gap-4">
+        <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-center gap-2.5">
-            <span className="size-1.5 rounded-full bg-emerald-400 shrink-0" />
-            <CardTitle className="text-[13.5px]">{typeLabel}</CardTitle>
-            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-mono uppercase">
-              {drill.status === "passed" ? "Passed" : drill.status === "failed" ? "Failed" : drill.status === "running" ? "Running" : "Complete"}
-            </Badge>
-            <Badge variant="outline" className="text-[11px] font-mono">
+            <span
+              className={`size-2 rounded-full shrink-0 ${
+                isPassed
+                  ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"
+                  : isFailed
+                  ? "bg-destructive shadow-[0_0_6px_rgba(239,68,68,0.8)]"
+                  : "bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.8)]"
+              }`}
+            />
+            <CardTitle className="text-sm sm:text-base font-semibold text-foreground truncate">
+              {typeLabel}
+            </CardTitle>
+            <Badge variant="outline" className="text-xs font-medium">
               #{drill.id}
             </Badge>
           </div>
+          <CardDescription className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+            <span className="text-foreground/90 font-medium">{drill.sourceSnapshot}</span>
+            <span className="text-muted-foreground/40">·</span>
+            <span className="text-muted-foreground font-normal">{drill.sourceTimestamp}</span>
+          </CardDescription>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-[12px] font-mono text-muted-foreground">
-            <span>Target: <span className="text-foreground/70">{drill.targetDb}</span></span>
-            <span>·</span>
-            <span>{drill.sourceSnapshot}</span>
-            <span>·</span>
-            <Badge variant="outline" className="text-emerald-400 border-emerald-500/20 text-[11px] font-mono gap-1">
-              <IconCheck className="size-3" />
-              4/4 checks verified
-            </Badge>
+        {/* Actions */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <Button
+            onClick={() => onViewLogs(drill)}
+            variant="outline"
+            size="sm"
+            className="h-8.5 px-3 text-xs font-medium gap-1.5"
+          >
+            <IconTerminal2 className="size-3.5" />
+            Logs
+          </Button>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="size-8 p-0 text-muted-foreground hover:text-foreground"
+              >
+                <IconDotsVertical className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44 bg-[#111111] border-[#222222] text-xs">
+              <DropdownMenuItem
+                onClick={() => onViewLogs(drill)}
+                className="gap-2 cursor-pointer text-white"
+              >
+                <IconTerminal2 className="size-3.5 text-muted-foreground" />
+                View full logs
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => onRerun(drill)}
+                className="gap-2 cursor-pointer text-white"
+              >
+                <IconRotateClockwise className="size-3.5 text-muted-foreground" />
+                Re-run drill
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-5 sm:p-6 space-y-5">
+        {/* 4-column Meta row */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-xs">
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Target Database</p>
+            <p className="text-xs sm:text-[13px] font-medium text-foreground truncate">
+              {drill.targetDb}
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Executed At</p>
+            <p className="text-xs sm:text-[13px] text-muted-foreground">
+              {drill.executedAt}
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Duration & Size</p>
+            <p className="text-xs sm:text-[13px] text-muted-foreground">
+              {drill.durationSec}s · {drill.sizeMb} MB
+            </p>
+          </div>
+
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Integrity Checks</p>
+            <div className="flex items-center gap-1.5 text-emerald-400">
+              <IconCheck className="size-3.5 shrink-0" />
+              <p className="text-xs sm:text-[13px] font-medium">
+                {passedChecksCount}/{drill.integrityChecks.length} checks verified
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Right: Timestamp, duration, and actions */}
-        <div className="flex items-center gap-4 text-[12px] font-mono text-muted-foreground shrink-0">
-          <div className="text-right hidden sm:block">
-            <p className="text-foreground/60">{drill.executedAt}</p>
-            <p className="text-[11px] text-muted-foreground">Duration: {drill.durationSec}s</p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={() => onViewLogs(drill)}
-              variant="outline"
-              size="sm"
-              className="h-8 px-2.5 text-[11.5px]"
+        {/* Status footer strip with shadcn Badge */}
+        <div className="flex items-center justify-between gap-2.5 pt-4 border-t border-border/50">
+          <div className="flex items-center gap-2.5">
+            <Badge
+              variant={isPassed ? "default" : isFailed ? "destructive" : "secondary"}
+              className="text-xs font-medium px-2.5 py-0.5"
             >
-              <IconTerminal2 className="size-3.5 mr-1" />
-              Logs
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon-sm">
-                  <IconDotsVertical className="size-3.5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem
-                  onClick={() => onViewLogs(drill)}
-                  className="gap-2 cursor-pointer"
-                >
-                  <IconTerminal2 className="size-3.5" />
-                  View full logs
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => onRerun(drill)}
-                  className="gap-2 cursor-pointer"
-                >
-                  <IconRotateClockwise className="size-3.5" />
-                  Re-run drill
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+              {isPassed ? "Passed" : isFailed ? "Failed" : isRunning ? "Running" : "Complete"}
+            </Badge>
+            <span className="text-muted-foreground/40 text-xs">·</span>
+            <span className="text-xs text-muted-foreground font-normal">
+              Initiated by {drill.initiatedBy}
+            </span>
           </div>
+          <span className="text-xs text-muted-foreground font-normal hidden sm:inline">
+            Recovery benchmark satisfied
+          </span>
         </div>
       </CardContent>
     </Card>
@@ -821,39 +882,39 @@ export function RestoresPageClient({
   );
 
   return (
-    <div className="space-y-8 sm:space-y-10 pb-24 sm:pb-16">
+    <div className="space-y-16 sm:space-y-20 pb-28 sm:pb-24">
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-[28px] font-semibold sm:font-normal tracking-tight text-foreground">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <div className="space-y-1.5">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
             Restores
           </h1>
-          <p className="text-xs sm:text-[13px] text-muted-foreground mt-1 font-mono">
+          <p className="text-xs sm:text-sm text-muted-foreground font-normal">
             Automated recovery drills & point-in-time database restores
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <Button
             onClick={handleOpenDrill}
             variant="outline"
-            className="flex-1 sm:flex-none h-9 px-3.5 border-[#262626] bg-[#111111] text-foreground hover:bg-[#1a1a1a] text-xs font-medium"
+            className="flex-1 sm:flex-none h-9.5 px-4 text-xs sm:text-sm font-medium"
           >
-            <IconShieldCheck className="size-3.5 mr-1.5 text-emerald-400" />
+            <IconShieldCheck className="size-4 mr-1.5 text-emerald-400" />
             Run DR Drill
           </Button>
           <Button
             onClick={handleOpenRestore}
-            className="flex-1 sm:flex-none h-9 px-3.5 bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold shadow-xs"
+            className="flex-1 sm:flex-none h-9.5 px-4 bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-sm font-semibold shadow-xs"
           >
-            <IconBolt className="size-3.5 mr-1.5" />
+            <IconBolt className="size-4 mr-1.5" />
             New Restore
           </Button>
         </div>
       </div>
 
       {/* ── 4 Stat Cards (Standard Card 1) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
         <StatCard
           icon={IconClock}
           label="Recovery Point (RPO)"
@@ -888,24 +949,31 @@ export function RestoresPageClient({
       <PitrScrubber onSelectPoint={handleSelectPoint} />
 
       {/* ── Recent Recovery Events ── */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-[14px] font-medium text-foreground">Recent Recovery Drills & Restores</h2>
+      <div className="space-y-6 sm:space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+              Recent Recovery Drills & Restores
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-normal">
+              Audit log of simulated disaster recovery drills and active database clones
+            </p>
+          </div>
 
-          <div className="relative">
-            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+          <div className="relative w-full sm:w-64 shrink-0">
+            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search drills..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8.5 pr-3 w-52"
+              className="h-9.5 pl-9 pr-3 w-full text-xs sm:text-sm"
             />
           </div>
         </div>
 
         {/* Clean Drill Cards */}
-        <div className="space-y-3.5">
+        <div className="space-y-4 sm:space-y-5">
           {filteredDrills.map((d) => (
             <DrillCard
               key={d.id}

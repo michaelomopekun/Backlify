@@ -78,22 +78,9 @@ export function OrgSidebar({ user, orgId, orgName }: OrgSidebarProps) {
   const base = `/dashboard/org/${orgId}`;
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border bg-[#0d0d0d]">
-      {/* Header */}
-      <SidebarHeader className="h-12 flex flex-row items-center gap-3 px-3.5 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center border-b border-border shrink-0">
-        <Link href="/dashboard/org" className="flex items-center gap-2.5 min-w-0">
-          <BrandMark />
-          <span className="text-sm font-semibold text-foreground truncate group-data-[collapsible=icon]:hidden">
-            {orgName}
-          </span>
-        </Link>
-        <span className="ml-auto shrink-0 text-[10px] font-medium text-muted-foreground border border-border rounded px-1.5 py-0.5 uppercase tracking-wide group-data-[collapsible=icon]:hidden">
-          Free
-        </span>
-      </SidebarHeader>
-
+    <Sidebar collapsible="icon" className="border-r border-border bg-[#0d0d0d] top-12 h-[calc(100svh-3rem)]">
       {/* Nav */}
-      <SidebarContent className="pt-2 px-2 group-data-[collapsible=icon]:px-1.5">
+      <SidebarContent className="pt-2.5 px-2 group-data-[collapsible=icon]:px-1.5">
         <SidebarGroup className="p-0">
           <SidebarMenu className="gap-1">
             {orgNav.map((item) => {
@@ -170,27 +157,9 @@ export function ProjectSidebar({
   const base = `/dashboard/project/${projectId}`;
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border bg-[#0d0d0d]">
-      {/* Header — logo + org breadcrumb */}
-      <SidebarHeader className="h-12 flex flex-row items-center gap-2 px-3.5 group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:justify-center border-b border-border shrink-0">
-        <Link href="/dashboard/org" className="shrink-0 flex items-center justify-center">
-          <BrandMark />
-        </Link>
-        <span className="text-muted-foreground text-sm group-data-[collapsible=icon]:hidden">/</span>
-        <Link
-          href={`/dashboard/org/${orgId}`}
-          className="text-muted-foreground text-sm hover:text-foreground transition-colors flex items-center gap-1.5 min-w-0 group-data-[collapsible=icon]:hidden"
-        >
-          <IconBuilding className="size-3.5 shrink-0" />
-          <span className="truncate">{orgName}</span>
-        </Link>
-        <span className="ml-1 shrink-0 text-[10px] font-medium text-muted-foreground border border-border rounded px-1.5 py-0.5 uppercase tracking-wide group-data-[collapsible=icon]:hidden">
-          Free
-        </span>
-      </SidebarHeader>
-
+    <Sidebar collapsible="icon" className="border-r border-border bg-[#0d0d0d] top-12 h-[calc(100svh-3rem)]">
       {/* Nav */}
-      <SidebarContent className="pt-2 px-2 group-data-[collapsible=icon]:px-1.5">
+      <SidebarContent className="pt-2.5 px-2 group-data-[collapsible=icon]:px-1.5">
         <SidebarGroup className="p-0">
           <SidebarMenu className="gap-1">
             {projectNav.map((item) => {

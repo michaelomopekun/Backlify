@@ -149,22 +149,22 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
   const nowPercent = ((11 * 60 + 46) / (24 * 60)) * 100;
 
   return (
-    <Card className="border-border bg-card py-0 gap-0 overflow-hidden shadow-xs">
-      <CardHeader className="p-4 sm:p-5 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <div className="space-y-0.5">
-          <CardTitle className="text-[13.5px] font-medium text-foreground">Next 24h Timeline</CardTitle>
-          <CardDescription className="text-[11px] text-muted-foreground font-mono">
+    <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
+      <CardHeader className="p-5 sm:p-6 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="space-y-1">
+          <CardTitle className="text-sm font-semibold text-foreground">Next 24h Timeline</CardTitle>
+          <CardDescription className="text-xs text-muted-foreground font-normal">
             Scheduled fires — UTC
           </CardDescription>
         </div>
-        <span className="text-[10.5px] font-mono text-muted-foreground bg-muted/40 border border-border rounded px-2.5 py-0.5 self-start sm:self-auto">
+        <span className="text-xs font-medium text-muted-foreground bg-muted/40 border border-border/60 rounded-md px-3 py-1 self-start sm:self-auto">
           Now: 11:46 UTC
         </span>
       </CardHeader>
 
-      <CardContent className="p-4 sm:p-5 space-y-5">
+      <CardContent className="p-5 sm:p-6 space-y-6">
         {/* Timeline Stem Track */}
-        <div className="relative pt-6 pb-6 select-none px-2 sm:px-4">
+        <div className="relative pt-7 pb-7 select-none px-3 sm:px-6">
           {/* Thin 1px Baseline */}
           <div className="relative h-px w-full bg-[#262626]">
             {/* Subtle progress highlight up to Now */}
@@ -176,7 +176,7 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
 
           {/* "Now" Marker Pin */}
           <div
-            className="absolute top-6 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20"
+            className="absolute top-7 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20"
             style={{ left: `${nowPercent}%` }}
           >
             {/* Vertical stem */}
@@ -195,7 +195,7 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
             return (
               <div
                 key={s.id}
-                className="absolute top-6 -translate-x-1/2 flex flex-col items-center group cursor-pointer z-30"
+                className="absolute top-7 -translate-x-1/2 flex flex-col items-center group cursor-pointer z-30"
                 style={{ left: `${pct}%` }}
               >
                 {/* Vertical Stem */}
@@ -207,7 +207,7 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
                 />
 
                 {/* Hover Tooltip */}
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 whitespace-nowrap bg-[#161616] border border-[#2e2e2e] text-white text-[10px] font-mono px-2 py-0.5 rounded shadow-lg pointer-events-none">
+                <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 whitespace-nowrap bg-[#161616] border border-[#2e2e2e] text-white text-[11px] px-2.5 py-1 rounded-md shadow-lg pointer-events-none">
                   {s.name}: {s.nextRunUtc} UTC
                 </div>
               </div>
@@ -215,7 +215,7 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
           })}
 
           {/* Hour Tick Marks & Labels safely below */}
-          <div className="relative w-full h-4 mt-4 pointer-events-none">
+          <div className="relative w-full h-4 mt-5 pointer-events-none">
             {[
               { h: 0, label: "00:00" },
               { h: 6, label: "06:00", hideMobile: true },
@@ -230,8 +230,8 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
                 }`}
                 style={{ left: `${(item.h / 24) * 100}%` }}
               >
-                <div className="w-px h-1.5 bg-[#262626] mb-1" />
-                <span className="text-[10px] font-mono text-muted-foreground/70">
+                <div className="w-px h-1.5 bg-[#262626] mb-1.5" />
+                <span className="text-[11px] text-muted-foreground/70">
                   {item.label}
                 </span>
               </div>
@@ -240,9 +240,9 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap items-center gap-4 sm:gap-6 pt-2 border-t border-border/50">
+        <div className="flex flex-wrap items-center gap-5 sm:gap-7 pt-4 border-t border-border/50">
           {active.map((s) => (
-            <div key={s.id} className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+            <div key={s.id} className="flex items-center gap-2 text-xs text-muted-foreground font-normal">
               <span
                 className={`size-2 rounded-full shrink-0 ${
                   s.status === "failing" ? "bg-red-500" : "bg-[#FFB31F]"
@@ -281,9 +281,9 @@ function ScheduleCard({
   const isActive = schedule.status === "active";
 
   return (
-    <Card className="border-border bg-card py-0 gap-0 overflow-hidden shadow-xs hover:border-[#2e2e2e] transition-colors">
-      <CardHeader className="p-5 border-b border-border/50 flex flex-row items-start justify-between gap-4">
-        <div className="flex-1 min-w-0 space-y-1">
+    <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs hover:border-border hover:bg-card transition-colors">
+      <CardHeader className="p-5 sm:p-6 border-b border-border/50 flex flex-row items-start justify-between gap-4">
+        <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex items-center gap-2.5">
             <span
               className={`size-2 rounded-full shrink-0 ${
@@ -294,19 +294,21 @@ function ScheduleCard({
                   : "bg-muted-foreground/40"
               }`}
             />
-            <CardTitle className="text-sm font-medium text-foreground truncate">
+            <CardTitle className="text-sm sm:text-base font-semibold text-foreground truncate">
               {schedule.name}
             </CardTitle>
           </div>
-          <CardDescription className="text-xs text-muted-foreground font-mono">
-            <span className="text-foreground/90 font-semibold">{schedule.cron}</span>
-            <span className="mx-2 text-muted-foreground/40">·</span>
-            {schedule.humanReadable}
+          <CardDescription className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+            <code className="font-mono text-xs font-medium text-foreground/90 bg-muted/60 border border-border/50 px-2 py-0.5 rounded">
+              {schedule.cron}
+            </code>
+            <span className="text-muted-foreground/40">·</span>
+            <span className="text-muted-foreground font-normal">{schedule.humanReadable}</span>
           </CardDescription>
         </div>
 
         {/* Actions & Official shadcn Switch */}
-        <div className="flex items-center gap-2.5 shrink-0">
+        <div className="flex items-center gap-3 shrink-0">
           <Switch
             checked={isActive}
             onCheckedChange={() => onToggle(schedule.id)}
@@ -346,49 +348,49 @@ function ScheduleCard({
         </div>
       </CardHeader>
 
-      <CardContent className="p-5 space-y-4">
+      <CardContent className="p-5 sm:p-6 space-y-5">
         {/* Meta row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
-          <div className="space-y-0.5">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Next Run</p>
-            <p className={`font-medium ${isPaused ? "text-muted-foreground" : "text-foreground"}`}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-xs">
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Next Run</p>
+            <p className={`text-xs sm:text-[13px] font-medium ${isPaused ? "text-muted-foreground" : "text-foreground"}`}>
               {schedule.nextRunLabel}
             </p>
           </div>
 
-          <div className="space-y-0.5">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Last Run</p>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Last Run</p>
             <div className="flex items-center gap-1.5">
               {schedule.lastRunOk ? (
-                <IconCircleCheck className="size-3 text-emerald-400 shrink-0" />
+                <IconCircleCheck className="size-3.5 text-emerald-400 shrink-0" />
               ) : (
-                <IconAlertTriangle className="size-3 text-destructive shrink-0" />
+                <IconAlertTriangle className="size-3.5 text-destructive shrink-0" />
               )}
-              <p className="text-muted-foreground">{schedule.lastRunLabel}</p>
+              <p className="text-xs sm:text-[13px] text-muted-foreground">{schedule.lastRunLabel}</p>
             </div>
           </div>
 
-          <div className="space-y-0.5">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Retention</p>
-            <p className="text-muted-foreground">Keep last {schedule.retentionDays}d</p>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Retention</p>
+            <p className="text-xs sm:text-[13px] text-muted-foreground">Keep last {schedule.retentionDays}d</p>
           </div>
 
-          <div className="space-y-0.5">
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Avg Duration</p>
-            <p className="text-muted-foreground">{fmtDuration(schedule.avgDurationSec)}</p>
+          <div className="space-y-1">
+            <p className="text-xs font-medium text-muted-foreground">Avg Duration</p>
+            <p className="text-xs sm:text-[13px] text-muted-foreground">{fmtDuration(schedule.avgDurationSec)}</p>
           </div>
         </div>
 
         {/* Status footer strip with shadcn Badge */}
-        <div className="flex items-center gap-2 pt-3 border-t border-border/50">
+        <div className="flex items-center gap-2.5 pt-4 border-t border-border/50">
           <Badge
             variant={isActive ? "default" : isFailing ? "destructive" : "secondary"}
-            className="text-[10px] font-mono uppercase px-2 py-0.5"
+            className="text-xs font-medium px-2.5 py-0.5"
           >
             {isActive ? "Active" : isFailing ? "Failing" : "Paused"}
           </Badge>
-          <span className="text-muted-foreground/40 text-[10px]">·</span>
-          <span className="text-[11px] font-mono text-muted-foreground">
+          <span className="text-muted-foreground/40 text-xs">·</span>
+          <span className="text-xs text-muted-foreground font-normal">
             {schedule.totalRuns} total runs
           </span>
         </div>
@@ -493,36 +495,36 @@ function CronEditorDrawer({
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 overflow-y-auto px-6 py-6 space-y-6">
           {/* Schedule name */}
           <div className="space-y-2">
-            <label className="text-[11px] font-mono uppercase tracking-widest text-[#555555]">
+            <Label className="text-xs font-medium text-foreground">
               Schedule Name
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Daily Production Snapshot"
-              className="w-full h-9 px-3 bg-[#111111] border border-[#222222] rounded-lg text-[13px] text-white placeholder-[#444444] focus:outline-none focus:border-[#333333] transition-colors"
+              className="h-9.5 text-sm"
             />
           </div>
 
           {/* Frequency presets */}
-          <div className="space-y-3">
-            <label className="text-[11px] font-mono uppercase tracking-widest text-[#555555]">
+          <div className="space-y-2.5">
+            <Label className="text-xs font-medium text-foreground">
               Frequency
-            </label>
-            <div className="grid grid-cols-5 gap-1.5">
+            </Label>
+            <div className="grid grid-cols-5 gap-2">
               {PRESET_OPTIONS.map((p) => (
                 <button
                   key={p.key}
                   type="button"
                   onClick={() => handlePreset(p)}
-                  className={`py-2 rounded-lg text-[11px] font-mono border transition-colors ${
+                  className={`py-2 rounded-lg text-xs font-medium border transition-colors ${
                     preset === p.key
                       ? "border-primary bg-primary/10 text-primary font-semibold"
-                      : "border-[#1e1e1e] bg-[#111111] text-[#666666] hover:text-white hover:border-[#2a2a2a]"
+                      : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:border-border"
                   }`}
                 >
                   {p.label}
@@ -533,10 +535,10 @@ function CronEditorDrawer({
 
           {/* Cron expression */}
           <div className="space-y-2">
-            <label className="text-[11px] font-mono uppercase tracking-widest text-[#555555]">
+            <Label className="text-xs font-medium text-foreground">
               Cron Expression
-            </label>
-            <input
+            </Label>
+            <Input
               type="text"
               value={cronStr}
               onChange={(e) => {
@@ -545,27 +547,27 @@ function CronEditorDrawer({
                 setReadable("Custom schedule");
               }}
               placeholder="0 14 * * *"
-              className="w-full h-9 px-3 bg-[#111111] border border-[#222222] rounded-lg text-[13px] text-white font-mono placeholder-[#444444] focus:outline-none focus:border-[#333333] transition-colors"
+              className="h-9.5 font-mono text-sm"
             />
             {/* Human readable preview */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#0a0a0a] border border-[#181818]">
-              <IconCalendarTime className="size-3.5 text-primary shrink-0" />
-              <span className="text-[11.5px] text-[#888888]">{readable}</span>
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/40">
+              <IconCalendarTime className="size-4 text-primary shrink-0" />
+              <span className="text-xs text-muted-foreground">{readable}</span>
             </div>
           </div>
 
           {/* Visual cron breakdown */}
           <div className="space-y-2">
-            <label className="text-[11px] font-mono uppercase tracking-widest text-[#555555]">
+            <Label className="text-xs font-medium text-foreground">
               Cron Fields
-            </label>
-            <div className="grid grid-cols-5 gap-1.5">
+            </Label>
+            <div className="grid grid-cols-5 gap-2">
               {["Minute", "Hour", "Day", "Month", "Weekday"].map((field, i) => (
                 <div key={field} className="space-y-1">
-                  <p className="text-[9px] font-mono text-[#444444] text-center uppercase">
+                  <p className="text-[10px] text-muted-foreground text-center font-medium">
                     {field}
                   </p>
-                  <div className="h-8 flex items-center justify-center bg-[#0a0a0a] border border-[#1a1a1a] rounded text-[13px] font-mono text-[#888888]">
+                  <div className="h-8 flex items-center justify-center bg-muted/30 border border-border/50 rounded-md text-xs font-mono text-foreground font-medium">
                     {cronStr.split(" ")[i] ?? "*"}
                   </div>
                 </div>
@@ -576,10 +578,10 @@ function CronEditorDrawer({
           {/* Retention policy */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <label className="text-[11px] font-mono uppercase tracking-widest text-[#555555]">
+              <Label className="text-xs font-medium text-foreground">
                 Retention Policy
-              </label>
-              <span className="text-[12px] font-mono text-white">
+              </Label>
+              <span className="text-xs text-foreground font-medium">
                 Keep last <span className="text-primary font-semibold">{retention}</span> days
               </span>
             </div>
@@ -589,9 +591,9 @@ function CronEditorDrawer({
               max={90}
               value={retention}
               onChange={(e) => setRetention(Number(e.target.value))}
-              className="w-full h-1 appearance-none bg-[#1e1e1e] rounded-full accent-primary cursor-pointer"
+              className="w-full h-1 appearance-none bg-muted/60 rounded-full accent-primary cursor-pointer"
             />
-            <div className="flex justify-between text-[9px] font-mono text-[#444444]">
+            <div className="flex justify-between text-[11px] text-muted-foreground">
               <span>1d</span>
               <span>30d</span>
               <span>90d</span>
@@ -599,11 +601,11 @@ function CronEditorDrawer({
           </div>
 
           {/* Target DB info */}
-          <div className="rounded-lg border border-[#1a1a1a] bg-[#0a0a0a] p-4 space-y-2">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-[#444444]">Target Database</p>
+          <div className="rounded-xl border border-border/60 bg-muted/20 p-4 space-y-2">
+            <p className="text-xs font-medium text-muted-foreground">Target Database</p>
             <div className="flex items-center gap-2">
               <span className="size-2 rounded-full bg-emerald-400" />
-              <span className="text-[12px] text-[#888888] font-mono">
+              <span className="text-xs text-muted-foreground">
                 postgres://prod-db.eu-central-1 · Postgres 16
               </span>
             </div>
@@ -761,26 +763,26 @@ export function SchedulesPageClient({
   }
 
   return (
-    <div className="space-y-8 sm:space-y-10 pb-24 sm:pb-16">
+    <div className="space-y-16 sm:space-y-20 pb-28 sm:pb-24">
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl sm:text-[28px] font-semibold sm:font-normal tracking-tight text-white">Schedules</h1>
-          <p className="text-xs sm:text-[13px] text-[#777777] mt-1 font-mono">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+        <div className="space-y-1.5">
+          <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Schedules</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground font-normal">
             {activeCount} active &middot; {schedules.length} total &middot; Next run {nextRun}
           </p>
         </div>
         <Button
           onClick={() => { setEditingSchedule(null); setDrawerOpen(true); }}
-          className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-[13px] font-semibold h-9 px-4 shadow-xs shrink-0"
+          className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-sm font-semibold h-9.5 px-4 shadow-xs shrink-0 mt-1 sm:mt-0"
         >
-          <IconPlus className="size-3.5 mr-1.5" />
+          <IconPlus className="size-4 mr-1.5" />
           New Schedule
         </Button>
       </div>
 
       {/* ── Stat Cards (Card 1 Style) ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
         <StatCard
           icon={IconCalendarTime}
           label="Active Schedules"
@@ -808,20 +810,29 @@ export function SchedulesPageClient({
       <TimelineRail schedules={schedules} />
 
       {/* ── Schedules Section ── */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-[13px] font-medium text-white">All Schedules</h2>
-          <span className="text-[11px] text-[#555555] font-mono">{schedules.length} schedules</span>
+      <div className="space-y-6 sm:space-y-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+          <div className="space-y-1">
+            <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">
+              All Schedules
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground font-normal">
+              Configured cron rules, snapshot policies, and retention schedules
+            </p>
+          </div>
+          <span className="text-xs font-medium text-muted-foreground self-start sm:self-auto bg-muted/40 border border-border/60 rounded-md px-3 py-1">
+            {schedules.length} configured
+          </span>
         </div>
 
         {/* ── Schedule Cards ── */}
-        <div className="space-y-3.5">
+        <div className="space-y-4 sm:space-y-5">
           {schedules.map((s) => (
             <div key={s.id} className="relative">
               {/* "Running now" flash overlay */}
               {runningId === s.id && (
                 <div className="absolute inset-0 rounded-xl border border-primary/40 bg-primary/5 z-10 flex items-center justify-center pointer-events-none">
-                  <span className="text-[12px] font-mono text-primary animate-pulse">
+                  <span className="text-xs font-mono text-primary animate-pulse">
                     ⚡ Backup triggered — running…
                   </span>
                 </div>
@@ -840,14 +851,14 @@ export function SchedulesPageClient({
 
       {/* ── Empty State (if all deleted) ── */}
       {schedules.length === 0 && (
-        <div className="rounded-xl border border-[#1a1a1a] bg-[#0f0f0f] p-12 text-center space-y-3">
-          <IconCalendarTime className="size-8 text-[#333333] mx-auto" />
-          <p className="text-[14px] text-[#555555]">No schedules configured</p>
+        <div className="rounded-xl border border-border/60 bg-card/60 p-12 text-center space-y-4">
+          <IconCalendarTime className="size-8 text-muted-foreground/60 mx-auto" />
+          <p className="text-sm text-muted-foreground">No schedules configured</p>
           <Button
             onClick={() => { setEditingSchedule(null); setDrawerOpen(true); }}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 text-[12px] font-semibold h-8 px-3"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold h-9 px-4"
           >
-            <IconPlus className="size-3.5 mr-1.5" />
+            <IconPlus className="size-4 mr-1.5" />
             Create your first schedule
           </Button>
         </div>

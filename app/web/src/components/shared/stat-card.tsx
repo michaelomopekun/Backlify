@@ -26,22 +26,22 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "flex items-center gap-3.5 sm:gap-4 p-4 sm:p-5 rounded-lg border border-[#1e1e1e] bg-[#111111] transition-colors hover:border-[#282828] min-w-0",
+        "flex items-center gap-4 sm:gap-5 p-5 sm:p-6 rounded-xl border border-border/60 bg-card/60 transition-colors hover:border-border hover:bg-card min-w-0 shadow-xs",
         className
       )}
     >
-      <div className="size-[46px] sm:size-[52px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
-        <Icon className={cn("size-4.5 sm:size-5", accent ?? "text-white/80")} stroke={1.3} />
+      <div className="size-12 sm:size-13 rounded-xl bg-muted/40 border border-border/50 flex items-center justify-center shrink-0">
+        <Icon className={cn("size-5 sm:size-5.5", accent ?? "text-foreground/80")} stroke={1.5} />
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#666666] truncate">
+      <div className="min-w-0 flex-1 space-y-1">
+        <p className="text-xs sm:text-[13px] font-medium text-muted-foreground truncate">
           {label}
         </p>
-        <p className="text-[19px] sm:text-[22px] font-normal text-white leading-tight mt-0.5">
+        <p className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground leading-tight">
           {value}
         </p>
         {sub && (
-          <p className="text-[10.5px] sm:text-[11px] text-[#666666] font-mono mt-0.5 truncate">
+          <p className="text-xs text-muted-foreground font-normal truncate">
             {sub}
           </p>
         )}
@@ -65,7 +65,7 @@ export function StatCardVariant2({
   return (
     <div
       className={cn(
-        "rounded-xl border border-[#1a1a1a] bg-[#0d0d0d] p-6 flex items-start gap-4 transition-colors hover:border-[#262626]",
+        "rounded-xl border border-border/60 bg-card/60 p-6 flex items-start gap-4 transition-colors hover:border-border hover:bg-card shadow-xs",
         className
       )}
     >
@@ -76,13 +76,13 @@ export function StatCardVariant2({
         <Icon className="size-5" style={{ color: accent ?? "#888888" }} />
       </div>
       <div className="space-y-1.5 min-w-0">
-        <p className="text-[11px] font-mono uppercase tracking-widest text-[#555555]">
+        <p className="text-xs sm:text-[13px] font-medium text-muted-foreground">
           {label}
         </p>
-        <p className="text-[24px] font-semibold tracking-tight text-white leading-none">
+        <p className="text-2xl font-semibold tracking-tight text-foreground leading-none">
           {value}
         </p>
-        {sub && <p className="text-[12px] text-[#666666] pt-0.5">{sub}</p>}
+        {sub && <p className="text-xs text-muted-foreground pt-0.5">{sub}</p>}
       </div>
     </div>
   );
