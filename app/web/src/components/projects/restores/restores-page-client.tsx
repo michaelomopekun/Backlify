@@ -24,6 +24,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+  SheetClose,
+} from "@/components/ui/sheet";
 
 /* ─────────────────────────────────────────────────────────────────
    Types & Mock Data
@@ -187,30 +200,29 @@ function PitrScrubber({
   const percent = (selectedIndex / (PITR_POINTS.length - 1)) * 100;
 
   return (
-    <div className="rounded-lg border border-[#1e1e1e] bg-[#111111] p-5 space-y-6">
-      <div className="flex items-center justify-between">
+    <Card>
+      <CardHeader className="flex-row items-center justify-between">
         <div>
-          <h2 className="text-[13.5px] font-medium text-white flex items-center gap-2">
-            <span>Point-in-Time Recovery</span>
-            <span className="text-[10px] font-mono text-primary bg-primary/10 border border-primary/20 rounded px-1.5 py-0.5">
+          <CardTitle className="flex items-center gap-2">
+            Point-in-Time Recovery
+            <Badge variant="outline" className="text-[10px] font-mono">
               Drag scrubber
-            </span>
-          </h2>
-          <p className="text-[11.5px] text-[#666666] font-mono mt-0.5">
+            </Badge>
+          </CardTitle>
+          <CardDescription className="font-mono text-[11.5px]">
             Drag the handle or click any checkpoint below to select a recovery target
-          </p>
+          </CardDescription>
         </div>
-        <span className="text-[11px] font-mono text-[#555555]">
+        <Badge variant="secondary" className="text-[11px] font-mono shrink-0">
           7-Day Window
-        </span>
-      </div>
+        </Badge>
+      </CardHeader>
 
-      {/* Timeline Slider Track with Centered Handle & Inset Margins (No Overflow) */}
-      <div className="space-y-3 pt-6 pb-2 px-2 sm:px-6">
+      <CardContent className="space-y-3 pt-2 pb-2 px-4 sm:px-6">
         {/* Rail & Draggable Handle Container */}
         <div className="relative h-6 flex items-center">
           {/* Horizontal Background Rail */}
-          <div className="h-1.5 w-full bg-[#1c1c1c] rounded-full overflow-hidden border border-[#262626]">
+          <div className="h-1.5 w-full bg-[#1c1c1c] rounded-full overflow-hidden border border-border">
             <div
               className="h-full bg-primary transition-all duration-75"
               style={{ width: `${percent}%` }}
@@ -222,14 +234,14 @@ function PitrScrubber({
             className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none transition-all duration-75 z-20 flex flex-col items-center"
             style={{ left: `${percent}%` }}
           >
-            {/* Floating Live Scrubber Bubble (clean, subtle border) */}
-            <div className="absolute -top-8 flex items-center px-2 py-0.5 rounded-md bg-[#161616] border border-[#2a2a2a] text-primary font-mono text-[10.5px] shadow-md whitespace-nowrap">
+            {/* Floating Live Scrubber Bubble */}
+            <div className="absolute -top-8 flex items-center px-2 py-0.5 rounded-md bg-card border border-border text-primary font-mono text-[10.5px] shadow-md whitespace-nowrap">
               <span>{current.day} {current.time.split(" ")[0]}</span>
             </div>
 
-            {/* Draggable Physical Thumb without excessive neon glow */}
+            {/* Draggable Physical Thumb */}
             <div className="size-4.5 rounded-full bg-white border-2 border-primary shadow-sm shadow-black/80 flex items-center justify-center">
-              <div className="size-1 rounded-full bg-[#111111]" />
+              <div className="size-1 rounded-full bg-card" />
             </div>
           </div>
 
@@ -261,10 +273,9 @@ function PitrScrubber({
                 className="absolute top-0 -translate-x-1/2 flex flex-col items-center group cursor-pointer focus:outline-none z-10"
                 style={{ left: `${ptPercent}%` }}
               >
-                {/* Vertical tick connecting to the rail */}
                 <div
                   className={`w-0.5 h-1.5 mb-1 transition-colors ${
-                    isSelected ? "bg-primary" : "bg-[#333333] group-hover:bg-[#666666]"
+                    isSelected ? "bg-primary" : "bg-muted-foreground/30 group-hover:bg-muted-foreground/60"
                   }`}
                 />
                 <span
@@ -273,7 +284,7 @@ function PitrScrubber({
                   } ${
                     isSelected
                       ? "text-primary font-semibold"
-                      : "text-[#555555] group-hover:text-[#888888]"
+                      : "text-muted-foreground group-hover:text-foreground/60"
                   }`}
                 >
                   {pt.day} {pt.time.split(" ")[0]}
@@ -282,29 +293,29 @@ function PitrScrubber({
             );
           })}
         </div>
-      </div>
+      </CardContent>
 
       {/* Selected Info & Action Strip */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-[#1a1a1a]">
+      <CardFooter className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-mono">
           <span className="size-1.5 rounded-full bg-emerald-400 shrink-0" />
-          <span className="text-white">
+          <span className="text-foreground">
             <span className="text-primary font-semibold">{current.date} · {current.time}</span> ({current.size})
           </span>
-          <span className="text-[#555555] hidden sm:inline">·</span>
-          <span className="text-[#666666] text-[11px]">Snapshot: {current.snapshotId}</span>
+          <span className="text-muted-foreground hidden sm:inline">·</span>
+          <Badge variant="outline" className="text-[11px] font-mono">Snapshot: {current.snapshotId}</Badge>
         </div>
 
         <Button
           onClick={() => onSelectPoint(current)}
           size="sm"
-          className="h-8 px-3.5 text-xs bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-xs shrink-0 self-start sm:self-auto"
+          className="h-8 px-3.5 text-xs font-semibold shadow-xs shrink-0 self-start sm:self-auto"
         >
           <IconBolt className="size-3.5 mr-1" />
           Restore from this point
         </Button>
-      </div>
-    </div>
+      </CardFooter>
+    </Card>
   );
 }
 
@@ -329,38 +340,38 @@ function DrillCard({
       : "Production Restore";
 
   return (
-    <div className="rounded-lg border border-[#1e1e1e] bg-[#111111] p-5 transition-colors hover:border-[#262626]">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <Card className="transition-colors hover:ring-foreground/20">
+      <CardContent className="flex flex-col md:flex-row md:items-center justify-between gap-4 py-4">
         {/* Left: Type, target, and checks */}
         <div className="space-y-1.5 min-w-0">
           <div className="flex items-center gap-2.5">
             <span className="size-1.5 rounded-full bg-emerald-400 shrink-0" />
-            <h3 className="text-[13.5px] font-medium text-white">{typeLabel}</h3>
-            <span className="text-[10px] font-mono uppercase px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-              Passed
-            </span>
-            <span className="text-[11px] text-[#555555] font-mono">
+            <CardTitle className="text-[13.5px]">{typeLabel}</CardTitle>
+            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-mono uppercase">
+              {drill.status === "passed" ? "Passed" : drill.status === "failed" ? "Failed" : drill.status === "running" ? "Running" : "Complete"}
+            </Badge>
+            <Badge variant="outline" className="text-[11px] font-mono">
               #{drill.id}
-            </span>
+            </Badge>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-[12px] font-mono text-[#666666]">
-            <span>Target: <span className="text-[#aaaaaa]">{drill.targetDb}</span></span>
+          <div className="flex flex-wrap items-center gap-2 text-[12px] font-mono text-muted-foreground">
+            <span>Target: <span className="text-foreground/70">{drill.targetDb}</span></span>
             <span>·</span>
             <span>{drill.sourceSnapshot}</span>
             <span>·</span>
-            <span className="text-emerald-400/90 flex items-center gap-1">
-              <IconCheck className="size-3 text-emerald-400" />
+            <Badge variant="outline" className="text-emerald-400 border-emerald-500/20 text-[11px] font-mono gap-1">
+              <IconCheck className="size-3" />
               4/4 checks verified
-            </span>
+            </Badge>
           </div>
         </div>
 
         {/* Right: Timestamp, duration, and actions */}
-        <div className="flex items-center gap-4 text-[12px] font-mono text-[#666666] shrink-0">
+        <div className="flex items-center gap-4 text-[12px] font-mono text-muted-foreground shrink-0">
           <div className="text-right hidden sm:block">
-            <p className="text-[#888888]">{drill.executedAt}</p>
-            <p className="text-[11px] text-[#555555]">Duration: {drill.durationSec}s</p>
+            <p className="text-foreground/60">{drill.executedAt}</p>
+            <p className="text-[11px] text-muted-foreground">Duration: {drill.durationSec}s</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -368,7 +379,7 @@ function DrillCard({
               onClick={() => onViewLogs(drill)}
               variant="outline"
               size="sm"
-              className="h-8 px-2.5 border-[#262626] bg-[#141414] text-[#aaaaaa] hover:text-white text-[11.5px]"
+              className="h-8 px-2.5 text-[11.5px]"
             >
               <IconTerminal2 className="size-3.5 mr-1" />
               Logs
@@ -376,27 +387,21 @@ function DrillCard({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button
-                  type="button"
-                  className="p-1.5 rounded text-[#555555] hover:text-white hover:bg-[#1a1a1a] transition-colors"
-                >
+                <Button variant="ghost" size="icon-sm">
                   <IconDotsVertical className="size-3.5" />
-                </button>
+                </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-40 bg-[#141414] border-[#262626] text-white text-[12px]"
-              >
+              <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuItem
                   onClick={() => onViewLogs(drill)}
-                  className="gap-2 text-[#aaaaaa] hover:text-white focus:bg-[#1a1a1a] focus:text-white cursor-pointer"
+                  className="gap-2 cursor-pointer"
                 >
                   <IconTerminal2 className="size-3.5" />
                   View full logs
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => onRerun(drill)}
-                  className="gap-2 text-[#aaaaaa] hover:text-white focus:bg-[#1a1a1a] focus:text-white cursor-pointer"
+                  className="gap-2 cursor-pointer"
                 >
                   <IconRotateClockwise className="size-3.5" />
                   Re-run drill
@@ -405,8 +410,8 @@ function DrillCard({
             </DropdownMenu>
           </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -501,31 +506,18 @@ function RestoreWizardDrawer({
     setTimeout(() => setCopied(false), 2000);
   }
 
-  if (!open) return null;
-
   return (
-    <>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-[60]" onClick={onClose} />
-
-      <div className="fixed top-0 right-0 h-full w-full max-w-xl bg-[#0d0d0d] border-l border-[#1a1a1a] z-[70] flex flex-col shadow-2xl">
+    <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <SheetContent side="right" showCloseButton={false} className="w-full max-w-xl sm:max-w-xl p-0 flex flex-col gap-0">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-[#1a1a1a] shrink-0">
-          <div>
-            <h2 className="text-[15px] font-medium text-white">
-              {isExecuting ? "Executing Recovery Process" : mode === "drill" ? "Run Disaster Recovery Drill" : "New Database Restore"}
-            </h2>
-            <p className="text-[11px] text-[#555555] mt-0.5 font-mono">
-              {isExecuting ? "Real-time streaming console logs" : "Configure source snapshot, target environment, and safety verification"}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 rounded-md text-[#555555] hover:text-white hover:bg-[#1a1a1a] transition-colors"
-          >
-            <IconX className="size-4" />
-          </button>
-        </div>
+        <SheetHeader className="px-6 py-5 border-b border-border space-y-0">
+          <SheetTitle>
+            {isExecuting ? "Executing Recovery Process" : mode === "drill" ? "Run Disaster Recovery Drill" : "New Database Restore"}
+          </SheetTitle>
+          <SheetDescription className="font-mono text-[11px]">
+            {isExecuting ? "Real-time streaming console logs" : "Configure source snapshot, target environment, and safety verification"}
+          </SheetDescription>
+        </SheetHeader>
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
@@ -533,43 +525,45 @@ function RestoreWizardDrawer({
             /* ── REALTIME TERMINAL & STEPPER ── */
             <div className="space-y-4">
               {/* Stepper */}
-              <div className="p-3.5 rounded-lg border border-[#1e1e1e] bg-[#111111] space-y-2">
-                <div className="flex items-center justify-between text-[11px] font-mono text-[#888888]">
-                  <span>Recovery Stepper</span>
-                  <span className="text-primary font-semibold">
-                    {executionStep === 5 ? "Completed" : `Phase ${executionStep} of 5`}
-                  </span>
-                </div>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {["Sandbox", "Download", "pg_restore", "Verify", "Teardown"].map((st, i) => {
-                    const isDone = executionStep > i + 1 || (executionStep === 5 && i === 4);
-                    const isCurrent = executionStep === i + 1 && executionStep !== 5;
-                    return (
-                      <div key={st} className="space-y-1">
-                        <div
-                          className={`h-1.5 rounded-full transition-colors ${
-                            isDone ? "bg-emerald-400" : isCurrent ? "bg-primary animate-pulse" : "bg-[#222222]"
-                          }`}
-                        />
-                        <p className="text-[9px] font-mono text-[#555555] text-center truncate">{st}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+              <Card>
+                <CardContent className="py-3.5 space-y-2">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                    <span>Recovery Stepper</span>
+                    <span className="text-primary font-semibold">
+                      {executionStep === 5 ? "Completed" : `Phase ${executionStep} of 5`}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-5 gap-1.5">
+                    {["Sandbox", "Download", "pg_restore", "Verify", "Teardown"].map((st, i) => {
+                      const isDone = executionStep > i + 1 || (executionStep === 5 && i === 4);
+                      const isCurrent = executionStep === i + 1 && executionStep !== 5;
+                      return (
+                        <div key={st} className="space-y-1">
+                          <div
+                            className={`h-1.5 rounded-full transition-colors ${
+                              isDone ? "bg-emerald-400" : isCurrent ? "bg-primary animate-pulse" : "bg-muted"
+                            }`}
+                          />
+                          <p className="text-[9px] font-mono text-muted-foreground text-center truncate">{st}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Terminal View */}
-              <div className="rounded-lg border border-[#222222] bg-[#050505] overflow-hidden flex flex-col font-mono text-[11.5px]">
+              <div className="rounded-lg border border-border bg-[#050505] overflow-hidden flex flex-col font-mono text-[11.5px]">
                 {/* Terminal Header */}
-                <div className="flex items-center justify-between px-4 py-2 bg-[#0d0d0d] border-b border-[#1a1a1a]">
+                <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border">
                   <div className="flex items-center gap-2">
                     <div className="size-2 rounded-full bg-emerald-400 animate-ping" />
-                    <span className="text-[#888888] text-[11px]">live-stream · stdout</span>
+                    <span className="text-muted-foreground text-[11px]">live-stream · stdout</span>
                   </div>
                   <button
                     type="button"
                     onClick={handleCopyLogs}
-                    className="flex items-center gap-1 text-[10px] text-[#666666] hover:text-white transition-colors"
+                    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
                   >
                     {copied ? <IconCheck className="size-3 text-emerald-400" /> : <IconCopy className="size-3" />}
                     <span>{copied ? "Copied" : "Copy Logs"}</span>
@@ -577,10 +571,10 @@ function RestoreWizardDrawer({
                 </div>
 
                 {/* Terminal Output */}
-                <div className="p-4 space-y-1.5 max-h-[380px] overflow-y-auto leading-relaxed text-[#aaaaaa]">
+                <div className="p-4 space-y-1.5 max-h-[380px] overflow-y-auto leading-relaxed text-muted-foreground">
                   {liveLogs.map((l, i) => (
                     <div key={i} className="flex items-start gap-2">
-                      <span className="text-[#444444] select-none">$</span>
+                      <span className="text-muted-foreground/40 select-none">$</span>
                       <span
                         className={
                           l.includes("[SUCCESS]")
@@ -589,7 +583,7 @@ function RestoreWizardDrawer({
                             ? "text-primary"
                             : l.includes("[SANDBOX]")
                             ? "text-blue-400"
-                            : "text-[#aaaaaa]"
+                            : "text-muted-foreground"
                         }
                       >
                         {l}
@@ -605,101 +599,106 @@ function RestoreWizardDrawer({
             <>
               {/* Mode Selector */}
               <div className="space-y-2">
-                <label className="text-[11px] font-mono uppercase tracking-widest text-[#555555]">
+                <Label className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
                   Select Operation Mode
-                </label>
+                </Label>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMode("drill")}
-                    className={`p-3.5 rounded-lg border text-left transition-all ${
+                  <Card
+                    className={`cursor-pointer transition-all ${
                       mode === "drill"
-                        ? "border-primary bg-primary/10 text-white"
-                        : "border-[#1e1e1e] bg-[#111111] text-[#777777] hover:border-[#2a2a2a]"
+                        ? "ring-1 ring-primary bg-primary/5"
+                        : "hover:ring-foreground/20"
                     }`}
+                    onClick={() => setMode("drill")}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <IconShieldCheck className={`size-4 ${mode === "drill" ? "text-primary" : "text-[#777777]"}`} />
-                      <span className="text-[13px] font-medium text-white">DR Drill (Dry Run)</span>
-                    </div>
-                    <p className="text-[11px] text-[#666666] leading-tight">
-                      Zero risk. Restores to isolated temp sandbox, checks integrity & destroys.
-                    </p>
-                  </button>
+                    <CardContent className="py-3.5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <IconShieldCheck className={`size-4 ${mode === "drill" ? "text-primary" : "text-muted-foreground"}`} />
+                        <span className="text-[13px] font-medium text-foreground">DR Drill (Dry Run)</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-tight">
+                        Zero risk. Restores to isolated temp sandbox, checks integrity & destroys.
+                      </p>
+                    </CardContent>
+                  </Card>
 
-                  <button
-                    type="button"
-                    onClick={() => setMode("restore")}
-                    className={`p-3.5 rounded-lg border text-left transition-all ${
+                  <Card
+                    className={`cursor-pointer transition-all ${
                       mode === "restore"
-                        ? "border-primary bg-primary/10 text-white"
-                        : "border-[#1e1e1e] bg-[#111111] text-[#777777] hover:border-[#2a2a2a]"
+                        ? "ring-1 ring-primary bg-primary/5"
+                        : "hover:ring-foreground/20"
                     }`}
+                    onClick={() => setMode("restore")}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <IconDatabase className={`size-4 ${mode === "restore" ? "text-primary" : "text-[#777777]"}`} />
-                      <span className="text-[13px] font-medium text-white">Target DB Restore</span>
-                    </div>
-                    <p className="text-[11px] text-[#666666] leading-tight">
-                      Restores snapshot into a live staging or production database instance.
-                    </p>
-                  </button>
+                    <CardContent className="py-3.5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <IconDatabase className={`size-4 ${mode === "restore" ? "text-primary" : "text-muted-foreground"}`} />
+                        <span className="text-[13px] font-medium text-foreground">Target DB Restore</span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground leading-tight">
+                        Restores snapshot into a live staging or production database instance.
+                      </p>
+                    </CardContent>
+                  </Card>
                 </div>
               </div>
 
               {/* Source Snapshot */}
               <div className="space-y-2">
-                <label className="text-[11px] font-mono uppercase tracking-widest text-[#555555]">
+                <Label className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
                   Source Snapshot
-                </label>
-                <div className="p-3.5 rounded-lg border border-[#1e1e1e] bg-[#111111] flex items-center justify-between">
-                  <div className="space-y-0.5 font-mono text-[12px]">
-                    <p className="text-white">
-                      {defaultPoint ? `${defaultPoint.date} · ${defaultPoint.time}` : "Latest Snapshot (bk-001)"}
-                    </p>
-                    <p className="text-[11px] text-[#666666]">
-                      Size: {defaultPoint ? defaultPoint.size : "142 MB"} · AES-256 Encrypted
-                    </p>
-                  </div>
-                  <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
-                    Verified
-                  </span>
-                </div>
+                </Label>
+                <Card>
+                  <CardContent className="py-3.5 flex items-center justify-between">
+                    <div className="space-y-0.5 font-mono text-[12px]">
+                      <p className="text-foreground">
+                        {defaultPoint ? `${defaultPoint.date} · ${defaultPoint.time}` : "Latest Snapshot (bk-001)"}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Size: {defaultPoint ? defaultPoint.size : "142 MB"} · AES-256 Encrypted
+                      </p>
+                    </div>
+                    <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px] font-mono uppercase">
+                      Verified
+                    </Badge>
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Target DB input */}
               {mode === "restore" && (
                 <div className="space-y-3">
-                  <div className="p-3 rounded-lg border border-amber-500/30 bg-amber-500/5 flex items-start gap-2.5">
-                    <IconAlertTriangle className="size-4 text-amber-400 shrink-0 mt-0.5" />
-                    <p className="text-[11.5px] text-[#aaaaaa] leading-relaxed">
-                      Restoring will overwrite existing tables in the target database. Type <strong className="text-white">RESTORE</strong> below to confirm.
-                    </p>
-                  </div>
+                  <Card className="border-amber-500/30 bg-amber-500/5">
+                    <CardContent className="py-3 flex items-start gap-2.5">
+                      <IconAlertTriangle className="size-4 text-amber-400 shrink-0 mt-0.5" />
+                      <p className="text-[11.5px] text-muted-foreground leading-relaxed">
+                        Restoring will overwrite existing tables in the target database. Type <strong className="text-foreground">RESTORE</strong> below to confirm.
+                      </p>
+                    </CardContent>
+                  </Card>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-mono uppercase tracking-widest text-[#555555]">
+                    <Label className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
                       Target Database URL
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="text"
                       placeholder="postgres://user:pass@host:5432/staging_db"
                       value={targetUrl}
                       onChange={(e) => setTargetUrl(e.target.value)}
-                      className="w-full h-9 px-3 bg-[#111111] border border-[#222222] rounded-lg text-[12.5px] text-white font-mono placeholder-[#444444] focus:outline-none focus:border-[#333333]"
                     />
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-mono uppercase tracking-widest text-[#555555]">
+                    <Label className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
                       Type RESTORE to Confirm
-                    </label>
-                    <input
+                    </Label>
+                    <Input
                       type="text"
                       placeholder="RESTORE"
                       value={confirmWord}
                       onChange={(e) => setConfirmWord(e.target.value)}
-                      className="w-32 h-9 px-3 bg-[#111111] border border-[#222222] rounded-lg text-[12.5px] text-white font-mono placeholder-[#444444] focus:outline-none focus:border-[#333333]"
+                      className="w-32"
                     />
                   </div>
                 </div>
@@ -707,35 +706,37 @@ function RestoreWizardDrawer({
 
               {/* Verification Suite checklist */}
               <div className="space-y-2">
-                <label className="text-[11px] font-mono uppercase tracking-widest text-[#555555]">
+                <Label className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
                   Integrity Verification Suite
-                </label>
-                <div className="p-3.5 rounded-lg border border-[#1e1e1e] bg-[#111111] space-y-2 text-[12px] font-mono text-[#888888]">
-                  <div className="flex items-center gap-2">
-                    <IconCheck className="size-3.5 text-emerald-400" />
-                    <span>Compare Schema Parity & Table Definitions</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <IconCheck className="size-3.5 text-emerald-400" />
-                    <span>Validate Row Counts & Sequence Offsets</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <IconCheck className="size-3.5 text-emerald-400" />
-                    <span>Run SHA-256 Table Block Checksum Integrity</span>
-                  </div>
-                </div>
+                </Label>
+                <Card>
+                  <CardContent className="py-3.5 space-y-2 text-[12px] font-mono text-muted-foreground">
+                    <div className="flex items-center gap-2">
+                      <IconCheck className="size-3.5 text-emerald-400" />
+                      <span>Compare Schema Parity & Table Definitions</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <IconCheck className="size-3.5 text-emerald-400" />
+                      <span>Validate Row Counts & Sequence Offsets</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <IconCheck className="size-3.5 text-emerald-400" />
+                      <span>Run SHA-256 Table Block Checksum Integrity</span>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-5 border-t border-[#1a1a1a] flex gap-3 shrink-0">
+        <SheetFooter className="px-6 py-5 border-t border-border flex-row gap-3">
           {isExecuting ? (
             <Button
               onClick={onClose}
               variant="outline"
-              className="flex-1 h-9 border-[#222222] bg-transparent text-[#888888] hover:text-white text-[13px]"
+              className="flex-1 h-9 text-[13px]"
             >
               Close & Keep Running in Background
             </Button>
@@ -744,7 +745,7 @@ function RestoreWizardDrawer({
               <Button
                 onClick={startExecution}
                 disabled={!canSubmit}
-                className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 text-[13px] font-semibold h-9 shadow-xs disabled:opacity-40"
+                className="flex-1 text-[13px] font-semibold h-9 shadow-xs disabled:opacity-40"
               >
                 {mode === "drill" ? (
                   <>
@@ -761,15 +762,15 @@ function RestoreWizardDrawer({
               <Button
                 onClick={onClose}
                 variant="outline"
-                className="h-9 px-4 border-[#222222] bg-transparent text-[#888888] hover:text-white text-[13px]"
+                className="h-9 px-4 text-[13px]"
               >
                 Cancel
               </Button>
             </>
           )}
-        </div>
-      </div>
-    </>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -824,10 +825,10 @@ export function RestoresPageClient({
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-[28px] font-semibold sm:font-normal tracking-tight text-white">
+          <h1 className="text-2xl sm:text-[28px] font-semibold sm:font-normal tracking-tight text-foreground">
             Restores
           </h1>
-          <p className="text-xs sm:text-[13px] text-[#777777] mt-1 font-mono">
+          <p className="text-xs sm:text-[13px] text-muted-foreground mt-1 font-mono">
             Automated recovery drills & point-in-time database restores
           </p>
         </div>
@@ -836,7 +837,7 @@ export function RestoresPageClient({
           <Button
             onClick={handleOpenDrill}
             variant="outline"
-            className="flex-1 sm:flex-none h-9 px-3.5 border-[#262626] bg-[#111111] text-white hover:bg-[#1a1a1a] text-xs font-medium"
+            className="flex-1 sm:flex-none h-9 px-3.5 border-[#262626] bg-[#111111] text-foreground hover:bg-[#1a1a1a] text-xs font-medium"
           >
             <IconShieldCheck className="size-3.5 mr-1.5 text-emerald-400" />
             Run DR Drill
@@ -889,16 +890,16 @@ export function RestoresPageClient({
       {/* ── Recent Recovery Events ── */}
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-[14px] font-medium text-white">Recent Recovery Drills & Restores</h2>
+          <h2 className="text-[14px] font-medium text-foreground">Recent Recovery Drills & Restores</h2>
 
           <div className="relative">
-            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-[#555555]" />
-            <input
+            <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+            <Input
               type="text"
               placeholder="Search drills..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="h-8 pl-8.5 pr-3 w-52 bg-[#111111] border border-[#222222] rounded-md text-[12px] text-white placeholder-[#555555] focus:outline-none focus:border-[#333333]"
+              className="h-8 pl-8.5 pr-3 w-52"
             />
           </div>
         </div>
@@ -950,43 +951,31 @@ export function RestoresPageClient({
       />
 
       {/* ── Historical Logs Drawer ── */}
-      {viewingLogsDrill && (
-        <>
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-[2px] z-40" onClick={() => setViewingLogsDrill(null)} />
-          <div className="fixed top-0 right-0 h-full w-full max-w-xl bg-[#0d0d0d] border-l border-[#1a1a1a] z-50 flex flex-col shadow-2xl">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-[#1a1a1a]">
-              <div>
-                <h3 className="text-[14px] font-medium text-white">
-                  Logs for Drill #{viewingLogsDrill.id.replace("drill-", "")}
-                </h3>
-                <p className="text-[11px] text-[#666666] font-mono">
-                  {viewingLogsDrill.executedAt} · Duration: {viewingLogsDrill.durationSec}s
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setViewingLogsDrill(null)}
-                className="p-1.5 rounded-md text-[#555555] hover:text-white"
-              >
-                <IconX className="size-4" />
-              </button>
-            </div>
+      <Sheet open={!!viewingLogsDrill} onOpenChange={(o) => { if (!o) setViewingLogsDrill(null); }}>
+        <SheetContent side="right" showCloseButton={true} className="w-full max-w-xl sm:max-w-xl p-0 flex flex-col gap-0">
+          <SheetHeader className="px-6 py-5 border-b border-border space-y-0">
+            <SheetTitle>
+              Logs for Drill #{viewingLogsDrill?.id.replace("drill-", "")}
+            </SheetTitle>
+            <SheetDescription className="font-mono text-[11px]">
+              {viewingLogsDrill?.executedAt} · Duration: {viewingLogsDrill?.durationSec}s
+            </SheetDescription>
+          </SheetHeader>
 
-            <div className="flex-1 p-6 overflow-y-auto">
-              <div className="p-4 rounded-lg border border-[#222222] bg-[#050505] font-mono text-[11.5px] space-y-1.5 leading-relaxed text-[#aaaaaa]">
-                {viewingLogsDrill.logs.map((l, i) => (
-                  <div key={i} className="flex items-start gap-2">
-                    <span className="text-[#444444] select-none">$</span>
-                    <span className={l.includes("[SUCCESS]") ? "text-emerald-400 font-semibold" : l.includes("[VERIFY]") ? "text-primary" : "text-[#aaaaaa]"}>
-                      {l}
-                    </span>
-                  </div>
-                ))}
-              </div>
+          <div className="flex-1 p-6 overflow-y-auto">
+            <div className="p-4 rounded-lg border border-border bg-[#050505] font-mono text-[11.5px] space-y-1.5 leading-relaxed text-muted-foreground">
+              {viewingLogsDrill?.logs.map((l, i) => (
+                <div key={i} className="flex items-start gap-2">
+                  <span className="text-muted-foreground/40 select-none">$</span>
+                  <span className={l.includes("[SUCCESS]") ? "text-emerald-400 font-semibold" : l.includes("[VERIFY]") ? "text-primary" : "text-muted-foreground"}>
+                    {l}
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
-        </>
-      )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

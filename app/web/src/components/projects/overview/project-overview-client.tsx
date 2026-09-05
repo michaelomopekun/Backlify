@@ -39,6 +39,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useWidgetOrder } from "@/hooks/use-widget-order";
 
@@ -325,41 +327,48 @@ function TopPanelContent({
       </div>
 
       {/* Right Column: Topology Canvas */}
-      <div className="xl:col-span-6 relative min-h-[500px] rounded-lg border border-[#222222] bg-[#0e0e0e] p-6 flex flex-col justify-between overflow-hidden shadow-sm">
+      <Card className="xl:col-span-6 relative min-h-[500px] p-6 flex flex-col justify-between overflow-hidden shadow-sm">
         <div
           className="absolute inset-0 opacity-20 pointer-events-none"
           style={{ backgroundImage: "radial-gradient(#505050 1px, transparent 1px)", backgroundSize: "20px 20px" }}
         />
         <div className="relative z-10 flex justify-end">
-          <div className="flex items-center border border-[#262626] rounded bg-[#161616] overflow-hidden text-[#888888]">
-            <button className="p-1.5 hover:text-white bg-[#222222] text-white transition-colors">
+          <div className="flex items-center border border-border rounded bg-card overflow-hidden text-muted-foreground">
+            <button className="p-1.5 hover:text-foreground bg-muted text-foreground transition-colors">
               <IconNetwork className="size-3.5" />
             </button>
-            <button className="p-1.5 hover:text-white transition-colors">
+            <button className="p-1.5 hover:text-foreground transition-colors">
               <IconWorld className="size-3.5" />
             </button>
           </div>
         </div>
-        <div className="relative z-10 my-auto mx-auto w-80 rounded-[7px] border border-[#282828] bg-[#161616] p-4 shadow-2xl">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex items-start gap-3.5">
-              <div className="size-9 rounded bg-[#182c20] border border-emerald-500/25 flex items-center justify-center shrink-0 mt-0.5">
-                <IconDatabase className="size-4 text-emerald-400" />
+        <div className="relative z-10 my-auto mx-auto w-80">
+          <Card>
+            <CardContent className="py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3.5">
+                  <div className="size-9 rounded bg-[#182c20] border border-emerald-500/25 flex items-center justify-center shrink-0 mt-0.5">
+                    <IconDatabase className="size-4 text-emerald-400" />
+                  </div>
+                  <div>
+                    <p className="text-[13px] font-medium text-foreground">Primary Database</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">Central EU (Frankfurt)</p>
+                    <p className="text-[11px] text-muted-foreground font-mono mt-0.5">eu-central-1 · Postgres 16</p>
+                  </div>
+                </div>
+                <span className="text-sm select-none">🇩🇪</span>
               </div>
-              <div>
-                <p className="text-[13px] font-medium text-white">Primary Database</p>
-                <p className="text-[11px] text-[#888888] mt-0.5">Central EU (Frankfurt)</p>
-                <p className="text-[11px] text-[#888888] font-mono mt-0.5">eu-central-1 · Postgres 16</p>
-              </div>
-            </div>
-            <span className="text-sm select-none">🇩🇪</span>
-          </div>
-          <div className="mt-4 pt-3 border-t border-[#262626] flex items-center justify-between text-[10.5px] text-[#888888] font-mono">
-            <span>CPU 2%</span><span>·</span><span>Disk 3%</span><span>·</span><span>RAM 43%</span><span>·</span><span>5/60 conns</span>
-          </div>
+            </CardContent>
+            <CardFooter className="flex items-center justify-between text-[10.5px] text-muted-foreground font-mono">
+              <Badge variant="outline" className="text-[10px] font-mono">CPU 2%</Badge>
+              <Badge variant="outline" className="text-[10px] font-mono">Disk 3%</Badge>
+              <Badge variant="outline" className="text-[10px] font-mono">RAM 43%</Badge>
+              <Badge variant="outline" className="text-[10px] font-mono">5/60 conns</Badge>
+            </CardFooter>
+          </Card>
         </div>
         <div className="relative z-10" />
-      </div>
+      </Card>
     </div>
   );
 }
@@ -397,88 +406,102 @@ function TelemetryPanelContent() {
       {/* 4 Telemetry Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Scheduled Backups */}
-        <div className="p-5 rounded-lg border border-[#222222] bg-[#121212] flex flex-col justify-between h-48 shadow-sm">
-          <div className="flex items-start justify-between">
-            <p className="text-[11px] font-mono uppercase tracking-wider text-[#888888]">SCHEDULED BACKUPS</p>
-            <div className="flex items-center gap-2.5 text-[10.5px] font-mono text-[#888888]">
-              <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-amber-400" />WARNINGS 0</span>
-              <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-red-400" />ERRORS 0</span>
+        <Card className="flex flex-col justify-between h-48">
+          <CardHeader className="pb-0">
+            <div className="flex items-start justify-between">
+              <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">SCHEDULED BACKUPS</p>
+              <div className="flex items-center gap-2.5 text-[10.5px] font-mono text-muted-foreground">
+                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-amber-400" />WARNINGS 0</Badge>
+                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-red-400" />ERRORS 0</Badge>
+              </div>
             </div>
-          </div>
-          <p className="text-2xl font-normal text-white -mt-2 tracking-tight">12</p>
-          <div>
-            <div className="flex items-end gap-1.5 h-16 border-b border-[#222222] pb-0.5">
+          </CardHeader>
+          <CardContent className="-mt-2">
+            <p className="text-2xl font-normal text-foreground tracking-tight">12</p>
+          </CardContent>
+          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
+            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
               {[15,30,45,20,60,80,50,75,90,85,100,40].map((h,i) => (
                 <div key={i} className="flex-1 rounded-t-[1px] bg-emerald-400 hover:bg-emerald-300 transition-colors" style={{ height:`${h}%` }} />
               ))}
             </div>
-            <div className="flex items-center justify-between text-[10px] font-mono text-[#666666] pt-2">
+            <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
               <span>Aug 26, 5:29am</span><span>Aug 26, 6:29am</span>
             </div>
-          </div>
-        </div>
+          </CardFooter>
+        </Card>
 
         {/* Manual Triggers */}
-        <div className="p-5 rounded-lg border border-[#222222] bg-[#121212] flex flex-col justify-between h-48 shadow-sm">
-          <div className="flex items-start justify-between">
-            <p className="text-[11px] font-mono uppercase tracking-wider text-[#888888]">MANUAL TRIGGERS</p>
-            <div className="flex items-center gap-2.5 text-[10.5px] font-mono text-[#888888]">
-              <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-amber-400" />WARNINGS 0</span>
-              <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-red-400" />ERRORS 0</span>
+        <Card className="flex flex-col justify-between h-48">
+          <CardHeader className="pb-0">
+            <div className="flex items-start justify-between">
+              <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">MANUAL TRIGGERS</p>
+              <div className="flex items-center gap-2.5 text-[10.5px] font-mono text-muted-foreground">
+                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-amber-400" />WARNINGS 0</Badge>
+                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-red-400" />ERRORS 0</Badge>
+              </div>
             </div>
-          </div>
-          <p className="text-2xl font-normal text-white -mt-2 tracking-tight">6</p>
-          <div>
-            <div className="flex items-end gap-1.5 h-16 border-b border-[#222222] pb-0.5">
+          </CardHeader>
+          <CardContent className="-mt-2">
+            <p className="text-2xl font-normal text-foreground tracking-tight">6</p>
+          </CardContent>
+          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
+            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
               {[0,20,0,50,0,40,80,0,90,0,60,100].map((h,i) => (
                 <div key={i} className="flex-1 rounded-t-[1px] bg-primary hover:bg-primary/80 transition-colors" style={{ height:`${h||8}%`, opacity: h ? 1 : 0.15 }} />
               ))}
             </div>
-            <div className="flex items-center justify-between text-[10px] font-mono text-[#666666] pt-2">
+            <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
               <span>Aug 26, 5:29am</span><span>Aug 26, 6:29am</span>
             </div>
-          </div>
-        </div>
+          </CardFooter>
+        </Card>
 
         {/* Restore Drills */}
-        <div className="p-5 rounded-lg border border-[#222222] bg-[#121212] flex flex-col justify-between h-48 shadow-sm">
-          <div className="flex items-start justify-between">
-            <p className="text-[11px] font-mono uppercase tracking-wider text-[#888888]">RESTORE DRILLS</p>
-            <div className="flex items-center gap-2.5 text-[10.5px] font-mono text-[#888888]">
-              <span className="flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-emerald-400" />ERRORS 0</span>
+        <Card className="flex flex-col justify-between h-48">
+          <CardHeader className="pb-0">
+            <div className="flex items-start justify-between">
+              <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">RESTORE DRILLS</p>
+              <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-emerald-400" />ERRORS 0</Badge>
             </div>
-          </div>
-          <p className="text-2xl font-normal text-white -mt-2 tracking-tight">2</p>
-          <div>
-            <div className="flex items-end gap-1.5 h-16 border-b border-[#222222] pb-0.5">
+          </CardHeader>
+          <CardContent className="-mt-2">
+            <p className="text-2xl font-normal text-foreground tracking-tight">2</p>
+          </CardContent>
+          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
+            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
               {[0,0,30,0,0,0,0,0,70,0,0,100].map((h,i) => (
                 <div key={i} className="flex-1 rounded-t-[1px] bg-blue-400 hover:bg-blue-300 transition-colors" style={{ height:`${h||8}%`, opacity: h ? 1 : 0.15 }} />
               ))}
             </div>
-            <div className="flex items-center justify-between text-[10px] font-mono text-[#666666] pt-2">
+            <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
               <span>Aug 26, 5:29am</span><span>Aug 26, 6:29am</span>
             </div>
-          </div>
-        </div>
+          </CardFooter>
+        </Card>
 
         {/* Storage Throughput */}
-        <div className="p-5 rounded-lg border border-[#222222] bg-[#121212] flex flex-col justify-between h-48 shadow-sm">
-          <div className="flex items-start justify-between">
-            <p className="text-[11px] font-mono uppercase tracking-wider text-[#888888]">STORAGE THROUGHPUT</p>
-            <div className="text-[11px] font-mono text-emerald-400">48 MB/s</div>
-          </div>
-          <p className="text-2xl font-normal text-white -mt-2 tracking-tight">1.2 GB</p>
-          <div>
-            <div className="flex items-end gap-1.5 h-16 border-b border-[#222222] pb-0.5">
+        <Card className="flex flex-col justify-between h-48">
+          <CardHeader className="pb-0">
+            <div className="flex items-start justify-between">
+              <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">STORAGE THROUGHPUT</p>
+              <Badge variant="outline" className="text-[10px] font-mono text-emerald-400">48 MB/s</Badge>
+            </div>
+          </CardHeader>
+          <CardContent className="-mt-2">
+            <p className="text-2xl font-normal text-foreground tracking-tight">1.2 GB</p>
+          </CardContent>
+          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
+            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
               {[25,40,55,45,65,80,85,75,90,70,85,100].map((h,i) => (
                 <div key={i} className="flex-1 rounded-t-[1px] bg-emerald-400 hover:bg-emerald-300 transition-colors" style={{ height:`${h}%` }} />
               ))}
             </div>
-            <div className="flex items-center justify-between text-[10px] font-mono text-[#666666] pt-2">
+            <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
               <span>Aug 26, 5:29am</span><span>Aug 26, 6:29am</span>
             </div>
-          </div>
-        </div>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );
