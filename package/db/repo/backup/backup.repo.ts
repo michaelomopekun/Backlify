@@ -57,6 +57,14 @@ export class BackupRepository {
 
     static async saveBackupJob(params: CreateBackupJobParams) {
 
+        if (!params.jobId) {
+
+            logger.warn({jobId: params.jobId}, "Invalid backup job ID");
+
+            return null;
+
+        }
+
         try{
 
             const projectId = params.projectId || "default";
@@ -102,6 +110,14 @@ export class BackupRepository {
     }
 
     static async updateJobStatus(jobId: string, initialJobStatus: BackupJobStatusType, newJobStatus: BackupJobStatusType) {
+
+        if (!jobId) {
+
+            logger.warn({jobId}, "Invalid backup job ID");
+
+            return null;
+
+        }
 
         try{
 
@@ -160,6 +176,14 @@ export class BackupRepository {
     } 
 
     static async forceUpdateJobStatus(jobId: string, newJobStatus: BackupJobStatusType, errorMessage?: string) {
+
+        if (!jobId) {
+
+            logger.warn({jobId}, "Invalid backup job ID");
+
+            return null;
+
+        }
 
         try {
 
@@ -222,6 +246,14 @@ export class BackupRepository {
     }
 
     static async getJobById(jobId: string) {
+
+        if (!jobId) {
+
+            logger.warn({jobId}, "Invalid backup job ID");
+
+            return null;
+
+        }
 
         try {
 

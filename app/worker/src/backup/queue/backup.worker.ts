@@ -307,6 +307,13 @@ backupWorker.on("completed", async (job) => {
 
     logger.info({ jobId: job.id }, "Backup job completed successfully");
 
+    // scheduled-backup trigger jobs do not provide backup files directly
+    if (job.name !== "backup" || !job.data?.jobId) {
+
+        logger.info({ jobId: job.id }, "Scheduled-backup trigger job, skipping cleanup");
+        
+        return;
+    }
 
     try {
 
