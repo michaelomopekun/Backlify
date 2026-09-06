@@ -1,14 +1,31 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import {
   IconSelector,
   IconPlugConnected,
   IconLayoutSidebar,
   IconGitBranch,
+  IconSearch,
+  IconCheck,
+  IconPlus,
 } from "@tabler/icons-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+} from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { OrgPickerClientActions } from "./org-picker-client-actions";
+
+function WireframeCubeIcon({ className = "size-3.5" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" className={className}>
+      <path d="m21 7.5-9-5.25L3 7.5m18 0-9 5.25m9-5.25v9l-9 5.25M3 7.5l9 5.25M3 7.5v9l9 5.25m0-9v9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 interface Props {
   orgId: string;
@@ -25,6 +42,9 @@ export function ProjectHeader({
   projectName,
   userInitials,
 }: Props) {
+  const [orgSearch, setOrgSearch] = useState("");
+  const [projectSearch, setProjectSearch] = useState("");
+
   const triggerMobileMenu = () => {
     if (typeof window !== "undefined") {
       window.dispatchEvent(new CustomEvent("backlify:open-modal", { detail: "sidebar" }));
@@ -86,9 +106,9 @@ export function ProjectHeader({
       </div>
 
       {/* ── DESKTOP HEADER (hidden sm:flex) ── */}
-      <div className="hidden sm:flex items-center gap-2.5 w-full">
+      <div className="hidden sm:flex items-center gap-2 w-full">
         {/* Brand Logo */}
-        <Link href="/dashboard/org" className="flex items-center shrink-0 pr-1 hover:opacity-85 transition-opacity">
+        <Link href="/dashboard/org" className="flex items-center shrink-0 pr-0.5 hover:opacity-85 transition-opacity">
           <img
             src="/backlify-logo.svg"
             alt="Backlify"
@@ -96,45 +116,204 @@ export function ProjectHeader({
           />
         </Link>
 
-        <span className="text-muted-foreground/40 font-light text-sm">/</span>
+        <span className="text-[#444444] text-[13px] font-light select-none">/</span>
 
-        {/* Org Selector */}
-        <Link
-          href={`/dashboard/org/${orgId}`}
-          className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium text-sm"
-        >
-          <span className="size-4 rounded flex items-center justify-center text-muted-foreground shrink-0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3.5">
-              <path d="M4 4h16v16H4z M9 9h6v6H9z" />
-            </svg>
-          </span>
-          <span>{orgName}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded border border-border/80 bg-muted/40 text-muted-foreground font-mono uppercase tracking-wider">
+        {/* ── Org Selector + Dropdown ── */}
+        <div className="flex items-center gap-1.5">
+          <Link
+            href={`/dashboard/org/${orgId}`}
+            className="flex items-center gap-1.5 text-[#dddddd] hover:text-white transition-colors text-[13px] font-normal"
+          >
+            <WireframeCubeIcon className="size-3.5 text-[#888888] shrink-0" />
+            <span>{orgName}</span>
+          </Link>
+
+          <span className="text-[10px] px-1.5 py-0.5 rounded border border-[#2d2d2d] bg-[#141414] text-[#888888] font-mono uppercase tracking-wider select-none">
             FREE
           </span>
-          <IconSelector className="size-3 text-muted-foreground shrink-0" />
-        </Link>
 
-        <span className="text-muted-foreground/40 font-light text-sm">/</span>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Switch organization"
+                className="size-6 rounded flex items-center justify-center text-[#888888] hover:text-white hover:bg-[#1f1f1f] border border-transparent hover:border-[#2e2e2e] data-[state=open]:bg-[#1c1c1c] data-[state=open]:border-[#2e2e2e] data-[state=open]:text-white transition-all cursor-pointer outline-none"
+              >
+                <IconSelector className="size-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              sideOffset={6}
+              className="w-64 bg-[#171717] border border-[#2c2c2c] rounded-lg shadow-2xl p-0 text-xs text-white z-50 overflow-hidden"
+            >
+              {/* Search input */}
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-[#262626]" onClick={(e) => e.stopPropagation()}>
+                <IconSearch className="size-3.5 text-[#666666] shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Find organization..."
+                  value={orgSearch}
+                  onChange={(e) => setOrgSearch(e.target.value)}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="bg-transparent text-xs text-white placeholder-[#666666] outline-none w-full font-sans"
+                  autoFocus
+                />
+              </div>
 
-        {/* Project Selector */}
-        <Link
-          href={`/dashboard/project/${projectId}`}
-          className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium text-sm truncate max-w-[200px]"
-        >
-          <span className="truncate">{projectName}</span>
-          <IconSelector className="size-3 text-muted-foreground shrink-0" />
-        </Link>
+              {/* Organization List */}
+              <div className="py-1 max-h-52 overflow-y-auto">
+                {orgName.toLowerCase().includes(orgSearch.toLowerCase()) && (
+                  <Link
+                    href={`/dashboard/org/${orgId}`}
+                    className="flex items-center justify-between px-3 py-2 text-xs text-white hover:bg-[#222222] rounded-sm mx-1 cursor-pointer font-medium transition-colors"
+                  >
+                    <span className="truncate">{orgName}</span>
+                    <IconCheck className="size-3.5 text-white shrink-0 ml-2" />
+                  </Link>
+                )}
 
-        <span className="text-muted-foreground/40 font-light text-sm">/</span>
+                <Link
+                  href="/dashboard/org"
+                  className="flex items-center px-3 py-2 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm mx-1 cursor-pointer transition-colors"
+                >
+                  <span>All Organizations</span>
+                </Link>
+              </div>
 
-        {/* Branch / Env Selector */}
-        <div className="flex items-center gap-1.5 text-foreground text-sm">
-          <span className="text-muted-foreground text-xs font-mono">main</span>
-          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25 text-amber-400 uppercase font-mono tracking-wider">
+              {/* Separator */}
+              <div className="h-px bg-[#262626]" />
+
+              {/* New Organization Action */}
+              <div className="p-1">
+                <Link
+                  href="/dashboard/org/new"
+                  className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm cursor-pointer transition-colors"
+                >
+                  <IconPlus className="size-3.5 text-[#888888]" />
+                  <span>New organization</span>
+                </Link>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <span className="text-[#444444] text-[13px] font-light select-none">/</span>
+
+        {/* ── Project Selector + Dropdown ── */}
+        <div className="flex items-center gap-1.5">
+          <Link
+            href={`/dashboard/project/${projectId}`}
+            className="flex items-center gap-1.5 text-[#dddddd] hover:text-white transition-colors text-[13px] font-normal truncate max-w-[200px]"
+          >
+            <WireframeCubeIcon className="size-3.5 text-[#888888] shrink-0" />
+            <span className="truncate">{projectName}</span>
+          </Link>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Switch project"
+                className="size-6 rounded flex items-center justify-center text-[#888888] hover:text-white hover:bg-[#1f1f1f] border border-transparent hover:border-[#2e2e2e] data-[state=open]:bg-[#1c1c1c] data-[state=open]:border-[#2e2e2e] data-[state=open]:text-white transition-all cursor-pointer outline-none"
+              >
+                <IconSelector className="size-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              sideOffset={6}
+              className="w-64 bg-[#171717] border border-[#2c2c2c] rounded-lg shadow-2xl p-0 text-xs text-white z-50 overflow-hidden"
+            >
+              {/* Search input */}
+              <div className="flex items-center gap-2 px-3 py-2 border-b border-[#262626]" onClick={(e) => e.stopPropagation()}>
+                <IconSearch className="size-3.5 text-[#666666] shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Find project..."
+                  value={projectSearch}
+                  onChange={(e) => setProjectSearch(e.target.value)}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="bg-transparent text-xs text-white placeholder-[#666666] outline-none w-full font-sans"
+                  autoFocus
+                />
+              </div>
+
+              {/* Project List */}
+              <div className="py-1 max-h-52 overflow-y-auto">
+                {projectName.toLowerCase().includes(projectSearch.toLowerCase()) && (
+                  <Link
+                    href={`/dashboard/project/${projectId}`}
+                    className="flex items-center justify-between px-3 py-2 text-xs text-white hover:bg-[#222222] rounded-sm mx-1 cursor-pointer font-medium transition-colors"
+                  >
+                    <span className="truncate">{projectName}</span>
+                    <IconCheck className="size-3.5 text-white shrink-0 ml-2" />
+                  </Link>
+                )}
+
+                <Link
+                  href={`/dashboard/org/${orgId}`}
+                  className="flex items-center px-3 py-2 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm mx-1 cursor-pointer transition-colors"
+                >
+                  <span>All Projects</span>
+                </Link>
+              </div>
+
+              {/* Separator */}
+              <div className="h-px bg-[#262626]" />
+
+              {/* New Project Action */}
+              <div className="p-1">
+                <Link
+                  href={`/dashboard/org/${orgId}/new`}
+                  className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm cursor-pointer transition-colors"
+                >
+                  <IconPlus className="size-3.5 text-[#888888]" />
+                  <span>New project</span>
+                </Link>
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <span className="text-[#444444] text-[13px] font-light select-none">/</span>
+
+        {/* ── Branch / Env Selector + Dropdown ── */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[#dddddd] text-[13px] font-normal font-sans">main</span>
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[#f59e0b]/30 bg-[#f59e0b]/10 text-[#f59e0b] font-mono tracking-wider select-none">
             PRODUCTION
           </span>
-          <IconSelector className="size-3 text-muted-foreground shrink-0" />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Switch branch"
+                className="size-6 rounded flex items-center justify-center text-[#888888] hover:text-white hover:bg-[#1f1f1f] border border-transparent hover:border-[#2e2e2e] data-[state=open]:bg-[#1c1c1c] data-[state=open]:border-[#2e2e2e] data-[state=open]:text-white transition-all cursor-pointer outline-none"
+              >
+                <IconSelector className="size-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              sideOffset={6}
+              className="w-56 bg-[#171717] border border-[#2c2c2c] rounded-lg shadow-2xl p-1 text-xs text-white z-50"
+            >
+              <div className="px-2.5 py-1.5 text-[11px] font-medium text-[#777777] uppercase tracking-wider">
+                Branches
+              </div>
+              <div className="flex items-center justify-between px-2.5 py-1.5 text-xs text-white bg-[#222222] rounded cursor-pointer font-medium">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono">main</span>
+                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#f59e0b]/10 border border-[#f59e0b]/25 text-[#f59e0b] uppercase font-mono">
+                    PRODUCTION
+                  </span>
+                </div>
+                <IconCheck className="size-3.5 text-white shrink-0" />
+              </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Sidebar Trigger */}

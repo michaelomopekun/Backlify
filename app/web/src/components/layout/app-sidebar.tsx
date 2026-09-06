@@ -15,6 +15,7 @@ import {
   IconChartBar,
   IconCreditCard,
   IconChevronRight,
+  IconHome,
 } from "@tabler/icons-react";
 
 import { cn } from "@/lib/utils";
@@ -47,7 +48,7 @@ const orgNav = [
 // ─── Project-level nav (matches Supabase's project sidebar) ───────────────
 
 const projectNav = [
-  { label: "Project Overview", href: "", icon: IconLayoutDashboard },
+  { label: "Project Overview", href: "", icon: IconHome },
   { label: "Backups", href: "/backups", icon: IconDatabaseImport },
   { label: "Schedules", href: "/schedules", icon: IconCalendarClock },
   { label: "Restores", href: "/restores", icon: IconRestore },
