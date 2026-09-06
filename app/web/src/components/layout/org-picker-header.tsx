@@ -18,7 +18,7 @@ export async function OrgPickerHeader({ title = "Organizations" }: OrgPickerHead
           <img
             src="/backlify-logo.svg"
             alt="Backlify"
-            className="size-5 object-contain"
+            className="size-7 object-contain"
           />
         </Link>
 

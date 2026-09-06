@@ -20,6 +20,7 @@ import { OrgSidebar } from "@/components/layout/app-sidebar";
 import { OrgPickerClientActions } from "@/components/layout/org-picker-client-actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Boxes } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -64,7 +65,9 @@ export default async function OrgProjectsPage({ params }: Props) {
           <img
             src="/backlify-logo.svg"
             alt="Backlify"
-            className="size-5 object-contain"
+            width={28}
+            height={28}
+            className="size-7 object-contain shrink-0"
           />
         </Link>
 
@@ -75,11 +78,7 @@ export default async function OrgProjectsPage({ params }: Props) {
           href={`/dashboard/org/${orgId}`}
           className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium text-sm"
         >
-          <span className="size-4 rounded flex items-center justify-center text-muted-foreground shrink-0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="size-3.5">
-              <path d="M4 4h16v16H4z M9 9h6v6H9z" />
-            </svg>
-          </span>
+          <Boxes className="size-3.5 text-muted-foreground shrink-0" />
           <span>{orgName}</span>
           <span className="text-[10px] px-1.5 py-0.5 rounded border border-border/80 bg-muted/40 text-muted-foreground font-mono uppercase tracking-wider">
             FREE

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { OrgPickerClientActions } from "./org-picker-client-actions";
+import { Boxes } from "lucide-react";
 
 function WireframeCubeIcon({ className = "size-3.5" }: { className?: string }) {
   return (
@@ -112,7 +113,9 @@ export function ProjectHeader({
           <img
             src="/backlify-logo.svg"
             alt="Backlify"
-            className="size-5 object-contain"
+            width={28}
+            height={28}
+            className="size-7 object-contain shrink-0"
           />
         </Link>
 
@@ -124,7 +127,7 @@ export function ProjectHeader({
             href={`/dashboard/org/${orgId}`}
             className="flex items-center gap-1.5 text-[#dddddd] hover:text-white transition-colors text-[13px] font-normal"
           >
-            <WireframeCubeIcon className="size-3.5 text-[#888888] shrink-0" />
+            <Boxes className="size-3.5 text-[#888888] shrink-0" />
             <span>{orgName}</span>
           </Link>
 
@@ -265,7 +268,7 @@ export function ProjectHeader({
               {/* New Project Action */}
               <div className="p-1">
                 <Link
-                  href={`/dashboard/org/${orgId}/new`}
+                  href={`/dashboard/project/new`}
                   className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm cursor-pointer transition-colors"
                 >
                   <IconPlus className="size-3.5 text-[#888888]" />
