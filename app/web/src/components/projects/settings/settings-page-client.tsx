@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,8 +94,31 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
   const [savedAlerts, setSavedAlerts] = useState(false);
 
   // Danger Zone
+  const router = useRouter();
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDeleteProject = async () => {
+    if (deleteConfirmText !== projectId || isDeleting) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setDeleteModalOpen(false);
+        router.push("/dashboard");
+      } else {
+        setDeleteError(data.error || data.message || "Failed to delete project");
+      }
+    } catch (err) {
+      setDeleteError("An unexpected error occurred while deleting the project");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleCopyDb = () => {
     navigator.clipboard.writeText(dbUrl);
@@ -799,25 +823,32 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
               className="h-9 font-mono text-xs bg-[#080808]"
             />
 
+            {deleteError && (
+              <p className="text-xs text-destructive font-medium">{deleteError}</p>
+            )}
+
             <div className="flex items-center justify-end gap-2 pt-2">
               <Button
                 variant="outline"
                 size="sm"
+                disabled={isDeleting}
                 onClick={() => {
                   setDeleteModalOpen(false);
                   setDeleteConfirmText("");
+                  setDeleteError(null);
                 }}
                 className="h-8 px-3 text-xs"
               >
                 Cancel
               </Button>
               <Button
-                disabled={deleteConfirmText !== projectId}
+                disabled={deleteConfirmText !== projectId || isDeleting}
                 variant="destructive"
                 size="sm"
+                onClick={handleDeleteProject}
                 className="h-8 px-3 text-xs font-medium"
               >
-                Permanently Delete
+                {isDeleting ? "Deleting..." : "Permanently Delete"}
               </Button>
             </div>
           </div>

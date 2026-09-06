@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { z } from "zod";
 
-import { ProjectRepository } from "db";
+import { ProjectRepository, ScheduleRepository, BackupFileRepository } from "db";
+
+import { backupQueue } from "@/lib/queues";
+
+import { StorageService } from "shared/config/storage";
 
 import { logger } from "shared/config/logger";
 
@@ -199,9 +203,74 @@ export async function DELETE(
     }
 
 
-    // Delete project (cascade will delete schedules)
-    const deletedProject = await ProjectRepository.deleteProject(id);
+    // 1. Clean up BullMQ repeatable schedules in Redis
+    const schedules = await ScheduleRepository.getSchedulesByProjectId(id);
 
+    for (const schedule of schedules) {
+    
+      try {
+    
+        await backupQueue.removeRepeatable(
+    
+          "scheduled-backup",
+    
+          { pattern: schedule.cronExpression, tz: schedule.timezone },
+    
+          `schedule-${schedule.id}`
+    
+        );
+    
+        logger.info({ scheduleId: schedule.id, projectId: id }, "Removed BullMQ repeatable schedule during project deletion");
+    
+      } catch (bullmqErr) {
+    
+        logger.warn({ scheduleId: schedule.id, error: bullmqErr }, "Failed to remove BullMQ schedule (it may not have been registered)");
+    
+      }
+    
+    }
+
+    
+    // 2. Delete physical backup dump files from S3 / R2 storage
+    try {
+    
+      const backupFiles = await BackupFileRepository.getBackupFilesByProjectId(id);
+    
+      if (backupFiles.length > 0) {
+    
+        const storageService = new StorageService();
+    
+        for (const file of backupFiles) {
+    
+          if (file.storageProvider === "r2" || file.storageProvider === "aws") {
+    
+            try {
+    
+              await storageService.deleteFile(file.filePath);
+    
+              logger.info({ filePath: file.filePath, projectId: id }, "Deleted backup file from cloud storage");
+    
+            } catch (storageErr) {
+    
+              logger.error({ filePath: file.filePath, error: storageErr }, "Failed to delete backup file from storage during project deletion");
+    
+            }
+    
+          }
+    
+        }
+    
+      }
+    
+    } catch (storageCleanupErr) {
+    
+      logger.error({ projectId: id, error: storageCleanupErr }, "Failed during storage cleanup for project deletion");
+    
+    }
+
+
+    // 3. Delete project from database (PostgreSQL cascade will delete backup_schedules, backup_jobs, backup_files, and restore_jobs)
+    const deletedProject = await ProjectRepository.deleteProject(id);
 
     return NextResponse.json({
 

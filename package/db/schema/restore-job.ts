@@ -16,7 +16,7 @@ export const restoreJobs = pgTable('restore_jobs', {
 
     .notNull()
   
-    .references(() => backupFiles.id),
+    .references(() => backupFiles.id, { onDelete: 'cascade' }),
   
   targetDatabaseUrl: text('target_database_url').notNull(),
   

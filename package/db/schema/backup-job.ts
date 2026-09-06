@@ -14,7 +14,7 @@ export const backupJobs = pgTable('backup_jobs', {
 
   id: text('id').primaryKey(),
 
-  projectId: text('project_id').notNull().references(() => projects.id),
+  projectId: text('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
 
   databaseUrl: text('database_url').notNull(),
 

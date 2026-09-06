@@ -12,7 +12,7 @@ export const backupFiles = pgTable('backup_files', {
     
     .notNull()
 
-    .references(() => backupJobs.id),
+    .references(() => backupJobs.id, { onDelete: 'cascade' }),
 
   fileName: varchar('file_name', { length: 255 }).notNull(),
 

@@ -142,21 +142,32 @@ export class PgDumpService {
 
     }
 
-    private parseConnectionString(dbUrl: string): { host: string; port: string; database: string; user: string; password: string } {
+    private parseConnectionString(dbUrl: string): { 
+        host: string; 
+        port: string; 
+        database: string; 
+        user: string; 
+        password: string;
+        sslmode?: string;
+    } {
 
         const url = new URL(dbUrl);
+
+        const sslmode = url.searchParams.get("sslmode") || undefined;
         
         return {
         
             host: url.hostname,
         
-            port: url.port,
+            port: url.port || "5432",
         
             database: decodeURIComponent(url.pathname.slice(1)),
         
             user: decodeURIComponent(url.username),
         
             password: decodeURIComponent(url.password),
+
+            sslmode,
         
         };
     
@@ -203,6 +214,20 @@ export class PgDumpService {
                 conn.database,
             ];
                 
+            const spawnEnv: NodeJS.ProcessEnv = {
+
+                ...process.env,
+                
+                PGPASSWORD: conn.password,
+            
+            };
+
+            if (conn.sslmode) {
+                
+                spawnEnv.PGSSLMODE = conn.sslmode;
+            
+            }
+
             // spawn pg_dump process
             const backupProcess = spawn( pgDumpPath, args, {
 
@@ -210,13 +235,7 @@ export class PgDumpService {
 
                 timeout,
 
-                env: {
-
-                    ...process.env,
-
-                    PGPASSWORD: conn.password,
-
-                },
+                env: spawnEnv,
 
             });
 
@@ -300,5 +319,41 @@ export class PgDumpService {
 
     }
 
+}
+
+export function parsePgDumpError(rawError: string): string {
+
+    if (/could not translate host name/i.test(rawError) || /getaddrinfo/i.test(rawError)) {
+    
+        return "Database host not found (DNS error). Please verify your host in Project Settings.";
+    
+    }
+    
+    if (/password authentication failed/i.test(rawError)) {
+    
+        return "Database authentication failed. Please verify your database username and password.";
+    
+    }
+    
+    if (/Connection refused/i.test(rawError)) {
+    
+        return "Connection refused. Please ensure PostgreSQL is running and port 5432 is accessible.";
+    
+    }
+    
+    if (/SSL/i.test(rawError) && (/no pg_hba.conf/i.test(rawError) || /does not support SSL/i.test(rawError))) {
+    
+        return "SSL connection error. Check if your database requires ?sslmode=require.";
+    
+    }
+    
+    if (/database ".*" does not exist/i.test(rawError)) {
+    
+        return "Database name not found on the PostgreSQL server.";
+    
+    }
+    
+    return rawError;
+    
 }
 

@@ -10,7 +10,7 @@ import { BackupRepository, ProjectRepository, ScheduleRepository } from "db";
 
 import { BACKUP_JOB_STATUS, BackupJobStatusType } from "shared/constants/backupJobStatus";
 
-import { PgDumpService } from "../service/pgdump.service";
+import { PgDumpService, parsePgDumpError } from "../service/pgdump.service";
 
 import { BackupFileUploadService } from "../service/backup_file_upload.service";
 
@@ -78,7 +78,19 @@ export const backupWorker = new Worker<any>(
 
                 if (!project) {
 
-                    logger.error({ projectId }, "Project not found for backup schedule, skipping");
+                    logger.warn({ projectId }, "Project not found for backup schedule, deactivating orphaned schedule");
+
+                    // deactivate the schedule in the db so it wont be reloaded
+                    await ScheduleRepository.updateSchedule(scheduleId, { isActive: false});
+
+                    // remove repeatable jobs from bullmq queue
+                    if (job.opts?.repeat?.key) {
+
+                        await backupQueue.removeRepeatableByKey(job.opts.repeat.key);
+
+                        logger.info({ scheduleId, projectId, repeatKey: job.opts.repeat.key }, "Removed orphaned schedule's repeatable jobs from queue");
+                        
+                    }
 
                     return { success: false, error: "Project not found" };
 
@@ -274,9 +286,10 @@ export const backupWorker = new Worker<any>(
         else {
 
             // 6 log failure — throw error here triggers BullMQ retry (attempts: 3, exponential backoff)
-            const errorMessage = backup_result.error ?? "pg_dump failed";
+            const rawErrorMessage = backup_result.error ?? "pg_dump failed";
+            const errorMessage = parsePgDumpError(rawErrorMessage);
             
-            logger.error({ jobId : job.id, error: errorMessage }, "Backup job failed, will retry if attempts remain");
+            logger.error({ jobId : job.id, error: errorMessage, raw: rawErrorMessage }, "Backup job failed, will retry if attempts remain");
 
             await emitJobTelemetry({
                 jobId: job.data.jobId,
@@ -339,18 +352,20 @@ backupWorker.on("failed", async (job, err) => {
 
     logger.error({ jobId: job?.id, err: err.message, attempts: job?.attemptsMade }, "Backup job failed");
 
-    // Mark as FAILED in DB only after all retries are exhausted
-    if (job) {  
+    // Guard: scheduled-backup trigger jobs or jobs without jobId do not have a DB record directly
+    if (!job || job.name !== "backup" || !job.data?.jobId) {
+        return;
+    }
 
-        const maxAttempts = job.opts.attempts ?? 1;
+    const maxAttempts = job.opts.attempts ?? 1;
 
-        if (job.attemptsMade < maxAttempts) {
+    if (job.attemptsMade < maxAttempts) {
 
-            logger.info({ jobId: job.id, attemptsMade: job.attemptsMade, maxAttempts }, "Job failed but retries remain; skipping FAILED status update");
+        logger.info({ jobId: job.id, attemptsMade: job.attemptsMade, maxAttempts }, "Job failed but retries remain; skipping FAILED status update");
 
-            return;
+        return;
 
-        }
+    }
 
         try {
 
@@ -376,8 +391,6 @@ backupWorker.on("failed", async (job, err) => {
             logger.error({ jobId: job.id, err: updateErr }, "Failed to update job status to FAILED");
         
         }
-    
-    }
 
 });
 

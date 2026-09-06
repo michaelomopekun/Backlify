@@ -1,6 +1,6 @@
 import { backupQueue } from "../backup/queue/backup.queue";
 
-import { ScheduleRepository } from "db";
+import { ProjectRepository, ScheduleRepository } from "db";
 
 import { logger } from "shared/config/logger";
 
@@ -37,6 +37,18 @@ export async function loadSchedules() {
     
     // 3. Add each active schedule as a repeatable job
     for (const schedule of activeSchedules) {
+
+      const project = await ProjectRepository.getProjectById(schedule.projectId);
+
+      if (!project) {
+
+        logger.warn({ scheduleId: schedule.id, projectId: schedule.projectId }, "skipping schedule as project does not exist");
+
+        await ScheduleRepository.updateSchedule(schedule.id, { isActive: false });
+
+        continue;
+
+      }
     
       logger.info(
     

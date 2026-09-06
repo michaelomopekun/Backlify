@@ -1,5 +1,7 @@
 import { backupFiles } from "../../schema/backup-file";
 
+import { backupJobs } from "../../schema/backup-job";
+
 import { db, eq } from "../../index";
 
 import { logger } from "shared/config/logger";
@@ -162,6 +164,31 @@ export class BackupFileRepository {
             logger.error({ backupJobId, error }, "Failed to delete backup file");
 
             throw error;
+
+        }
+
+    }
+
+    static async getBackupFilesByProjectId(projectId: string) {
+
+        try{
+            const rows = await db
+                .select({
+                    id: backupFiles.id,
+                    filePath: backupFiles.filePath,
+                    storageProvider: backupFiles.storageProvider,
+                })
+                .from(backupFiles)
+                .innerJoin(backupJobs, eq(backupFiles.backupJobId, backupJobs.id))
+                .where(eq(backupJobs.projectId, projectId));
+
+            return rows;
+
+        } catch (error) {
+
+            logger.error({projectId, error}, "Failed to fetch backup files by project ID");
+
+            return [];
 
         }
 
