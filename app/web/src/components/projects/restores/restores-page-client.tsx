@@ -506,6 +506,7 @@ function RestoreWizardDrawer({
   const [copied, setCopied] = useState(false);
 
   const logsEndRef = useRef<HTMLDivElement>(null);
+  const sseRef = useRef<EventSource | null>(null);
 
   useEffect(() => {
     setMode(defaultMode);
@@ -513,6 +514,13 @@ function RestoreWizardDrawer({
     setExecutionStep(0);
     setLiveLogs([]);
     setConfirmWord("");
+
+    return () => {
+      if (sseRef.current) {
+        sseRef.current.close();
+        sseRef.current = null;
+      }
+    };
   }, [open, defaultMode]);
 
   useEffect(() => {
@@ -550,13 +558,42 @@ function RestoreWizardDrawer({
       const res = await triggerRestore(formData);
       if (res?.error) {
         setLiveLogs((prev) => [...prev, `[ERROR] Restore rejected: ${res.error}`]);
-      } else {
-        setExecutionStep(5);
+      } else if (res?.jobId) {
         setLiveLogs((prev) => [
           ...prev,
           `[SUCCESS] Restore Job enqueued: ${res.jobId}`,
-          `[INFO] Worker has locked target database and begun schema restoration.`,
+          `[INFO] Connected to worker SSE telemetry stream. Listening for events...`,
         ]);
+
+        if (sseRef.current) sseRef.current.close();
+        const es = new EventSource(`/api/jobs/${res.jobId}/telemetry`);
+        sseRef.current = es;
+
+        es.onmessage = (ev) => {
+          try {
+            const telemetry = JSON.parse(ev.data);
+            if (telemetry && telemetry.message) {
+              setLiveLogs((prev) => [
+                ...prev,
+                `[${telemetry.phase || "INFO"}] ${telemetry.message}`,
+              ]);
+              if (telemetry.phase === "DOWNLOAD") setExecutionStep(2);
+              else if (telemetry.phase === "CHECKSUM") setExecutionStep(3);
+              else if (telemetry.phase === "RESTORE") setExecutionStep(4);
+              else if (telemetry.phase === "COMPLETE") {
+                setExecutionStep(5);
+                es.close();
+              } else if (telemetry.phase === "ERROR") {
+                es.close();
+              }
+            }
+          } catch {}
+        };
+
+        es.addEventListener("done", () => {
+          setExecutionStep(5);
+          es.close();
+        });
       }
     }
   }

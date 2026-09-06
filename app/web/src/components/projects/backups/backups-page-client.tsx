@@ -17,9 +17,11 @@ import {
   IconLoader2,
   IconDotsVertical,
   IconFilter,
+  IconTerminal2,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/shared/stat-card";
+import { JobTelemetryDrawer } from "@/components/shared/job-telemetry-drawer";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -321,6 +323,7 @@ export function BackupsPageClient({
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | BackupType>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | BackupStatus>("all");
+  const [activeTelemetryJobId, setActiveTelemetryJobId] = useState<string | null>(null);
 
   const handleBackupSuccess = (jobId: string, label?: string) => {
     const newEntry: Backup = {
@@ -333,6 +336,7 @@ export function BackupsPageClient({
       label: label ?? "manual-trigger",
     };
     setBackupsList((prev) => [newEntry, ...prev]);
+    setActiveTelemetryJobId(jobId);
   };
 
   const filtered = backupsList.filter((b) => {
@@ -583,6 +587,12 @@ export function BackupsPageClient({
                         align="end"
                         className="w-44 bg-[#111111] border-[#222222] text-[12px]"
                       >
+                        <DropdownMenuItem
+                          onClick={() => setActiveTelemetryJobId(backup.id)}
+                          className="gap-2 cursor-pointer text-white"
+                        >
+                          <IconTerminal2 className="size-3.5 text-primary" /> Live Console & Logs
+                        </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2 cursor-pointer text-white">
                           <IconDownload className="size-3.5 text-[#888888]" /> Download dump
                         </DropdownMenuItem>
@@ -623,6 +633,15 @@ export function BackupsPageClient({
           onSuccess={handleBackupSuccess}
         />
       )}
+
+      {/* Real-time SSE Telemetry Drawer */}
+      <JobTelemetryDrawer
+        jobId={activeTelemetryJobId}
+        jobType="backup"
+        open={!!activeTelemetryJobId}
+        onClose={() => setActiveTelemetryJobId(null)}
+        title="Backup Worker Live Console"
+      />
     </div>
   );
 }

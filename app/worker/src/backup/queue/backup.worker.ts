@@ -18,6 +18,8 @@ import { v4 as uuidv4 } from "uuid";
 
 import { CleanupService } from "../service/cleanup.service";
 
+import { emitJobTelemetry } from "shared/config/job-telemetry";
+
 
 async function transitionBackupStatus(job: any, fromStatus: BackupJobStatusType, toStatus: BackupJobStatusType, opts?: { forceOnMismatch?: boolean; errorMessage?: string }) {
 
@@ -158,19 +160,54 @@ export const backupWorker = new Worker<any>(
 
         logger.info({ jobId : job.id }, "updated job status to in_progress");
 
+        await emitJobTelemetry({
+            jobId: job.data.jobId,
+            level: "info",
+            phase: "INIT",
+            message: "Worker claimed backup job from queue. Initializing PostgreSQL snapshot pipeline...",
+            progress: 10,
+        });
+
         // 2 call pgdump service to perform backup
         const pg_dump_service = new PgDumpService();
+
+        await emitJobTelemetry({
+            jobId: job.data.jobId,
+            level: "info",
+            phase: "DUMP",
+            message: "Spawning pg_dump with custom archive format (-Fc)...",
+            progress: 25,
+        });
 
         const backup_result = await pg_dump_service.executePgDump({
             
             databaseUrl: job.data.databaseUrl,
             
             jobId: job.data.jobId,
+
+            onLog: (line) => {
+                emitJobTelemetry({
+                    jobId: job.data.jobId,
+                    level: "info",
+                    phase: "DUMP",
+                    message: line,
+                    progress: 45,
+                });
+            },
             
         });
 
         // 3 wait for result and update status accordingly
         if (backup_result.success) {
+
+            const sizeKb = Math.round((backup_result.fileSize || 0) / 1024);
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "success",
+                phase: "DUMP",
+                message: `pg_dump completed successfully (${sizeKb} KB in ${backup_result.duration}ms).`,
+                progress: 60,
+            });
 
             // 4 transition to UPLOADING — tracks cloud upload phase
             await transitionBackupStatus(
@@ -186,6 +223,14 @@ export const backupWorker = new Worker<any>(
             );
 
             logger.info({ jobId: job.id }, "Updated job status to uploading");
+
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "info",
+                phase: "UPLOAD",
+                message: "Uploading encrypted snapshot archive to storage vault...",
+                progress: 75,
+            });
 
             const backup_file_service = new BackupFileUploadService();
 
@@ -215,6 +260,14 @@ export const backupWorker = new Worker<any>(
             
             // 7 log completion
             logger.info({ jobId : job.id }, "Backup job completed");
+
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "success",
+                phase: "COMPLETE",
+                message: "Snapshot encrypted, verified, and sealed in storage vault successfully.",
+                progress: 100,
+            });
             
             return { success: true };
         } 
@@ -224,6 +277,13 @@ export const backupWorker = new Worker<any>(
             const errorMessage = backup_result.error ?? "pg_dump failed";
             
             logger.error({ jobId : job.id, error: errorMessage }, "Backup job failed, will retry if attempts remain");
+
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "error",
+                phase: "ERROR",
+                message: `pg_dump execution failed: ${errorMessage}`,
+            });
             
             throw new Error(errorMessage);
         }

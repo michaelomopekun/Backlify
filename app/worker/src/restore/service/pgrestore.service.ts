@@ -16,6 +16,8 @@ export interface PgRestoreOptions {
 
     timeout?: number;
 
+    onLog?: (line: string) => void;
+
 }
 
 export interface PgRestoreResult {
@@ -33,7 +35,7 @@ export class PgRestoreService {
 
     async executePgRestore(options: PgRestoreOptions): Promise<PgRestoreResult> {
 
-        const { backupFilePath, targetDatabaseUrl, jobId, timeout = 600000 } = options;
+        const { backupFilePath, targetDatabaseUrl, jobId, timeout = 600000, onLog } = options;
 
         const startTime = Date.now();
 
@@ -45,7 +47,7 @@ export class PgRestoreService {
             logger.info({ jobId, backupFilePath }, "Starting pg_restore process");
 
             // 2 run pg_restore
-            const result = await this.spawnPgRestore(targetDatabaseUrl, backupFilePath, timeout);
+            const result = await this.spawnPgRestore(targetDatabaseUrl, backupFilePath, timeout, onLog);
 
             if (!result.success) {
 
@@ -113,7 +115,7 @@ export class PgRestoreService {
     
     }
 
-    private spawnPgRestore( targetDatabaseUrl: string, backupFilePath: string, timeout: number ): Promise<{ success: boolean; error?: string }> {
+    private spawnPgRestore( targetDatabaseUrl: string, backupFilePath: string, timeout: number, onLog?: (line: string) => void ): Promise<{ success: boolean; error?: string }> {
 
         return new Promise((resolve) => {
 
@@ -131,9 +133,13 @@ export class PgRestoreService {
                 
                 '-d', conn.database,
 
+                '-v', // verbose mode to stream progress
+
                 '--clean',
 
                 '--if-exists',
+
+                '--no-owner',
                 
                 backupFilePath,
             ];
@@ -162,7 +168,14 @@ export class PgRestoreService {
             // capture stderr
             restoreProcess.stderr.on("data", (data: Buffer) => {
 
-                stderr += data.toString();
+                const text = data.toString();
+                stderr += text;
+                if (onLog) {
+                    text.split(/\r?\n/).forEach((line) => {
+                        const trimmed = line.trim();
+                        if (trimmed) onLog(trimmed);
+                    });
+                }
 
             });
 

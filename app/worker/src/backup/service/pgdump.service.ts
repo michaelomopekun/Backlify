@@ -15,6 +15,8 @@ export interface PgDumpOptions {
 
     timeout?: number;
 
+    onLog?: (line: string) => void;
+
 }
 
 export interface PgDumpResult {
@@ -61,7 +63,7 @@ export class PgDumpService {
 
     async executePgDump(options: PgDumpOptions): Promise<PgDumpResult> {
 
-        const { databaseUrl, jobId, timeout = 300000 } = options;
+        const { databaseUrl, jobId, timeout = 300000, onLog } = options;
 
         const backUpPath = this.generateBackupPath(jobId);
 
@@ -73,7 +75,7 @@ export class PgDumpService {
 
             logger.info({ jobId, databaseUrl }, "Starting pg_dump process");
 
-            const result = await this.spawnPgDump(databaseUrl, backUpPath, timeout);
+            const result = await this.spawnPgDump(databaseUrl, backUpPath, timeout, onLog);
 
             if (!result.success) {
 
@@ -160,7 +162,7 @@ export class PgDumpService {
     
     }
 
-    private spawnPgDump( databaseUrl: string, outputFile: string, timeout: number ): Promise<{ success: boolean; error?: string }> {
+    private spawnPgDump( databaseUrl: string, outputFile: string, timeout: number, onLog?: (line: string) => void ): Promise<{ success: boolean; error?: string }> {
 
         return new Promise((resolve) => {
 
@@ -225,7 +227,14 @@ export class PgDumpService {
             // capture stderr
             backupProcess.stderr.on("data", (data: Buffer) => {
 
-                stderr += data.toString();
+                const text = data.toString();
+                stderr += text;
+                if (onLog) {
+                    text.split(/\r?\n/).forEach((line) => {
+                        const trimmed = line.trim();
+                        if (trimmed) onLog(trimmed);
+                    });
+                }
 
             });
 

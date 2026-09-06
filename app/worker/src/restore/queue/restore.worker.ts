@@ -16,6 +16,8 @@ import { EncryptionService } from "../../shared/service/encryption.service";
 
 import { createHash } from "crypto";
 
+import { emitJobTelemetry } from "shared/config/job-telemetry";
+
 
 
 export const restoreWorker = new Worker<RestoreJobData>(
@@ -46,6 +48,14 @@ export const restoreWorker = new Worker<RestoreJobData>(
             
         });
 
+        await emitJobTelemetry({
+            jobId: job.data.jobId,
+            level: "info",
+            phase: "INIT",
+            message: "Worker claimed restore job. Initializing recovery pipeline...",
+            progress: 10,
+        });
+
 
         // 2 fetch backup file record
         const backupFile = await BackupFileRepository.getBackupFileById(job.data.backupFileId);
@@ -55,6 +65,13 @@ export const restoreWorker = new Worker<RestoreJobData>(
             const errorMessage = `Backup file record not found for id: ${job.data.backupFileId}`;
             
             logger.error({ jobId: job.id }, errorMessage);
+
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "error",
+                phase: "ERROR",
+                message: errorMessage,
+            });
             
             throw new Error(errorMessage);
 
@@ -83,6 +100,14 @@ export const restoreWorker = new Worker<RestoreJobData>(
 
             logger.info({ jobId: job.id, cloudKey: backupFile.filePath, tempDownloadPath }, "Downloading backup from cloud storage");
 
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "info",
+                phase: "DOWNLOAD",
+                message: `Downloading encrypted snapshot package (${backupFile.fileName}) from ${backupFile.storageProvider}...`,
+                progress: 25,
+            });
+
             await storageService.downloadFile(backupFile.filePath, tempDownloadPath);
 
             restoreFilePath = tempDownloadPath;
@@ -110,11 +135,26 @@ export const restoreWorker = new Worker<RestoreJobData>(
 
             logger.error({ jobId: job.id }, err);
 
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "error",
+                phase: "ERROR",
+                message: err,
+            });
+
             throw new Error(err);
 
         }
 
         logger.info({ jobId: job.id }, "Checksum validation passed");
+
+        await emitJobTelemetry({
+            jobId: job.data.jobId,
+            level: "success",
+            phase: "CHECKSUM",
+            message: `SHA-256 integrity checksum validated: ${downloadedChecksum.substring(0, 16)}... [MATCH]`,
+            progress: 40,
+        });
 
 
         // --- Decryption (if applicable) ---
@@ -137,6 +177,14 @@ export const restoreWorker = new Worker<RestoreJobData>(
             
             logger.info({ jobId: job.id, restoreFilePath, decryptedTempPath }, "Decrypting backup file");
 
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "info",
+                phase: "CHECKSUM",
+                message: "Decrypting snapshot payload with AES-256 envelope key...",
+                progress: 50,
+            });
+
             await encryptionService.decryptFile(restoreFilePath, decryptedTempPath);
 
             finalRestorePath = decryptedTempPath;
@@ -147,6 +195,14 @@ export const restoreWorker = new Worker<RestoreJobData>(
 
         const pgRestoreService = new PgRestoreService();
 
+        await emitJobTelemetry({
+            jobId: job.data.jobId,
+            level: "info",
+            phase: "RESTORE",
+            message: "Spawning pg_restore --clean --if-exists --no-owner on target database...",
+            progress: 60,
+        });
+
         // 3 execute pg_restore
         const restoreResult = await pgRestoreService.executePgRestore({
 
@@ -155,6 +211,16 @@ export const restoreWorker = new Worker<RestoreJobData>(
             targetDatabaseUrl: job.data.targetDatabaseUrl,
 
             jobId: job.data.jobId,
+
+            onLog: (line) => {
+                emitJobTelemetry({
+                    jobId: job.data.jobId,
+                    level: "info",
+                    phase: "RESTORE",
+                    message: line,
+                    progress: 75,
+                });
+            },
 
         });
 
@@ -194,6 +260,14 @@ export const restoreWorker = new Worker<RestoreJobData>(
 
             logger.info({ jobId: job.id }, "Restore job completed");
 
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "success",
+                phase: "COMPLETE",
+                message: `Database successfully restored and verified in ${restoreResult.duration}ms.`,
+                progress: 100,
+            });
+
             return { success: true };
 
         } else {
@@ -202,6 +276,13 @@ export const restoreWorker = new Worker<RestoreJobData>(
             const errorMessage = restoreResult.error ?? "pg_restore failed";
 
             logger.error({ jobId: job.id, error: errorMessage }, "Restore job failed, will retry if attempts remain");
+
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "error",
+                phase: "ERROR",
+                message: `pg_restore execution failed: ${errorMessage}`,
+            });
 
             throw new Error(errorMessage);
 
