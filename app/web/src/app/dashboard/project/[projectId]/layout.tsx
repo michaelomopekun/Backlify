@@ -37,8 +37,8 @@ export default async function ProjectLayout({ children, params }: Props) {
     org = await OrganizationRepository.getOrganizationById(orgId);
   } catch {}
 
-  const orgName = org?.name ?? `${user.name}'s Org`;
-  const projectName = project?.name ?? "roadRescue's Project";
+  const orgName = org?.name ?? "Organization";
+  const projectName = project?.name ?? (project ? "Untitled Project" : "Project");
 
   return (
     <SidebarProvider className="h-screen w-screen overflow-hidden flex flex-col bg-[#0c0c0c]">

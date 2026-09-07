@@ -54,14 +54,6 @@ interface StatusItem {
   detail: string;
 }
 
-const statusList: StatusItem[] = [
-  { name: "PostgreSQL Connection", status: "Healthy", detail: "SSL active · 12ms latency" },
-  { name: "Backup Worker Queue",   status: "Healthy", detail: "0 queued · Idle" },
-  { name: "Cron Scheduler",        status: "Healthy", detail: "Next trigger in 4h 22m" },
-  { name: "Storage Target (S3/R2)",status: "Healthy", detail: "Encrypted bucket connected" },
-  { name: "Restore Engine",        status: "Healthy", detail: "Standby & verified" },
-];
-
 /* ─────────────────────────────────────────────────────────────────────────────
    Grip Handle
 ───────────────────────────────────────────────────────────────────────────── */

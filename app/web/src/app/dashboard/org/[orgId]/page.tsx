@@ -13,7 +13,7 @@ import {
   IconInfoCircle,
   IconX,
 } from "@tabler/icons-react";
-import { ProjectRepository, OrganizationRepository } from "db";
+import { ProjectRepository, OrganizationRepository, BackupRepository, ScheduleRepository } from "db";
 import { getCurrentUser } from "@/lib/current-user";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { OrgSidebar } from "@/components/layout/app-sidebar";
@@ -37,24 +37,34 @@ export default async function OrgProjectsPage({ params }: Props) {
     org = await OrganizationRepository.getOrganizationById(orgId);
   } catch {}
 
-  const orgName = org?.name ?? `${user.name}'s Org`;
+  const orgName = org?.name ?? "Organization";
 
   let dbProjects: Array<{ id: string; name: string; databaseUrl: string; createdAt: Date }> = [];
   try {
     dbProjects = await ProjectRepository.getAllProjects();
   } catch {}
 
-  // Projects list with Backlify PostgreSQL data
-  const displayProjects = dbProjects.length > 0 ? dbProjects : [
-    {
-      id: "proj-1",
-      name: "roadRescue's Project",
-      dbEngine: "Postgres 16",
-      region: "eu-central-1",
-      tier: "FREE · ACTIVE",
-      isPaused: false,
-    },
-  ];
+  let totalBackupsCount = 0;
+  let totalStorageBytes = 0;
+  try {
+    const allBackups = await BackupRepository.listBackups({});
+    totalBackupsCount = allBackups.length;
+    totalStorageBytes = allBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+  } catch {}
+
+  let activeSchedulesCount = 0;
+  try {
+    const activeSchedules = await ScheduleRepository.getAllActiveSchedules();
+    activeSchedulesCount = activeSchedules.length;
+  } catch {}
+
+  const storageUsedStr = totalStorageBytes === 0
+    ? "0 MB"
+    : totalStorageBytes > 1024 * 1024 * 1024
+    ? `${(totalStorageBytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
+    : `${Math.round(totalStorageBytes / (1024 * 1024))} MB`;
+
+  const displayProjects = dbProjects;
 
   return (
     <SidebarProvider className="flex flex-col min-h-screen">
@@ -160,51 +170,59 @@ export default async function OrgProjectsPage({ params }: Props) {
 
               {/* Projects Grid (3-column layout) */}
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pt-1">
-                {displayProjects.map((p) => {
-                  const projectId = "id" in p ? p.id : "proj-1";
-                  const name = "name" in p ? p.name : "Project";
-                  const dbEngine = "dbEngine" in p ? p.dbEngine : "Postgres 16";
-                  const region = "region" in p ? p.region : "eu-central-1";
-                  const tier = "tier" in p ? p.tier : "FREE · ACTIVE";
-                  const isPaused = "isPaused" in p ? p.isPaused : false;
-
-                  return (
+                {displayProjects.length === 0 ? (
+                  <div className="col-span-full flex flex-col items-center justify-center p-12 text-center rounded-lg border border-dashed border-[#222222] bg-[#111111]/50">
+                    <Boxes className="size-10 text-[#555555] mb-3" />
+                    <h3 className="text-[15px] font-medium text-white mb-1">No projects yet</h3>
+                    <p className="text-[12px] text-[#777777] max-w-sm mb-4">
+                      You haven&apos;t created any projects in this organization yet. Connect a database to start automated backups.
+                    </p>
                     <Link
-                      key={projectId}
-                      href={`/dashboard/project/${projectId}`}
-                      className="group relative flex flex-col justify-between p-5 rounded-lg border border-[#1e1e1e] bg-[#111111] hover:border-[#2f2f2f] hover:bg-[#141414] transition-all min-h-[160px]"
+                      href="/dashboard/project/new"
+                      className="flex items-center gap-1.5 h-8 px-3.5 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-[12px] transition-colors"
                     >
-                      <div>
-                        <div className="flex items-start justify-between gap-2 mb-1.5">
-                          <h2 className="text-[14px] font-medium text-white group-hover:text-white transition-colors truncate">
-                            {name}
-                          </h2>
-                          <span className="p-1 -mr-1 rounded text-[#555555] group-hover:text-[#888888] hover:text-white transition-colors">
-                            <IconDotsVertical className="size-3.5" />
-                          </span>
+                      <IconPlus className="size-3.5 stroke-[2.5]" />
+                      <span>Create project</span>
+                    </Link>
+                  </div>
+                ) : (
+                  displayProjects.map((p) => {
+                    let dbHost = "PostgreSQL";
+                    try {
+                      const url = new URL(p.databaseUrl);
+                      dbHost = url.hostname || "PostgreSQL";
+                    } catch {}
+
+                    return (
+                      <Link
+                        key={p.id}
+                        href={`/dashboard/project/${p.id}`}
+                        className="group relative flex flex-col justify-between p-5 rounded-lg border border-[#1e1e1e] bg-[#111111] hover:border-[#2f2f2f] hover:bg-[#141414] transition-all min-h-[160px]"
+                      >
+                        <div>
+                          <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <h2 className="text-[14px] font-medium text-white group-hover:text-white transition-colors truncate">
+                              {p.name}
+                            </h2>
+                            <span className="p-1 -mr-1 rounded text-[#555555] group-hover:text-[#888888] hover:text-white transition-colors">
+                              <IconDotsVertical className="size-3.5" />
+                            </span>
+                          </div>
+
+                          <p className="text-[12px] text-[#666666] font-mono truncate">
+                            PostgreSQL <span className="text-[#3a3a3a]">·</span> {dbHost}
+                          </p>
                         </div>
 
-                        <p className="text-[12px] text-[#666666] font-mono">
-                          {dbEngine} <span className="text-[#3a3a3a]">·</span> {region}
-                        </p>
-                      </div>
-
-                      <div className="mt-6 flex items-center justify-between">
-                        {isPaused ? (
-                          <div className="flex items-center gap-1.5 text-[11px] text-[#777777]">
-                            <span className="size-1.5 rounded-full bg-amber-400/80" />
-                            <span>Project is paused</span>
-                            <IconInfoCircle className="size-3 text-[#555555]" />
-                          </div>
-                        ) : (
+                        <div className="mt-6 flex items-center justify-between">
                           <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded border border-[#242424] bg-[#161616] text-[#888888] tracking-wider">
-                            {tier}
+                            ACTIVE
                           </span>
-                        )}
-                      </div>
-                    </Link>
-                  );
-                })}
+                        </div>
+                      </Link>
+                    );
+                  })
+                )}
               </div>
             </div>
 
@@ -226,10 +244,10 @@ export default async function OrgProjectsPage({ params }: Props) {
 
                 <div className="space-y-3 pt-1">
                   {[
-                    { label: "PROJECTS", value: `${Math.max(displayProjects.length, 1)}`, limit: "2" },
-                    { label: "TOTAL BACKUPS", value: "18", limit: "50" },
-                    { label: "STORAGE USED", value: "1.2 GB", limit: "5 GB" },
-                    { label: "ACTIVE SCHEDULES", value: "1", limit: "3" },
+                    { label: "PROJECTS", value: `${displayProjects.length}`, limit: "2" },
+                    { label: "TOTAL BACKUPS", value: `${totalBackupsCount}`, limit: "50" },
+                    { label: "STORAGE USED", value: storageUsedStr, limit: "5 GB" },
+                    { label: "ACTIVE SCHEDULES", value: `${activeSchedulesCount}`, limit: "3" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center justify-between text-[11px] font-mono">
                       <div className="flex items-center gap-2">
