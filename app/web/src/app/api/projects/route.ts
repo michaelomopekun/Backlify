@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { v4 as uuidv4 } from "uuid";
 
-import { ProjectRepository } from "db";
+import { OrganizationRepository, ProjectRepository } from "db";
 
 import { logger } from "shared/config/logger";
 
@@ -46,6 +46,16 @@ export async function POST(req: NextRequest) {
     
     const { orgId, name, databaseUrl } = validated.data;
     
+    const existingOrg = await OrganizationRepository.getOrganizationById(orgId);
+    if (!existingOrg) {
+      await OrganizationRepository.createOrganization({
+        id: orgId,
+        name: orgId === "default-org" ? "Default Organization" : orgId,
+        slug: orgId,
+        userId: "user-placeholder",
+      });
+    }
+
     const id = `proj-${uuidv4().substring(0, 12)}`;
 
 

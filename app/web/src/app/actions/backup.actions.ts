@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
-import { BackupRepository, ProjectRepository, ScheduleRepository } from "db";
+import { BackupRepository, OrganizationRepository, ProjectRepository, ScheduleRepository } from "db";
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 import type { BackupJobStatusType } from "shared/constants/backupJobStatus";
 
@@ -77,6 +77,16 @@ export async function createProject(formData: FormData) {
   }
 
   try {
+    const existingOrg = await OrganizationRepository.getOrganizationById(orgId);
+    if (!existingOrg) {
+      await OrganizationRepository.createOrganization({
+        id: orgId,
+        name: orgId === "default-org" ? "Default Organization" : orgId,
+        slug: orgId,
+        userId: "user-placeholder",
+      });
+    }
+
     const projectId = `proj-${uuidv4().substring(0, 8)}`;
     const project = await ProjectRepository.createProject({
       id: projectId,

@@ -1,0 +1,34 @@
+﻿# Dependencies (all workspaces)
+**/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js build cache & dev chunks
+**/.next
+**/out
+**/dist
+**/.turbo
+app/worker/lib
+**/src/temp
+**/temp
+*.dump
+*.sql
+*.tar.gz
+
+# Git & IDE
+.git
+.gitignore
+.vscode
+.agents
+.claude
+
+# Marketing & media assets not needed in container
+marketing/
+preview-shoot.mjs
+Implement_figma_Design/
+
+# Environment secrets
+.env
+.env*.local
