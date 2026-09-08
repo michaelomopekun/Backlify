@@ -64,8 +64,8 @@ export function OrgPickerClientActions({ userInitials }: Props) {
       </div>
 
       {/* User profile picture - always visible */}
-      <Avatar className="size-7 cursor-pointer">
-        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+      <Avatar className="size-7 cursor-pointer border border-[#2a2a2a]">
+        <AvatarFallback className="bg-[#1f1f1f] text-foreground text-[11px] font-medium">
           {userInitials}
         </AvatarFallback>
       </Avatar>

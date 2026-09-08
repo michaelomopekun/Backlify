@@ -44,8 +44,8 @@
   --sidebar-foreground: #f9fafb;
   --sidebar-primary: #FFB31F;
   --sidebar-primary-foreground: #000000;
-  --sidebar-accent: rgba(255,179,31,0.10);
-  --sidebar-accent-foreground: #FFB31F;
+  --sidebar-accent: #1e1e1e;
+  --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #1f1f1f;
   --sidebar-ring: #FFB31F;
 

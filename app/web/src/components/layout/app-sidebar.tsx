@@ -98,8 +98,8 @@ export function OrgSidebar({ user, orgId, orgName }: OrgSidebarProps) {
                     className={cn(
                       "text-sm gap-3 h-9 rounded-md transition-all group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center",
                       isActive
-                        ? "bg-[#202020] text-white font-medium border border-[#2c2c2c] shadow-xs"
-                        : "text-[#777777] hover:text-white hover:bg-[#161616]"
+                        ? "!bg-[#202020] !text-white font-medium border border-[#2c2c2c] shadow-xs [&_svg]:!text-white"
+                        : "text-[#777777] hover:!text-white hover:bg-[#161616]"
                     )}
                   >
                     <Link href={href}>
@@ -117,8 +117,8 @@ export function OrgSidebar({ user, orgId, orgName }: OrgSidebarProps) {
       {/* Footer */}
       <SidebarFooter className="border-t border-border p-2.5 group-data-[collapsible=icon]:p-1.5">
         <div className="flex items-center gap-3 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <Avatar className="size-7 shrink-0">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+          <Avatar className="size-7 shrink-0 border border-[#2a2a2a]">
+            <AvatarFallback className="bg-[#1f1f1f] text-foreground text-[11px] font-medium">
               {user.initials}
             </AvatarFallback>
           </Avatar>
@@ -177,8 +177,8 @@ export function ProjectSidebar({
                     className={cn(
                       "text-sm gap-3 h-9 rounded-md transition-all group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center",
                       isActive
-                        ? "bg-[#202020] text-white font-medium border border-[#2c2c2c] shadow-xs"
-                        : "text-[#777777] hover:text-white hover:bg-[#161616]"
+                        ? "!bg-[#202020] !text-white font-medium border border-[#2c2c2c] shadow-xs [&_svg]:!text-white"
+                        : "text-[#777777] hover:!text-white hover:bg-[#161616]"
                     )}
                   >
                     <Link href={href}>
@@ -204,8 +204,8 @@ export function ProjectSidebar({
                 className={cn(
                   "text-sm gap-3 h-9 rounded-md transition-all group-data-[collapsible=icon]:size-9 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:justify-center",
                   pathname.startsWith(`${base}/settings`)
-                    ? "bg-[#202020] text-white font-medium border border-[#2c2c2c] shadow-xs"
-                    : "text-[#777777] hover:text-white hover:bg-[#161616]"
+                    ? "!bg-[#202020] !text-white font-medium border border-[#2c2c2c] shadow-xs [&_svg]:!text-white"
+                    : "text-[#777777] hover:!text-white hover:bg-[#161616]"
                 )}
               >
                 <Link href={`${base}/settings`}>
@@ -221,8 +221,8 @@ export function ProjectSidebar({
       {/* Footer */}
       <SidebarFooter className="border-t border-border p-2.5 group-data-[collapsible=icon]:p-1.5">
         <div className="flex items-center gap-3 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
-          <Avatar className="size-7 shrink-0">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-bold">
+          <Avatar className="size-7 shrink-0 border border-[#2a2a2a]">
+            <AvatarFallback className="bg-[#1f1f1f] text-foreground text-[11px] font-medium">
               {user.initials}
             </AvatarFallback>
           </Avatar>

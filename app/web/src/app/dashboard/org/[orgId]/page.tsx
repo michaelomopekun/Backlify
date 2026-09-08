@@ -181,7 +181,7 @@ export default async function OrgProjectsPage({ params }: Props) {
                       action={
                         <Link
                           href={`/dashboard/project/new?orgId=${orgId}`}
-                          className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-medium transition-colors shadow-xs"
+                          className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md bg-[#161616] border border-[#2a2a2a] hover:bg-[#202020] hover:border-[#383838] text-white text-xs font-medium transition-colors shadow-xs"
                         >
                           <IconPlus className="size-3.5 stroke-[2.5]" />
                           <span>New project</span>
@@ -238,26 +238,26 @@ export default async function OrgProjectsPage({ params }: Props) {
                       <p className="text-[11px] text-[#666666] mt-0.5">Current billing cycle</p>
                     </div>
                     <Link
-                      href={`/dashboard/org/${orgId}`}
-                      className="flex items-center h-7 px-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-[11px] transition-colors shadow-xs"
+                      href={`/dashboard/org/${orgId}/billing`}
+                      className="flex items-center h-7 px-2.5 rounded-md border border-[#2a2a2a] bg-transparent hover:bg-[#1c1c1c] text-white font-normal text-[11px] transition-colors"
                     >
-                      Upgrade
+                      Upgrade to Pro
                     </Link>
                   </div>
 
                   <div className="space-y-3 pt-1">
                     {[
-                      { label: "PROJECTS", value: `${displayProjects.length}`, limit: "2" },
-                      { label: "TOTAL BACKUPS", value: `${totalBackupsCount}`, limit: "50" },
-                      { label: "STORAGE USED", value: storageUsedStr, limit: "5 GB" },
-                      { label: "ACTIVE SCHEDULES", value: `${activeSchedulesCount}`, limit: "3" },
+                      { label: "Projects", value: `${displayProjects.length}`, limit: "2" },
+                      { label: "Total backups", value: `${totalBackupsCount}`, limit: "50" },
+                      { label: "Storage used", value: storageUsedStr, limit: "5 GB" },
+                      { label: "Active schedules", value: `${activeSchedulesCount}`, limit: "3" },
                     ].map((item) => (
-                      <div key={item.label} className="flex items-center justify-between text-[11px] font-mono">
-                        <div className="flex items-center gap-2">
-                          <span className="size-2 rounded-full bg-emerald-400 shrink-0" />
-                          <span className="text-[#888888] tracking-wider">{item.label}</span>
+                      <div key={item.label} className="flex items-center justify-between text-[12px]">
+                        <div className="flex items-center gap-2.5">
+                          <span className="size-2.5 rounded-full border border-[#444444] shrink-0" />
+                          <span className="text-[#888888]">{item.label}</span>
                         </div>
-                        <span className="text-white">
+                        <span className="text-white font-mono text-[11.5px]">
                           {item.value} <span className="text-[#555555]">/ {item.limit}</span>
                         </span>
                       </div>
