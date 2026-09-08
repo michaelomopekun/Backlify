@@ -79,12 +79,7 @@ export async function createProject(formData: FormData) {
   try {
     const existingOrg = await OrganizationRepository.getOrganizationById(orgId);
     if (!existingOrg) {
-      await OrganizationRepository.createOrganization({
-        id: orgId,
-        name: orgId === "default-org" ? "Default Organization" : orgId,
-        slug: orgId,
-        userId: "user-placeholder",
-      });
+      return { error: "Organization not found. Please create an organization first." };
     }
 
     const projectId = `proj-${uuidv4().substring(0, 8)}`;

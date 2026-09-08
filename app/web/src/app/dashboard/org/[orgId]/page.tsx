@@ -1,16 +1,14 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import {
   IconSearch,
   IconLayoutGrid,
   IconList,
   IconDotsVertical,
-  IconHelp,
-  IconBell,
   IconSelector,
   IconArrowsSort,
   IconChevronDown,
   IconPlus,
-  IconInfoCircle,
   IconX,
 } from "@tabler/icons-react";
 import { ProjectRepository, OrganizationRepository, BackupRepository, ScheduleRepository } from "db";
@@ -18,8 +16,6 @@ import { getCurrentUser } from "@/lib/current-user";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { OrgSidebar } from "@/components/layout/app-sidebar";
 import { OrgPickerClientActions } from "@/components/layout/org-picker-client-actions";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
 import { Boxes } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -37,11 +33,17 @@ export default async function OrgProjectsPage({ params }: Props) {
     org = await OrganizationRepository.getOrganizationById(orgId);
   } catch {}
 
-  const orgName = org?.name ?? "Organization";
+  // If the organization does not exist in the database, return to organizations list
+  if (!org) {
+    redirect("/dashboard/org");
+  }
 
-  let dbProjects: Array<{ id: string; name: string; databaseUrl: string; createdAt: Date }> = [];
+  const orgName = org.name;
+
+  let dbProjects: Array<{ id: string; orgId: string; name: string; databaseUrl: string; createdAt: Date }> = [];
   try {
-    dbProjects = await ProjectRepository.getAllProjects();
+    const all = await ProjectRepository.getAllProjects();
+    dbProjects = all.filter((p) => p.orgId === orgId);
   } catch {}
 
   let totalBackupsCount = 0;
@@ -109,193 +111,210 @@ export default async function OrgProjectsPage({ params }: Props) {
         <OrgSidebar user={user} orgId={orgId} orgName={orgName} />
 
         <SidebarInset className="bg-[#0c0c0c] flex-1 min-w-0">
+          {/* Page Content */}
+          <main className="flex-1 px-8 lg:px-12 py-8 max-w-[1600px] w-full">
+            <h1 className="text-[26px] font-normal tracking-tight text-white mb-8">Projects</h1>
 
-        {/* Page Content */}
-        <main className="flex-1 px-8 lg:px-12 py-8 max-w-[1600px] w-full">
-          <h1 className="text-[26px] font-normal tracking-tight text-white mb-8">Projects</h1>
-
-          <div className="flex flex-col lg:flex-row gap-8 items-start">
-            {/* Left / Main Projects Section */}
-            <div className="flex-1 min-w-0 w-full space-y-4">
-              {/* Toolbar */}
-              <div className="flex flex-wrap items-center gap-2.5">
-                {/* Search */}
-                <div className="relative">
-                  <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-[#555555]" />
-                  <input
-                    type="text"
-                    placeholder="Search for a project"
-                    className="h-8 pl-8 pr-3 w-56 bg-[#111111] border border-[#222222] rounded-md text-[12px] text-white placeholder-[#555555] focus:outline-none focus:border-[#3a3a3a] transition-colors"
-                  />
-                </div>
-
-                {/* Status dropdown filter */}
-                <button
-                  type="button"
-                  className="flex items-center gap-1.5 h-8 px-2.5 text-[12px] text-[#888888] bg-[#111111] border border-[#222222] rounded-md hover:text-white hover:border-[#333333] transition-colors font-mono"
-                >
-                  <span>Status</span>
-                  <IconChevronDown className="size-3 text-[#666666]" />
-                </button>
-
-                {/* Sorted by dropdown */}
-                <button
-                  type="button"
-                  className="flex items-center gap-1.5 h-8 px-2.5 text-[12px] text-[#888888] bg-[#111111] border border-[#222222] rounded-md hover:text-white hover:border-[#333333] transition-colors font-mono"
-                >
-                  <IconArrowsSort className="size-3.5 text-[#666666]" />
-                  <span>Sorted by name</span>
-                </button>
-
-                {/* View toggle segmented control & New project button */}
-                <div className="ml-auto flex items-center gap-2.5">
-                  <div className="flex items-center border border-[#222222] bg-[#111111] rounded-md overflow-hidden p-0.5">
-                    <button className="p-1 rounded bg-[#222222] text-white shadow-xs">
-                      <IconLayoutGrid className="size-3.5" />
-                    </button>
-                    <button className="p-1 rounded text-[#666666] hover:text-white transition-colors">
-                      <IconList className="size-3.5" />
-                    </button>
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
+              {/* Left / Main Projects Section */}
+              <div className="flex-1 min-w-0 w-full space-y-4">
+                {/* Toolbar */}
+                <div className="flex flex-wrap items-center gap-2.5">
+                  {/* Search */}
+                  <div className="relative">
+                    <IconSearch className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-[#555555]" />
+                    <input
+                      type="text"
+                      placeholder="Search for a project"
+                      className="h-8 pl-8 pr-3 w-56 bg-[#111111] border border-[#222222] rounded-md text-[12px] text-white placeholder-[#555555] focus:outline-none focus:border-[#3a3a3a] transition-colors"
+                    />
                   </div>
 
-                  <Link
-                    href={`/dashboard/project/new`}
-                    className="flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-[12px] transition-colors shadow-xs"
-                  >
-                    <IconPlus className="size-3.5 stroke-[2.5]" />
-                    <span>New project</span>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Projects Grid (3-column layout) */}
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pt-1">
-                {displayProjects.length === 0 ? (
-                  <div className="col-span-full flex flex-col items-center justify-center p-12 text-center rounded-lg border border-dashed border-[#222222] bg-[#111111]/50">
-                    <Boxes className="size-10 text-[#555555] mb-3" />
-                    <h3 className="text-[15px] font-medium text-white mb-1">No projects yet</h3>
-                    <p className="text-[12px] text-[#777777] max-w-sm mb-4">
-                      You haven&apos;t created any projects in this organization yet. Connect a database to start automated backups.
-                    </p>
-                    <Link
-                      href="/dashboard/project/new"
-                      className="flex items-center gap-1.5 h-8 px-3.5 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-[12px] transition-colors"
-                    >
-                      <IconPlus className="size-3.5 stroke-[2.5]" />
-                      <span>Create project</span>
-                    </Link>
-                  </div>
-                ) : (
-                  displayProjects.map((p) => {
-                    let dbHost = "PostgreSQL";
-                    try {
-                      const url = new URL(p.databaseUrl);
-                      dbHost = url.hostname || "PostgreSQL";
-                    } catch {}
-
-                    return (
-                      <Link
-                        key={p.id}
-                        href={`/dashboard/project/${p.id}`}
-                        className="group relative flex flex-col justify-between p-5 rounded-lg border border-[#1e1e1e] bg-[#111111] hover:border-[#2f2f2f] hover:bg-[#141414] transition-all min-h-[160px]"
-                      >
-                        <div>
-                          <div className="flex items-start justify-between gap-2 mb-1.5">
-                            <h2 className="text-[14px] font-medium text-white group-hover:text-white transition-colors truncate">
-                              {p.name}
-                            </h2>
-                            <span className="p-1 -mr-1 rounded text-[#555555] group-hover:text-[#888888] hover:text-white transition-colors">
-                              <IconDotsVertical className="size-3.5" />
-                            </span>
-                          </div>
-
-                          <p className="text-[12px] text-[#666666] font-mono truncate">
-                            PostgreSQL <span className="text-[#3a3a3a]">·</span> {dbHost}
-                          </p>
-                        </div>
-
-                        <div className="mt-6 flex items-center justify-between">
-                          <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded border border-[#242424] bg-[#161616] text-[#888888] tracking-wider">
-                            ACTIVE
-                          </span>
-                        </div>
-                      </Link>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-
-            {/* Right Aside: Backlify "Free plan usage" Card */}
-            <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
-              <div className="rounded-lg border border-[#1e1e1e] bg-[#111111] p-5 space-y-5">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <h3 className="text-[13px] font-medium text-white">Free plan usage</h3>
-                    <p className="text-[11px] text-[#666666] mt-0.5">Current billing cycle</p>
-                  </div>
-                  <Link
-                    href={`/dashboard/org/${orgId}`}
-                    className="flex items-center h-7 px-2.5 rounded-md bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-[11px] transition-colors"
-                  >
-                    Upgrade
-                  </Link>
-                </div>
-
-                <div className="space-y-3 pt-1">
-                  {[
-                    { label: "PROJECTS", value: `${displayProjects.length}`, limit: "2" },
-                    { label: "TOTAL BACKUPS", value: `${totalBackupsCount}`, limit: "50" },
-                    { label: "STORAGE USED", value: storageUsedStr, limit: "5 GB" },
-                    { label: "ACTIVE SCHEDULES", value: `${activeSchedulesCount}`, limit: "3" },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between text-[11px] font-mono">
-                      <div className="flex items-center gap-2">
-                        <span className="size-2 rounded-full bg-emerald-400 shrink-0" />
-                        <span className="text-[#888888] tracking-wider">{item.label}</span>
-                      </div>
-                      <span className="text-white">
-                        {item.value} <span className="text-[#555555]">/ {item.limit}</span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Backlify DR & Backup Notice Card */}
-              <div className="rounded-lg border border-[#1e1e1e] bg-[#111111] p-4 space-y-2.5 relative">
-                <button
-                  type="button"
-                  className="absolute top-3.5 right-3.5 text-[#555555] hover:text-white transition-colors"
-                >
-                  <IconX className="size-3.5" />
-                </button>
-
-                <span className="inline-block text-[9px] font-mono uppercase px-1.5 py-0.5 rounded border border-[#2a2a2a] bg-[#181818] text-[#888888] font-semibold tracking-wider">
-                  NOTICE
-                </span>
-
-                <h4 className="text-[12.5px] font-medium text-white leading-snug pr-4">
-                  Automated DR Drill Engine
-                </h4>
-
-                <p className="text-[11.5px] text-[#666666] leading-relaxed">
-                  Scheduled point-in-time disaster recovery testing is now enabled for all PostgreSQL clusters.
-                </p>
-
-                <div className="pt-1">
+                  {/* Status dropdown filter */}
                   <button
                     type="button"
-                    className="h-7 px-3 text-[11px] border border-[#2a2a2a] bg-[#161616] hover:bg-[#202020] text-white rounded-md transition-colors font-medium"
+                    className="flex items-center gap-1.5 h-8 px-2.5 text-[12px] text-[#888888] bg-[#111111] border border-[#222222] rounded-md hover:text-white hover:border-[#333333] transition-colors font-mono"
                   >
-                    Learn more
+                    <span>Status</span>
+                    <IconChevronDown className="size-3 text-[#666666]" />
                   </button>
+
+                  {/* Sorted by dropdown */}
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 h-8 px-2.5 text-[12px] text-[#888888] bg-[#111111] border border-[#222222] rounded-md hover:text-white hover:border-[#333333] transition-colors font-mono"
+                  >
+                    <IconArrowsSort className="size-3.5 text-[#666666]" />
+                    <span>Sorted by name</span>
+                  </button>
+
+                  {/* View toggle segmented control & New project button */}
+                  <div className="ml-auto flex items-center gap-2.5">
+                    <div className="flex items-center border border-[#222222] bg-[#111111] rounded-md overflow-hidden p-0.5">
+                      <button className="p-1 rounded bg-[#222222] text-white shadow-xs">
+                        <IconLayoutGrid className="size-3.5" />
+                      </button>
+                      <button className="p-1 rounded text-[#666666] hover:text-white transition-colors">
+                        <IconList className="size-3.5" />
+                      </button>
+                    </div>
+
+                    <Link
+                      href={`/dashboard/project/new?orgId=${orgId}`}
+                      className="flex items-center gap-1.5 h-8 px-3 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-[12px] transition-colors shadow-xs"
+                    >
+                      <IconPlus className="size-3.5 stroke-[2.5]" />
+                      <span>New project</span>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Projects Grid (3-column layout) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pt-1">
+                  {displayProjects.length === 0 ? (
+                    /* Supabase styled empty projects dashed card */
+                    <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-[#222222] bg-[#111111]/40 py-16 sm:py-20 px-6 text-center shadow-xs">
+                      <div className="size-10 rounded-lg border border-[#262626] bg-[#161616] flex items-center justify-center mb-4 text-[#888888] shadow-xs">
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="size-5 text-[#aaaaaa]"
+                        >
+                          <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" />
+                          <path d="M12 12l8-4.5" />
+                          <path d="M12 12v9" />
+                          <path d="M12 12L4 7.5" />
+                        </svg>
+                      </div>
+                      <h3 className="text-base font-medium text-white mb-1">Create a project</h3>
+                      <p className="text-xs sm:text-sm text-[#777777] max-w-sm mb-5">
+                        Launch a complete backend built on Postgres.
+                      </p>
+                      <Link
+                        href={`/dashboard/project/new?orgId=${orgId}`}
+                        className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md bg-[#161616] border border-[#2a2a2a] hover:bg-[#202020] text-white text-xs font-medium transition-colors shadow-xs"
+                      >
+                        <IconPlus className="size-3.5 stroke-[2.5]" />
+                        <span>New project</span>
+                      </Link>
+                    </div>
+                  ) : (
+                    displayProjects.map((p) => {
+                      let dbHost = "PostgreSQL";
+                      try {
+                        const url = new URL(p.databaseUrl);
+                        dbHost = url.hostname || "PostgreSQL";
+                      } catch {}
+
+                      return (
+                        <Link
+                          key={p.id}
+                          href={`/dashboard/project/${p.id}`}
+                          className="group relative flex flex-col justify-between p-5 rounded-lg border border-[#1e1e1e] bg-[#111111] hover:border-[#2f2f2f] hover:bg-[#141414] transition-all min-h-[160px]"
+                        >
+                          <div>
+                            <div className="flex items-start justify-between gap-2 mb-1.5">
+                              <h2 className="text-[14px] font-medium text-white group-hover:text-white transition-colors truncate">
+                                {p.name}
+                              </h2>
+                              <span className="p-1 -mr-1 rounded text-[#555555] group-hover:text-[#888888] hover:text-white transition-colors">
+                                <IconDotsVertical className="size-3.5" />
+                              </span>
+                            </div>
+
+                            <p className="text-[12px] text-[#666666] font-mono truncate">
+                              PostgreSQL <span className="text-[#3a3a3a]">·</span> {dbHost}
+                            </p>
+                          </div>
+
+                          <div className="mt-6 flex items-center justify-between">
+                            <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded border border-[#242424] bg-[#161616] text-[#888888] tracking-wider">
+                              ACTIVE
+                            </span>
+                          </div>
+                        </Link>
+                      );
+                    })
+                  )}
                 </div>
               </div>
-            </aside>
-          </div>
-        </main>
-      </SidebarInset>
+
+              {/* Right Aside: Backlify "Free plan usage" Card */}
+              <aside className="w-full lg:w-72 xl:w-80 shrink-0 space-y-6">
+                <div className="rounded-lg border border-[#1e1e1e] bg-[#111111] p-5 space-y-5">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="text-[13px] font-medium text-white">Free plan usage</h3>
+                      <p className="text-[11px] text-[#666666] mt-0.5">Current billing cycle</p>
+                    </div>
+                    <Link
+                      href={`/dashboard/org/${orgId}`}
+                      className="flex items-center h-7 px-2.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] transition-colors"
+                    >
+                      Upgrade
+                    </Link>
+                  </div>
+
+                  <div className="space-y-3 pt-1">
+                    {[
+                      { label: "PROJECTS", value: `${displayProjects.length}`, limit: "2" },
+                      { label: "TOTAL BACKUPS", value: `${totalBackupsCount}`, limit: "50" },
+                      { label: "STORAGE USED", value: storageUsedStr, limit: "5 GB" },
+                      { label: "ACTIVE SCHEDULES", value: `${activeSchedulesCount}`, limit: "3" },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center justify-between text-[11px] font-mono">
+                        <div className="flex items-center gap-2">
+                          <span className="size-2 rounded-full bg-emerald-400 shrink-0" />
+                          <span className="text-[#888888] tracking-wider">{item.label}</span>
+                        </div>
+                        <span className="text-white">
+                          {item.value} <span className="text-[#555555]">/ {item.limit}</span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Backlify DR & Backup Notice Card */}
+                <div className="rounded-lg border border-[#1e1e1e] bg-[#111111] p-4 space-y-2.5 relative">
+                  <button
+                    type="button"
+                    className="absolute top-3.5 right-3.5 text-[#555555] hover:text-white transition-colors"
+                  >
+                    <IconX className="size-3.5" />
+                  </button>
+
+                  <span className="inline-block text-[9px] font-mono uppercase px-1.5 py-0.5 rounded border border-[#2a2a2a] bg-[#181818] text-[#888888] font-semibold tracking-wider">
+                    NOTICE
+                  </span>
+
+                  <h4 className="text-[12.5px] font-medium text-white leading-snug pr-4">
+                    Automated DR Drill Engine
+                  </h4>
+
+                  <p className="text-[11.5px] text-[#666666] leading-relaxed">
+                    Scheduled point-in-time disaster recovery testing is now enabled for all PostgreSQL clusters.
+                  </p>
+
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      className="h-7 px-3 text-[11px] border border-[#2a2a2a] bg-[#161616] hover:bg-[#202020] text-white rounded-md transition-colors font-medium"
+                    >
+                      Learn more
+                    </button>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </main>
+        </SidebarInset>
       </div>
     </SidebarProvider>
   );
