@@ -395,7 +395,7 @@ export function BackupsPageClient({
           label="Next Scheduled"
           value="—"
           sub="Check schedules page"
-          accent="text-amber-400"
+          accent="text-muted-foreground"
         />
       </div>
 
@@ -439,7 +439,7 @@ export function BackupsPageClient({
           <span>·</span>
           <span><span className="text-blue-400 font-medium">{manualCount}</span> manual</span>
           <span>·</span>
-          <span><span className="text-amber-400 font-medium">{inProgressCount}</span> in progress</span>
+          <span><span className="text-foreground font-medium">{inProgressCount}</span> in progress</span>
         </div>
       </div>
 
@@ -584,7 +584,7 @@ export function BackupsPageClient({
                           onClick={() => setActiveTelemetryJobId(backup.id)}
                           className="gap-2 cursor-pointer text-white"
                         >
-                          <IconTerminal2 className="size-3.5 text-primary" /> Live Console & Logs
+                          <IconTerminal2 className="size-3.5 text-muted-foreground" /> Live Console & Logs
                         </DropdownMenuItem>
                         <DropdownMenuItem className="gap-2 cursor-pointer text-white">
                           <IconDownload className="size-3.5 text-[#888888]" /> Download dump

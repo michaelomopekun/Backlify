@@ -466,7 +466,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
             size="sm"
             className="h-8.5 px-3 text-xs border-border bg-card hover:bg-muted font-medium w-full sm:w-auto"
           >
-            <IconRefresh className={`size-3.5 mr-1.5 ${testingPing ? "animate-spin text-primary" : ""}`} />
+            <IconRefresh className={`size-3.5 mr-1.5 ${testingPing ? "animate-spin text-muted-foreground" : ""}`} />
             {testingPing ? "Probing Database…" : "Test Connection & Ping"}
           </Button>
 
@@ -579,7 +579,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
       <Card id="retention" className="scroll-mt-8 border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
         <CardHeader className="p-5 sm:p-6 border-b border-border/50">
           <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-            <IconAdjustments className="size-4 text-amber-400" />
+            <IconAdjustments className="size-4 text-muted-foreground" />
             <span>Automated Snapshot Retention (FIFO)</span>
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground font-normal">
@@ -591,7 +591,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <Label className="text-xs text-muted-foreground">Snapshot Retention Window</Label>
-              <span className="text-xs text-primary font-bold">
+              <span className="text-xs text-foreground font-semibold">
                 {retentionDays} Snapshots (FIFO)
               </span>
             </div>
@@ -649,7 +649,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
       <Card id="alerts" className="scroll-mt-8 border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
         <CardHeader className="p-5 sm:p-6 border-b border-border/50">
           <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-            <IconBell className="size-4 text-amber-400" />
+            <IconBell className="size-4 text-muted-foreground" />
             <span>Incident Alerts & Webhooks</span>
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground font-normal">
@@ -744,7 +744,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
             <Button
               variant="outline"
               size="sm"
-              className="h-8.5 px-3 border-amber-800/40 text-amber-400 hover:bg-amber-950/20 text-xs self-start sm:self-auto"
+              className="h-8.5 px-3 border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-medium self-start sm:self-auto"
             >
               Pause Schedules
             </Button>
@@ -797,7 +797,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
                   isActive
                     ? item.danger
                       ? "bg-destructive/15 text-destructive font-medium border border-destructive/30"
-                      : "bg-primary/10 text-primary font-medium border border-primary/25"
+                      : "bg-[#202020] text-white font-medium border border-[#2c2c2c]"
                     : item.danger
                     ? "text-destructive/80 hover:text-destructive hover:bg-destructive/10"
                     : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
@@ -853,7 +853,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
           </div>
           <div className="flex items-center justify-between pt-2">
             <span className="text-muted-foreground">Incident Alerts</span>
-            <span className="font-medium text-amber-400">
+            <span className="font-medium text-foreground">
               {webhookUrl ? "Connected" : "Inactive"}
             </span>
           </div>

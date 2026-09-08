@@ -39,7 +39,7 @@ export default async function ProjectOverviewPage({ params }: Props) {
         <div className="pt-2">
           <Link
             href="/dashboard/org"
-            className="inline-flex items-center gap-2 text-xs text-primary hover:underline"
+            className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground hover:underline"
           >
             <IconArrowLeft className="size-3.5" />
             <span>Return to organizations</span>

@@ -496,7 +496,7 @@ function CronEditorDrawer({
             />
             {/* Human readable preview */}
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border/40">
-              <IconCalendarTime className="size-4 text-primary shrink-0" />
+              <IconCalendarTime className="size-4 text-muted-foreground shrink-0" />
               <span className="text-xs text-muted-foreground">{readable}</span>
             </div>
           </div>
@@ -527,7 +527,7 @@ function CronEditorDrawer({
                 Retention Policy
               </Label>
               <span className="text-xs text-foreground font-medium">
-                Keep last <span className="text-primary font-semibold">{retention}</span> days
+                Keep last <span className="text-foreground font-semibold">{retention}</span> days
               </span>
             </div>
             <input
@@ -740,7 +740,7 @@ export function SchedulesPageClient({
           label="Next Run In"
           value={nextRun}
           sub={schedules.find((s) => s.status === "active")?.name ?? "No active schedule"}
-          accent="text-amber-400"
+          accent="text-muted-foreground"
         />
         <StatCard
           icon={IconRefresh}
@@ -801,9 +801,9 @@ export function SchedulesPageClient({
           <p className="text-sm text-muted-foreground">No schedules configured</p>
           <Button
             onClick={() => { setEditingSchedule(null); setDrawerOpen(true); }}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold h-9 px-4"
+            className="inline-flex items-center gap-1.5 h-8.5 px-4 rounded-md bg-[#161616] border border-[#2a2a2a] hover:bg-[#202020] text-white text-xs font-medium transition-colors shadow-xs"
           >
-            <IconPlus className="size-4 mr-1.5" />
+            <IconPlus className="size-4 mr-1" />
             Create your first schedule
           </Button>
         </div>

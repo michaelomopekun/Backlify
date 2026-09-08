@@ -263,7 +263,7 @@ export function FloatingSupportDock() {
                       : "text-[#888888] hover:text-white hover:bg-[#161616]"
                   }`}
                 >
-                  <Icon className={`size-4.5 shrink-0 ${isActive ? "text-primary" : "text-[#777777]"}`} />
+                  <Icon className={`size-4.5 shrink-0 ${isActive ? "text-white" : "text-[#777777]"}`} />
                   <span>{item.label}</span>
                 </Link>
               );
@@ -334,7 +334,7 @@ export function FloatingSupportDock() {
                   <div className="flex items-start gap-3.5 pr-2">
                     <Icon className="size-4 text-[#777777] group-hover:text-white mt-0.5 transition-colors shrink-0" />
                     <div>
-                      <h4 className="text-[13px] font-medium text-white group-hover:text-primary transition-colors">
+                      <h4 className="text-[13px] font-medium text-white transition-colors">
                         {item.title}
                       </h4>
                       <p className="text-[11.5px] text-[#666666] leading-snug mt-0.5">
@@ -416,7 +416,7 @@ export function FloatingSupportDock() {
                         className="w-full px-3 py-2 rounded-lg flex items-center justify-between text-left hover:bg-[#181818] transition-colors group"
                       >
                         <div className="flex items-center gap-2.5">
-                          <Icon className="size-4 text-[#777777] group-hover:text-primary transition-colors" />
+                          <Icon className="size-4 text-[#777777] group-hover:text-white transition-colors" />
                           <span className="text-[12.5px] text-white font-medium">{item.name}</span>
                         </div>
                         {item.tag && (
@@ -439,7 +439,7 @@ export function FloatingSupportDock() {
         <div className="fixed bottom-20 left-1/2 -translate-x-1/2 w-[92vw] max-w-md z-[90] rounded-xl border border-[#222222] bg-[#111111] shadow-2xl p-5 space-y-4 animate-in zoom-in-95 fade-in duration-150">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <IconBulb className="size-4 text-primary" />
+              <IconBulb className="size-4 text-muted-foreground" />
               <h3 className="text-sm font-semibold text-white">Share Feedback</h3>
             </div>
             <button

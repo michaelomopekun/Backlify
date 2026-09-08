@@ -75,7 +75,7 @@ export function ProjectHeader({
               <IconSelector className="size-3 text-muted-foreground shrink-0" />
             </div>
             <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground font-mono">
-              <IconGitBranch className="size-3 text-amber-400" />
+              <IconGitBranch className="size-3 text-muted-foreground" />
               <span>main</span>
             </div>
           </div>
@@ -91,7 +91,7 @@ export function ProjectHeader({
             <IconPlugConnected className="size-4" />
           </button>
 
-          <div className="size-7 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shrink-0">
+          <div className="size-7 rounded-full bg-[#1f1f1f] border border-[#2a2a2a] text-foreground text-xs font-medium flex items-center justify-center shrink-0">
             {userInitials}
           </div>
 

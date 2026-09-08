@@ -203,7 +203,7 @@ export function JobTelemetryDrawer({
         <div className="px-5 py-4 border-b border-[#1b1b1b] flex items-center justify-between shrink-0 bg-[#0e0e0e]">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <IconTerminal2 className="size-4 text-primary shrink-0" />
+              <IconTerminal2 className="size-4 text-muted-foreground shrink-0" />
               <h2 className="text-[14px] font-semibold text-white truncate">
                 {title || `${jobType.toUpperCase()} Execution Console`}
               </h2>
@@ -231,7 +231,7 @@ export function JobTelemetryDrawer({
                   Live Streaming Telemetry (Worker Active)
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1.5 text-amber-400">
+                <span className="inline-flex items-center gap-1.5 text-muted-foreground">
                   <IconLoader2 className="size-3 animate-spin" />
                   Connecting to telemetry buffer…
                 </span>
@@ -292,7 +292,7 @@ export function JobTelemetryDrawer({
                       : isPast
                       ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-400"
                       : isCurrent
-                      ? "border-primary/50 bg-primary/10 text-primary font-medium"
+                      ? "border-foreground/30 bg-muted/40 text-foreground font-medium"
                       : "border-[#1c1c1c] bg-[#101010] text-[#555555]"
                   }`}
                 >
@@ -300,7 +300,7 @@ export function JobTelemetryDrawer({
                   {isPast ? (
                     <IconCheck className="size-3 text-emerald-400 shrink-0 ml-1" />
                   ) : isCurrent ? (
-                    <IconLoader2 className="size-3 text-primary animate-spin shrink-0 ml-1" />
+                    <IconLoader2 className="size-3 text-foreground animate-spin shrink-0 ml-1" />
                   ) : null}
                 </div>
               );
@@ -316,7 +316,7 @@ export function JobTelemetryDrawer({
         >
           {logs.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center text-[#555555] py-12 space-y-3">
-              <IconLoader2 className="size-6 animate-spin text-primary/70" />
+              <IconLoader2 className="size-6 animate-spin text-muted-foreground" />
               <div>
                 <p className="text-white text-[13px] font-medium">
                   Awaiting worker task telemetry…
@@ -394,7 +394,7 @@ export function JobTelemetryDrawer({
               <button
                 type="button"
                 onClick={() => setAutoScroll(true)}
-                className="flex items-center gap-1 text-primary hover:underline"
+                className="flex items-center gap-1 text-muted-foreground hover:text-foreground hover:underline"
               >
                 <IconArrowDown className="size-3" /> Auto-scroll paused
               </button>

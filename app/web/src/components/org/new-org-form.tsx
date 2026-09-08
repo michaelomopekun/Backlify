@@ -64,7 +64,7 @@ export function NewOrgForm() {
           <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-start">
             <div>
               <label htmlFor="org-name" className="text-xs font-medium text-foreground block">
-                Name <span className="text-primary">*</span>
+                Name <span className="text-muted-foreground">*</span>
               </label>
               <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
                 What&apos;s the name of your company or team?
@@ -80,7 +80,7 @@ export function NewOrgForm() {
                 placeholder="e.g. Acme Corporation"
                 required
                 disabled={isSubmitting}
-                className="bg-muted/30 border-border text-sm h-9 focus-visible:ring-primary"
+                className="bg-muted/30 border-border text-sm h-9"
               />
               <p className="text-[11px] text-muted-foreground">
                 You can change this later in organization settings.

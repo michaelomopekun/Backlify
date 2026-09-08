@@ -154,7 +154,7 @@ export function NewProjectForm({ orgId, orgName }: Props) {
           <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-start">
             <div>
               <label htmlFor="project-name" className="text-xs font-medium text-foreground block">
-                Name <span className="text-primary">*</span>
+                Name <span className="text-muted-foreground">*</span>
               </label>
               <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
                 What&apos;s the name of your project or database cluster?
@@ -169,7 +169,7 @@ export function NewProjectForm({ orgId, orgName }: Props) {
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Production Analytics Database"
                 required
-                className="bg-muted/30 border-border text-sm h-9 focus-visible:ring-primary"
+                className="bg-muted/30 border-border text-sm h-9"
               />
               <p className="text-[11px] text-muted-foreground">
                 You can change this anytime in project settings.
@@ -181,7 +181,7 @@ export function NewProjectForm({ orgId, orgName }: Props) {
           <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-start">
             <div>
               <label htmlFor="db-url" className="text-xs font-medium text-foreground block">
-                PostgreSQL URI <span className="text-primary">*</span>
+                PostgreSQL URI <span className="text-muted-foreground">*</span>
               </label>
               <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
                 Direct connection URI for automated backups.
@@ -198,7 +198,7 @@ export function NewProjectForm({ orgId, orgName }: Props) {
                   onChange={(e) => setDatabaseUrl(e.target.value)}
                   placeholder="postgresql://postgres:password@db.supabase.co:5432/postgres?sslmode=require"
                   required
-                  className="bg-muted/30 border-border font-mono text-xs h-9 pr-9 focus-visible:ring-primary"
+                  className="bg-muted/30 border-border font-mono text-xs h-9 pr-9"
                 />
                 <button
                   type="button"
@@ -218,7 +218,7 @@ export function NewProjectForm({ orgId, orgName }: Props) {
                   type="button"
                   onClick={handleTestConnection}
                   disabled={isTesting || !databaseUrl}
-                  className="text-[11px] font-medium text-primary hover:underline flex items-center gap-1 disabled:opacity-50 disabled:no-underline"
+                  className="text-[11.5px] font-medium text-muted-foreground hover:text-foreground flex items-center gap-1.5 transition-colors disabled:opacity-40 disabled:no-underline cursor-pointer"
                 >
                   {isTesting ? (
                     <>

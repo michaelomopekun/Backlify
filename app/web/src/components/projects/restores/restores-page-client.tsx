@@ -154,7 +154,7 @@ function PitrScrubber({
             style={{ left: `${percent}%` }}
           >
             {/* Floating Live Scrubber Bubble */}
-            <div className="absolute -top-8 flex items-center px-2.5 py-1 rounded-md bg-card border border-border text-primary text-xs font-medium shadow-md whitespace-nowrap">
+            <div className="absolute -top-8 flex items-center px-2.5 py-1 rounded-md bg-card border border-border text-foreground text-xs font-medium shadow-md whitespace-nowrap">
               <span>{current.day} {current.time.split(" ")[0]}</span>
             </div>
 
@@ -202,7 +202,7 @@ function PitrScrubber({
                     showOnMobile ? "block" : "hidden sm:block"
                   } ${
                     isSelected
-                      ? "text-primary font-semibold"
+                      ? "text-foreground font-semibold"
                       : "text-muted-foreground group-hover:text-foreground/60"
                   }`}
                 >
@@ -219,7 +219,7 @@ function PitrScrubber({
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs">
           <span className="size-2 rounded-full bg-emerald-400 shrink-0 shadow-[0_0_6px_rgba(52,211,153,0.8)]" />
           <span className="text-foreground font-medium">
-            <span className="text-primary font-semibold">{current.date} · {current.time}</span> ({current.size})
+            <span className="text-foreground font-semibold">{current.date} · {current.time}</span> ({current.size})
           </span>
           <span className="text-muted-foreground/40 hidden sm:inline">·</span>
           <code className="font-mono text-xs font-medium text-foreground/90 bg-muted/60 border border-border/50 px-2 py-0.5 rounded">
@@ -622,14 +622,14 @@ function RestoreWizardDrawer({
                   <Card
                     className={`cursor-pointer transition-all ${
                       mode === "drill"
-                        ? "ring-1 ring-primary bg-primary/5"
-                        : "hover:ring-foreground/20"
+                        ? "border border-[#383838] bg-[#161616]"
+                        : "hover:border-border"
                     }`}
                     onClick={() => setMode("drill")}
                   >
                     <CardContent className="py-3.5">
                       <div className="flex items-center gap-2 mb-1">
-                        <IconShieldCheck className={`size-4 ${mode === "drill" ? "text-primary" : "text-muted-foreground"}`} />
+                        <IconShieldCheck className={`size-4 ${mode === "drill" ? "text-foreground" : "text-muted-foreground"}`} />
                         <span className="text-[13px] font-medium text-foreground">DR Drill (Dry Run)</span>
                       </div>
                       <p className="text-[11px] text-muted-foreground leading-tight">
@@ -641,14 +641,14 @@ function RestoreWizardDrawer({
                   <Card
                     className={`cursor-pointer transition-all ${
                       mode === "restore"
-                        ? "ring-1 ring-primary bg-primary/5"
-                        : "hover:ring-foreground/20"
+                        ? "border border-[#383838] bg-[#161616]"
+                        : "hover:border-border"
                     }`}
                     onClick={() => setMode("restore")}
                   >
                     <CardContent className="py-3.5">
                       <div className="flex items-center gap-2 mb-1">
-                        <IconDatabase className={`size-4 ${mode === "restore" ? "text-primary" : "text-muted-foreground"}`} />
+                        <IconDatabase className={`size-4 ${mode === "restore" ? "text-foreground" : "text-muted-foreground"}`} />
                         <span className="text-[13px] font-medium text-foreground">Target DB Restore</span>
                       </div>
                       <p className="text-[11px] text-muted-foreground leading-tight">
@@ -885,7 +885,7 @@ export function RestoresPageClient({
           label="Recovery Point (RPO)"
           value={recoveryPoints.length > 0 ? recoveryPoints[recoveryPoints.length - 1].time : "—"}
           sub={recoveryPoints.length > 0 ? `Latest: ${recoveryPoints[recoveryPoints.length - 1].snapshotId}` : "No completed backups yet"}
-          accent="text-amber-400"
+          accent="text-muted-foreground"
         />
         <StatCard
           icon={IconBolt}
@@ -944,9 +944,9 @@ export function RestoresPageClient({
             <p className="text-sm text-muted-foreground">No restore drills or recovery events recorded</p>
             <Button
               onClick={handleOpenDrill}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold h-9 px-4"
+              className="inline-flex items-center gap-1.5 h-8.5 px-4 rounded-md bg-[#161616] border border-[#2a2a2a] hover:bg-[#202020] text-white text-xs font-medium transition-colors shadow-xs"
             >
-              <IconShieldCheck className="size-4 mr-1.5" />
+              <IconShieldCheck className="size-4 mr-1" />
               Run Disaster Recovery Drill
             </Button>
           </div>
