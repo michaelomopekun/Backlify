@@ -16,7 +16,8 @@ import { getCurrentUser } from "@/lib/current-user";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { OrgSidebar } from "@/components/layout/app-sidebar";
 import { OrgPickerClientActions } from "@/components/layout/org-picker-client-actions";
-import { Boxes } from "lucide-react";
+import { Boxes, Box } from "lucide-react";
+import { EmptyState } from "@/components/shared/empty-state";
 
 export const dynamic = "force-dynamic";
 
@@ -161,7 +162,7 @@ export default async function OrgProjectsPage({ params }: Props) {
 
                     <Link
                       href={`/dashboard/project/new?orgId=${orgId}`}
-                      className="flex items-center gap-1.5 h-8 px-3 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-[12px] transition-colors shadow-xs"
+                      className="flex items-center gap-1.5 h-8 px-3 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-[12px] transition-colors shadow-xs"
                     >
                       <IconPlus className="size-3.5 stroke-[2.5]" />
                       <span>New project</span>
@@ -172,38 +173,21 @@ export default async function OrgProjectsPage({ params }: Props) {
                 {/* Projects Grid (3-column layout) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 pt-1">
                   {displayProjects.length === 0 ? (
-                    /* Supabase styled empty projects dashed card */
-                    <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-dashed border-[#222222] bg-[#111111]/40 py-16 sm:py-20 px-6 text-center shadow-xs">
-                      <div className="size-10 rounded-lg border border-[#262626] bg-[#161616] flex items-center justify-center mb-4 text-[#888888] shadow-xs">
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="1.6"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="size-5 text-[#aaaaaa]"
+                    <EmptyState
+                      className="col-span-full border-[#222222] bg-[#111111]/40"
+                      icon={Box}
+                      title="Create a project"
+                      description="Launch a complete backend built on Postgres."
+                      action={
+                        <Link
+                          href={`/dashboard/project/new?orgId=${orgId}`}
+                          className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-medium transition-colors shadow-xs"
                         >
-                          <path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" />
-                          <path d="M12 12l8-4.5" />
-                          <path d="M12 12v9" />
-                          <path d="M12 12L4 7.5" />
-                        </svg>
-                      </div>
-                      <h3 className="text-base font-medium text-white mb-1">Create a project</h3>
-                      <p className="text-xs sm:text-sm text-[#777777] max-w-sm mb-5">
-                        Launch a complete backend built on Postgres.
-                      </p>
-                      <Link
-                        href={`/dashboard/project/new?orgId=${orgId}`}
-                        className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-md bg-[#161616] border border-[#2a2a2a] hover:bg-[#202020] text-white text-xs font-medium transition-colors shadow-xs"
-                      >
-                        <IconPlus className="size-3.5 stroke-[2.5]" />
-                        <span>New project</span>
-                      </Link>
-                    </div>
+                          <IconPlus className="size-3.5 stroke-[2.5]" />
+                          <span>New project</span>
+                        </Link>
+                      }
+                    />
                   ) : (
                     displayProjects.map((p) => {
                       let dbHost = "PostgreSQL";
@@ -255,7 +239,7 @@ export default async function OrgProjectsPage({ params }: Props) {
                     </div>
                     <Link
                       href={`/dashboard/org/${orgId}`}
-                      className="flex items-center h-7 px-2.5 rounded-md bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-[11px] transition-colors"
+                      className="flex items-center h-7 px-2.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 font-medium text-[11px] transition-colors shadow-xs"
                     >
                       Upgrade
                     </Link>

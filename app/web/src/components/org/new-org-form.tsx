@@ -154,7 +154,7 @@ export function NewOrgForm() {
             type="submit"
             size="sm"
             disabled={isSubmitting}
-            className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
           >
             {isSubmitting ? (
               <>
