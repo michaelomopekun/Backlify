@@ -62,7 +62,7 @@ export default async function SchedulesPage({
     <SchedulesPageClient
       orgId={orgId}
       projectId={projectId}
-      initialSchedules={initialSchedules.length > 0 ? initialSchedules : undefined}
+      initialSchedules={initialSchedules}
     />
   );
 }

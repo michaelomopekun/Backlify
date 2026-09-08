@@ -61,64 +61,6 @@ interface Schedule {
   totalRuns: number;
 }
 
-const MOCK_SCHEDULES: Schedule[] = [
-  {
-    id: "sch-001",
-    name: "Daily Production Snapshot",
-    cron: "0 14 * * *",
-    humanReadable: "Every day at 14:00 UTC",
-    status: "active",
-    nextRunUtc: "14:00",
-    nextRunLabel: "in 2h 14m",
-    lastRunLabel: "Aug 26 · 14:00 UTC",
-    lastRunOk: true,
-    retentionDays: 7,
-    avgDurationSec: 71,
-    totalRuns: 42,
-  },
-  {
-    id: "sch-002",
-    name: "Nightly Full Backup",
-    cron: "0 2 * * *",
-    humanReadable: "Every day at 02:00 UTC",
-    status: "active",
-    nextRunUtc: "02:00",
-    nextRunLabel: "in 14h 22m",
-    lastRunLabel: "Aug 27 · 02:00 UTC",
-    lastRunOk: true,
-    retentionDays: 30,
-    avgDurationSec: 134,
-    totalRuns: 28,
-  },
-  {
-    id: "sch-003",
-    name: "Weekly Long-term Archive",
-    cron: "0 0 * * 0",
-    humanReadable: "Every Sunday at 00:00 UTC",
-    status: "failing",
-    nextRunUtc: "00:00",
-    nextRunLabel: "in 6d 20h",
-    lastRunLabel: "Aug 18 · 00:00 UTC",
-    lastRunOk: false,
-    retentionDays: 90,
-    avgDurationSec: 198,
-    totalRuns: 6,
-  },
-  {
-    id: "sch-004",
-    name: "Hourly WAL Checkpoint",
-    cron: "0 * * * *",
-    humanReadable: "Every hour",
-    status: "paused",
-    nextRunUtc: "11:00",
-    nextRunLabel: "Paused",
-    lastRunLabel: "Aug 25 · 10:00 UTC",
-    lastRunOk: true,
-    retentionDays: 1,
-    avgDurationSec: 22,
-    totalRuns: 120,
-  },
-];
 
 // Timeline marks: each schedule's fire time as a fraction of 24h
 const TIMELINE_HOURS = Array.from({ length: 25 }, (_, i) => i); // 0..24
@@ -145,8 +87,11 @@ function fmtDuration(sec: number) {
 
 function TimelineRail({ schedules }: { schedules: Schedule[] }) {
   const active = schedules.filter((s) => s.status !== "paused");
-  // Current time mock: 11:46 UTC
-  const nowPercent = ((11 * 60 + 46) / (24 * 60)) * 100;
+  const now = new Date();
+  const utcHours = now.getUTCHours();
+  const utcMinutes = now.getUTCMinutes();
+  const nowPercent = ((utcHours * 60 + utcMinutes) / (24 * 60)) * 100;
+  const nowLabel = `${String(utcHours).padStart(2, "0")}:${String(utcMinutes).padStart(2, "0")} UTC`;
 
   return (
     <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
@@ -158,7 +103,7 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
           </CardDescription>
         </div>
         <span className="text-xs font-medium text-muted-foreground bg-muted/40 border border-border/60 rounded-md px-3 py-1 self-start sm:self-auto">
-          Now: 11:46 UTC
+          Now: {nowLabel}
         </span>
       </CardHeader>
 
@@ -681,7 +626,7 @@ export function SchedulesPageClient({
         totalRuns: 42,
       }));
     }
-    return MOCK_SCHEDULES;
+    return [];
   });
 
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -794,7 +739,7 @@ export function SchedulesPageClient({
           icon={IconClock}
           label="Next Run In"
           value={nextRun}
-          sub="Daily Production Snapshot"
+          sub={schedules.find((s) => s.status === "active")?.name ?? "No active schedule"}
           accent="text-amber-400"
         />
         <StatCard

@@ -43,6 +43,7 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useWidgetOrder } from "@/hooks/use-widget-order";
+import { formatBytes, formatRelativeTime } from "@/lib/format";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Data
@@ -52,6 +53,20 @@ interface StatusItem {
   name: string;
   status: string;
   detail: string;
+}
+
+export interface ProjectOverviewProps {
+  project: {
+    id: string;
+    name: string;
+    databaseUrl: string;
+    orgId?: string | null;
+    retentionCount?: number | null;
+  };
+  schedules?: any[];
+  backupJobs?: any[];
+  orgId: string;
+  projectId: string;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -129,16 +144,18 @@ const WidgetDragContext = React.createContext<{
 ───────────────────────────────────────────────────────────────────────────── */
 
 function TopPanelContent({
-  projectName,
-  databaseUrl,
+  project,
+  schedules = [],
+  backupJobs = [],
   orgId,
   projectId,
   copied,
   maskedUrl,
   onCopy,
 }: {
-  projectName: string;
-  databaseUrl: string;
+  project: ProjectOverviewProps["project"];
+  schedules?: any[];
+  backupJobs?: any[];
   orgId: string;
   projectId: string;
   copied: boolean;
@@ -146,6 +163,60 @@ function TopPanelContent({
   onCopy: () => void;
 }) {
   const { activatorRef, listeners } = React.useContext(WidgetDragContext);
+
+  const completedBackups = backupJobs.filter((j) => j.status === "completed");
+  const failedBackups = backupJobs.filter((j) => j.status === "failed");
+  const activeSchedules = schedules.filter((s) => s.isActive);
+  const latestJob = backupJobs.length > 0 ? backupJobs[0] : null;
+  const lastCompletedBackup = completedBackups.length > 0 ? completedBackups[0] : null;
+
+  let dbHost = "—";
+  let dbName = "—";
+  if (project.databaseUrl) {
+    try {
+      const parsed = new URL(project.databaseUrl);
+      dbHost = parsed.host || "—";
+      dbName = parsed.pathname.replace(/^\//, "") || "postgres";
+    } catch {}
+  }
+
+  const isFailing = latestJob?.status === "failed";
+  const isRunning = latestJob && ["pending", "queued", "in_progress", "uploading"].includes(latestJob.status);
+  const statusLabel = isFailing ? "Degraded" : isRunning ? "Running" : completedBackups.length > 0 ? "Healthy" : "Standby";
+
+  let lastBackupLabel = "No backups yet";
+  if (lastCompletedBackup) {
+    const timeAgo = formatRelativeTime(lastCompletedBackup.completedAt || lastCompletedBackup.createdAt);
+    const size = formatBytes(lastCompletedBackup.fileSize || 0);
+    lastBackupLabel = `${timeAgo} · ${size}`;
+  }
+
+  const activeScheduleLabel = activeSchedules.length > 0
+    ? (activeSchedules[0].cronExpression || "Configured")
+    : "No active schedule";
+
+  const dynamicStatusList: StatusItem[] = [
+    {
+      name: "PostgreSQL Database",
+      status: project.databaseUrl ? "Connected" : "Missing",
+      detail: project.databaseUrl ? `Host: ${dbHost}` : "Database URL not configured",
+    },
+    {
+      name: "Backup Schedules",
+      status: activeSchedules.length > 0 ? "Active" : "Idle",
+      detail: activeSchedules.length > 0 ? `${activeSchedules.length} active schedule(s)` : "No automated schedule configured",
+    },
+    {
+      name: "Snapshots Vault",
+      status: completedBackups.length > 0 ? "Healthy" : "Empty",
+      detail: completedBackups.length > 0 ? `${completedBackups.length} snapshot(s) stored` : "No backups created yet",
+    },
+    {
+      name: "Backup Worker Queue",
+      status: isRunning ? "Processing" : "Standby",
+      detail: isRunning ? "Job actively executing" : "0 queued · Standby",
+    },
+  ];
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 lg:gap-14 items-start">
@@ -163,7 +234,7 @@ function TopPanelContent({
         {/* Title & Connection Header */}
         <div>
           <h1 className="text-2xl sm:text-[32px] font-semibold tracking-tight text-foreground font-sans">
-            {projectName}
+            {project.name || "Untitled Project"}
           </h1>
 
           <div className="mt-2.5 flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-mono">
@@ -171,50 +242,46 @@ function TopPanelContent({
               {maskedUrl}
             </span>
 
-            <DropdownMenu>
-              <div className="inline-flex rounded border border-[#2a2a2a] bg-[#161616] overflow-hidden">
-                <button
-                  type="button"
-                  onClick={onCopy}
-                  className="flex items-center gap-1.5 px-2.5 py-0.5 text-xs text-[#999999] hover:text-white transition-colors font-sans"
-                >
-                  {copied ? (
-                    <>
-                      <IconCheck className="size-3.5 text-emerald-400" />
-                      <span className="text-emerald-400">Copied</span>
-                    </>
-                  ) : (
-                    <span>Copy</span>
-                  )}
-                </button>
-                <DropdownMenuTrigger asChild>
+            {project.databaseUrl ? (
+              <DropdownMenu>
+                <div className="inline-flex rounded border border-[#2a2a2a] bg-[#161616] overflow-hidden">
                   <button
                     type="button"
-                    className="px-1.5 py-0.5 border-l border-[#2a2a2a] hover:bg-[#222222] text-[#888888] hover:text-white"
+                    onClick={onCopy}
+                    className="flex items-center gap-1.5 px-2.5 py-0.5 text-xs text-[#999999] hover:text-white transition-colors font-sans"
                   >
-                    <IconChevronDown className="size-3" />
+                    {copied ? (
+                      <>
+                        <IconCheck className="size-3.5 text-emerald-400" />
+                        <span className="text-emerald-400">Copied</span>
+                      </>
+                    ) : (
+                      <span>Copy</span>
+                    )}
                   </button>
-                </DropdownMenuTrigger>
-              </div>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="px-1.5 py-0.5 border-l border-[#2a2a2a] hover:bg-[#222222] text-[#888888] hover:text-white"
+                    >
+                      <IconChevronDown className="size-3" />
+                    </button>
+                  </DropdownMenuTrigger>
+                </div>
 
-              <DropdownMenuContent align="start" className="w-60 border-border bg-popover text-xs">
-                <DropdownMenuItem onClick={onCopy} className="cursor-pointer">
-                  Copy Project URL
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => navigator.clipboard.writeText(databaseUrl || maskedUrl)}
-                  className="cursor-pointer"
-                >
-                  Copy Connection String (URI)
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => navigator.clipboard.writeText(`psql "${databaseUrl || maskedUrl}"`)}
-                  className="cursor-pointer"
-                >
-                  Copy psql CLI Command
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                <DropdownMenuContent align="start" className="w-60 border-border bg-popover text-xs">
+                  <DropdownMenuItem onClick={onCopy} className="cursor-pointer">
+                    Copy Connection String (URI)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => navigator.clipboard.writeText(`psql "${project.databaseUrl}"`)}
+                    className="cursor-pointer"
+                  >
+                    Copy psql CLI Command
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
           </div>
         </div>
 
@@ -227,13 +294,18 @@ function TopPanelContent({
                 <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0 group-hover/metric:border-[#383838] transition-colors">
                   <div className="grid grid-cols-3 gap-1">
                     {[...Array(6)].map((_, i) => (
-                      <div key={i} className="size-[5px] sm:size-[6px] rounded-full bg-emerald-400" />
+                      <div
+                        key={i}
+                        className={`size-[5px] sm:size-[6px] rounded-full ${
+                          isFailing ? "bg-red-400" : isRunning ? "bg-amber-400 animate-pulse" : completedBackups.length > 0 ? "bg-emerald-400" : "bg-zinc-500"
+                        }`}
+                      />
                     ))}
                   </div>
                 </div>
                 <div>
                   <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">STATUS</p>
-                  <p className="text-base sm:text-[17px] font-normal text-white">Healthy</p>
+                  <p className="text-base sm:text-[17px] font-normal text-white">{statusLabel}</p>
                 </div>
               </div>
             </DropdownMenuTrigger>
@@ -245,7 +317,7 @@ function TopPanelContent({
                 </Link>
               </div>
               <div className="space-y-2 pt-1">
-                {statusList.map((item) => (
+                {dynamicStatusList.map((item) => (
                   <div key={item.name} className="flex items-start gap-2 text-xs">
                     <IconCircleCheck className="size-4 text-emerald-400 shrink-0 mt-0.5" />
                     <div>
@@ -266,8 +338,12 @@ function TopPanelContent({
             <div>
               <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">RETENTION</p>
               <div className="flex items-center gap-2">
-                <p className="text-base sm:text-[17px] font-normal text-white">7 Snapshots</p>
-                <span className="text-[9px] sm:text-[9.5px] uppercase font-mono px-1.5 py-0.2 rounded bg-[#202020] text-[#999999] border border-[#2e2e2e]">FIFO</span>
+                <p className="text-base sm:text-[17px] font-normal text-white">
+                  {project.retentionCount != null ? `${project.retentionCount} Snapshots` : "—"}
+                </p>
+                {project.retentionCount != null && (
+                  <span className="text-[9px] sm:text-[9.5px] uppercase font-mono px-1.5 py-0.2 rounded bg-[#202020] text-[#999999] border border-[#2e2e2e]">FIFO</span>
+                )}
               </div>
             </div>
           </div>
@@ -279,7 +355,9 @@ function TopPanelContent({
             </div>
             <div>
               <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">STORAGE VAULT</p>
-              <p className="text-base sm:text-[17px] font-normal text-white">AES-256 S3</p>
+              <p className="text-base sm:text-[17px] font-normal text-white">
+                {completedBackups.length > 0 ? "AES-256 S3" : "—"}
+              </p>
             </div>
           </div>
 
@@ -290,7 +368,7 @@ function TopPanelContent({
             </div>
             <div>
               <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">ACTIVE SCHEDULE</p>
-              <p className="text-base sm:text-[17px] font-normal text-white">Daily @ 14:00 UTC</p>
+              <p className="text-base sm:text-[17px] font-normal text-white">{activeScheduleLabel}</p>
             </div>
           </div>
 
@@ -301,7 +379,7 @@ function TopPanelContent({
             </div>
             <div>
               <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">LAST BACKUP</p>
-              <p className="text-base sm:text-[17px] font-normal text-white">2h ago · 142 MB</p>
+              <p className="text-base sm:text-[17px] font-normal text-white">{lastBackupLabel}</p>
             </div>
           </div>
 
@@ -312,7 +390,9 @@ function TopPanelContent({
             </div>
             <div>
               <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">RESTORE READINESS</p>
-              <p className="text-base sm:text-[17px] font-normal text-white">Verified</p>
+              <p className="text-base sm:text-[17px] font-normal text-white">
+                {completedBackups.length > 0 ? "Verified" : "—"}
+              </p>
             </div>
           </div>
         </div>
@@ -344,18 +424,23 @@ function TopPanelContent({
                   </div>
                   <div>
                     <p className="text-[13px] font-medium text-foreground">Primary Database</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">Central EU (Frankfurt)</p>
-                    <p className="text-[11px] text-muted-foreground font-mono mt-0.5">eu-central-1 · Postgres 16</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 truncate max-w-[190px]" title={dbHost}>
+                      {dbHost !== "—" ? dbHost : "Database Host"}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground font-mono mt-0.5">
+                      {dbName !== "—" ? dbName : "PostgreSQL"}
+                    </p>
                   </div>
                 </div>
-                <span className="text-sm select-none">🇩🇪</span>
+                <Badge variant="outline" className="text-[10px] font-mono text-emerald-400 border-emerald-500/30">
+                  {project.databaseUrl ? "ONLINE" : "OFFLINE"}
+                </Badge>
               </div>
             </CardContent>
             <CardFooter className="flex items-center justify-between text-[10.5px] text-muted-foreground font-mono">
-              <Badge variant="outline" className="text-[10px] font-mono">CPU 2%</Badge>
-              <Badge variant="outline" className="text-[10px] font-mono">Disk 3%</Badge>
-              <Badge variant="outline" className="text-[10px] font-mono">RAM 43%</Badge>
-              <Badge variant="outline" className="text-[10px] font-mono">5/60 conns</Badge>
+              <Badge variant="outline" className="text-[10px] font-mono">{completedBackups.length} Snapshots</Badge>
+              <Badge variant="outline" className="text-[10px] font-mono">{activeSchedules.length} Schedules</Badge>
+              <Badge variant="outline" className="text-[10px] font-mono">{project.retentionCount ? `Retention: ${project.retentionCount}` : "Retention: —"}</Badge>
             </CardFooter>
           </Card>
         </div>
@@ -369,8 +454,25 @@ function TopPanelContent({
    TelemetryPanel widget content
 ───────────────────────────────────────────────────────────────────────────── */
 
-function TelemetryPanelContent() {
+function TelemetryPanelContent({
+  backupJobs = [],
+  schedules = [],
+}: {
+  backupJobs?: any[];
+  schedules?: any[];
+}) {
   const { activatorRef, listeners } = React.useContext(WidgetDragContext);
+
+  const completedBackups = backupJobs.filter((j) => j.status === "completed");
+  const manualBackups = backupJobs.filter((j) => j.id?.includes("manual") || j.jobType === "manual");
+  const scheduledBackups = backupJobs.filter((j) => !j.id?.includes("manual") && j.jobType !== "manual");
+  const scheduledErrors = scheduledBackups.filter((j) => j.status === "failed");
+  const manualErrors = manualBackups.filter((j) => j.status === "failed");
+
+  const totalBytes = completedBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+  const successRate = backupJobs.length > 0
+    ? `${((completedBackups.length / backupJobs.length) * 100).toFixed(1)}%`
+    : "—";
 
   return (
     <div className="space-y-4 pt-4">
@@ -386,13 +488,10 @@ function TelemetryPanelContent() {
             <GripHandle />
           </div>
           <div className="flex items-center gap-3.5 text-[15px] text-white">
-            <span className="font-normal">18 Total Backup Operations</span>
-            <span className="font-normal">100.0% Success Rate</span>
+            <span className="font-normal">{backupJobs.length} Total Backup Operation{backupJobs.length === 1 ? "" : "s"}</span>
+            <span className="font-normal">{successRate} Success Rate</span>
           </div>
         </div>
-        <Button variant="outline" size="sm" className="h-7 text-xs border-[#262626] bg-[#161616] text-[#999999] hover:text-white">
-          Last 60 minutes ▾
-        </Button>
       </div>
 
       {/* 4 Telemetry Cards */}
@@ -403,22 +502,19 @@ function TelemetryPanelContent() {
             <div className="flex items-start justify-between">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">SCHEDULED BACKUPS</p>
               <div className="flex items-center gap-2.5 text-[10.5px] font-mono text-muted-foreground">
-                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-amber-400" />WARNINGS 0</Badge>
-                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-red-400" />ERRORS 0</Badge>
+                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-red-400" />ERRORS {scheduledErrors.length}</Badge>
               </div>
             </div>
           </CardHeader>
           <CardContent className="-mt-2">
-            <p className="text-2xl font-normal text-foreground tracking-tight">12</p>
+            <p className="text-2xl font-normal text-foreground tracking-tight">{scheduledBackups.length}</p>
           </CardContent>
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
-              {[15,30,45,20,60,80,50,75,90,85,100,40].map((h,i) => (
-                <div key={i} className="flex-1 rounded-t-[1px] bg-emerald-400 hover:bg-emerald-300 transition-colors" style={{ height:`${h}%` }} />
-              ))}
+            <div className="flex items-center justify-center h-16 border-b border-border pb-0.5 text-[11px] font-mono text-muted-foreground">
+              {scheduledBackups.length === 0 ? "No scheduled backups run" : `${scheduledBackups.length} scheduled execution(s)`}
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
-              <span>Aug 26, 5:29am</span><span>Aug 26, 6:29am</span>
+              <span>Status</span><span>{scheduledErrors.length > 0 ? "Errors detected" : "Operational"}</span>
             </div>
           </CardFooter>
         </Card>
@@ -429,22 +525,19 @@ function TelemetryPanelContent() {
             <div className="flex items-start justify-between">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">MANUAL TRIGGERS</p>
               <div className="flex items-center gap-2.5 text-[10.5px] font-mono text-muted-foreground">
-                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-amber-400" />WARNINGS 0</Badge>
-                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-red-400" />ERRORS 0</Badge>
+                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-red-400" />ERRORS {manualErrors.length}</Badge>
               </div>
             </div>
           </CardHeader>
           <CardContent className="-mt-2">
-            <p className="text-2xl font-normal text-foreground tracking-tight">6</p>
+            <p className="text-2xl font-normal text-foreground tracking-tight">{manualBackups.length}</p>
           </CardContent>
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
-              {[0,20,0,50,0,40,80,0,90,0,60,100].map((h,i) => (
-                <div key={i} className="flex-1 rounded-t-[1px] bg-primary hover:bg-primary/80 transition-colors" style={{ height:`${h||8}%`, opacity: h ? 1 : 0.15 }} />
-              ))}
+            <div className="flex items-center justify-center h-16 border-b border-border pb-0.5 text-[11px] font-mono text-muted-foreground">
+              {manualBackups.length === 0 ? "No manual backups triggered" : `${manualBackups.length} manual trigger(s)`}
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
-              <span>Aug 26, 5:29am</span><span>Aug 26, 6:29am</span>
+              <span>Activity</span><span>{manualBackups.length > 0 ? "Active" : "None"}</span>
             </div>
           </CardFooter>
         </Card>
@@ -458,39 +551,35 @@ function TelemetryPanelContent() {
             </div>
           </CardHeader>
           <CardContent className="-mt-2">
-            <p className="text-2xl font-normal text-foreground tracking-tight">2</p>
+            <p className="text-2xl font-normal text-foreground tracking-tight">0</p>
           </CardContent>
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
-              {[0,0,30,0,0,0,0,0,70,0,0,100].map((h,i) => (
-                <div key={i} className="flex-1 rounded-t-[1px] bg-blue-400 hover:bg-blue-300 transition-colors" style={{ height:`${h||8}%`, opacity: h ? 1 : 0.15 }} />
-              ))}
+            <div className="flex items-center justify-center h-16 border-b border-border pb-0.5 text-[11px] font-mono text-muted-foreground">
+              No restore drills recorded
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
-              <span>Aug 26, 5:29am</span><span>Aug 26, 6:29am</span>
+              <span>Standby</span><span>0 completed</span>
             </div>
           </CardFooter>
         </Card>
 
-        {/* Storage Throughput */}
+        {/* Total Storage Stored */}
         <Card className="flex flex-col justify-between h-48">
           <CardHeader className="pb-0">
             <div className="flex items-start justify-between">
-              <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">STORAGE THROUGHPUT</p>
-              <Badge variant="outline" className="text-[10px] font-mono text-emerald-400">48 MB/s</Badge>
+              <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">TOTAL STORAGE</p>
+              <Badge variant="outline" className="text-[10px] font-mono text-emerald-400">{completedBackups.length} Files</Badge>
             </div>
           </CardHeader>
           <CardContent className="-mt-2">
-            <p className="text-2xl font-normal text-foreground tracking-tight">1.2 GB</p>
+            <p className="text-2xl font-normal text-foreground tracking-tight">{formatBytes(totalBytes)}</p>
           </CardContent>
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
-              {[25,40,55,45,65,80,85,75,90,70,85,100].map((h,i) => (
-                <div key={i} className="flex-1 rounded-t-[1px] bg-emerald-400 hover:bg-emerald-300 transition-colors" style={{ height:`${h}%` }} />
-              ))}
+            <div className="flex items-center justify-center h-16 border-b border-border pb-0.5 text-[11px] font-mono text-muted-foreground">
+              {completedBackups.length === 0 ? "No storage consumed" : `${completedBackups.length} snapshot(s) encrypted`}
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
-              <span>Aug 26, 5:29am</span><span>Aug 26, 6:29am</span>
+              <span>Vault</span><span>Encrypted</span>
             </div>
           </CardFooter>
         </Card>
@@ -515,7 +604,7 @@ function DragOverlaySnapshot({ id }: { id: string }) {
   return (
     <div className="rounded-xl border border-emerald-500/30 bg-[#0e0e0e]/80 backdrop-blur-sm shadow-[0_32px_64px_rgba(0,0,0,0.7)] ring-1 ring-emerald-500/20 px-6 py-4 opacity-90 cursor-grabbing">
       <p className="text-[13px] text-[#888888] font-mono uppercase tracking-wider">Telemetry Panel</p>
-      <p className="text-sm text-white/60 mt-0.5">18 Total Backup Operations · Sparklines</p>
+      <p className="text-sm text-white/60 mt-0.5">Backup Operations · Metrics</p>
     </div>
   );
 }
@@ -528,26 +617,29 @@ import React from "react";
 ───────────────────────────────────────────────────────────────────────────── */
 
 export function ProjectOverviewHeader({
-  projectName,
-  databaseUrl,
+  project,
+  schedules = [],
+  backupJobs = [],
   orgId,
   projectId,
-}: {
-  projectName: string;
-  databaseUrl: string;
-  orgId: string;
-  projectId: string;
-}) {
+}: ProjectOverviewProps) {
   const [copied, setCopied] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
   const { order, updateOrder } = useWidgetOrder(projectId);
 
-  const maskedUrl = databaseUrl
-    ? databaseUrl.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:••••••••@")
-    : `https://${projectId.slice(0, 10)}.backlify.app`;
+  let maskedUrl = "—";
+  if (project?.databaseUrl) {
+    try {
+      const parsed = new URL(project.databaseUrl);
+      maskedUrl = `${parsed.protocol}//${parsed.username}:••••••••@${parsed.host}${parsed.pathname}`;
+    } catch {
+      maskedUrl = project.databaseUrl.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:••••••••@");
+    }
+  }
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(databaseUrl || maskedUrl);
+    if (!project?.databaseUrl) return;
+    navigator.clipboard.writeText(project.databaseUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -573,8 +665,9 @@ export function ProjectOverviewHeader({
   const widgetContent: Record<string, React.ReactNode> = {
     "top-panel": (
       <TopPanelContent
-        projectName={projectName}
-        databaseUrl={databaseUrl}
+        project={project}
+        schedules={schedules}
+        backupJobs={backupJobs}
         orgId={orgId}
         projectId={projectId}
         copied={copied}
@@ -582,7 +675,12 @@ export function ProjectOverviewHeader({
         onCopy={handleCopy}
       />
     ),
-    "telemetry-panel": <TelemetryPanelContent />,
+    "telemetry-panel": (
+      <TelemetryPanelContent
+        backupJobs={backupJobs}
+        schedules={schedules}
+      />
+    ),
   };
 
   return (

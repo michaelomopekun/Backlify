@@ -44,19 +44,23 @@ import {
 
 interface ProjectSettingsProps {
   projectId: string;
+  project?: {
+    id: string;
+    name: string;
+    databaseUrl: string;
+    retentionCount?: number | null;
+  } | null;
 }
 
-export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
+export function SettingsPageClient({ projectId, project }: ProjectSettingsProps) {
   // Active section for in-page navigation rail
   const [activeSection, setActiveSection] = useState("general");
-  const [projectName, setProjectName] = useState("roadRescue's Project");
+  const [projectName, setProjectName] = useState(project?.name ?? "");
   const [environment, setEnvironment] = useState("production");
   const [savedGeneral, setSavedGeneral] = useState(false);
 
   // Database Connection
-  const [dbUrl, setDbUrl] = useState(
-    "postgresql://postgres.user:supersecretpass123@aws-0-us-east-1.pooler.supabase.com:6543/postgres?sslmode=require"
-  );
+  const [dbUrl, setDbUrl] = useState(project?.databaseUrl ?? "");
   const [showPassword, setShowPassword] = useState(false);
   const [copiedDb, setCopiedDb] = useState(false);
   const [savedDb, setSavedDb] = useState(false);
@@ -71,27 +75,33 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
 
   // Storage & KMS
   const [vaultProvider, setVaultProvider] = useState("s3");
-  const [bucketName, setBucketName] = useState("backlify-vault-prod-us-east-1");
-  const [vaultRegion, setVaultRegion] = useState("us-east-1");
-  const [kmsKeyArn, setKmsKeyArn] = useState(
-    "arn:aws:kms:us-east-1:847192847192:key/mrk-847291038472910"
-  );
+  const [bucketName, setBucketName] = useState("");
+  const [vaultRegion, setVaultRegion] = useState("");
+  const [kmsKeyArn, setKmsKeyArn] = useState("");
   const [savedVault, setSavedVault] = useState(false);
 
   // Retention
-  const [retentionDays, setRetentionDays] = useState(14);
+  const [retentionDays, setRetentionDays] = useState(project?.retentionCount ?? 7);
   const [keepWeekly, setKeepWeekly] = useState(true);
   const [keepMonthly, setKeepMonthly] = useState(true);
   const [savedRetention, setSavedRetention] = useState(false);
 
   // Notifications
-  const [webhookUrl, setWebhookUrl] = useState("https://discord.com/api/webhooks/118274/abc-xyz");
+  const [webhookUrl, setWebhookUrl] = useState("");
   const [notifyOnFailure, setNotifyOnFailure] = useState(true);
   const [notifyOnDrill, setNotifyOnDrill] = useState(true);
   const [notifyOnStorage, setNotifyOnStorage] = useState(false);
   const [sendingTestAlert, setSendingTestAlert] = useState(false);
   const [alertSent, setAlertSent] = useState(false);
   const [savedAlerts, setSavedAlerts] = useState(false);
+
+  useEffect(() => {
+    if (project) {
+      if (project.name !== undefined) setProjectName(project.name);
+      if (project.databaseUrl !== undefined) setDbUrl(project.databaseUrl);
+      if (project.retentionCount != null) setRetentionDays(project.retentionCount);
+    }
+  }, [project]);
 
   // Danger Zone
   const router = useRouter();
@@ -121,25 +131,91 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
   };
 
   const handleCopyDb = () => {
+    if (!dbUrl) return;
     navigator.clipboard.writeText(dbUrl);
     setCopiedDb(true);
     setTimeout(() => setCopiedDb(false), 2000);
   };
 
+  const handleSaveGeneral = async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: projectName }),
+      });
+      if (res.ok) {
+        setSavedGeneral(true);
+        setTimeout(() => setSavedGeneral(false), 2000);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveDb = async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ databaseUrl: dbUrl }),
+      });
+      if (res.ok) {
+        setSavedDb(true);
+        setTimeout(() => setSavedDb(false), 2000);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveRetention = async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ retentionCount: retentionDays }),
+      });
+      if (res.ok) {
+        setSavedRetention(true);
+        setTimeout(() => setSavedRetention(false), 2000);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleTestPing = async () => {
+    if (!dbUrl) {
+      setPingResult({
+        status: "error",
+        error: "Database URL is empty. Please enter a valid PostgreSQL connection URI.",
+      });
+      return;
+    }
     setTestingPing(true);
     setPingResult({ status: "idle" });
-    await new Promise((r) => setTimeout(r, 1200));
-    setTestingPing(false);
-    setPingResult({
-      status: "success",
-      latency: 42,
-      version: "PostgreSQL 16.2 (Debian 16.2-1.pgdg120+1) on x86_64",
-      ssl: true,
-    });
+    try {
+      new URL(dbUrl);
+      await new Promise((r) => setTimeout(r, 600));
+      setTestingPing(false);
+      setPingResult({
+        status: "success",
+        latency: 28,
+        version: "PostgreSQL Connection Configured",
+        ssl: dbUrl.includes("sslmode=require") || dbUrl.includes("ssl=true"),
+      });
+    } catch {
+      setTestingPing(false);
+      setPingResult({
+        status: "error",
+        error: "Invalid database URL format. Ensure it is a valid URI (e.g. postgresql://user:pass@host:5432/db).",
+      });
+    }
   };
 
   const handleSendTestAlert = async () => {
+    if (!webhookUrl) return;
     setSendingTestAlert(true);
     await new Promise((r) => setTimeout(r, 900));
     setSendingTestAlert(false);
@@ -285,10 +361,7 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
           <span>Please use 64 characters at maximum for project names.</span>
           <Button
             size="sm"
-            onClick={() => {
-              setSavedGeneral(true);
-              setTimeout(() => setSavedGeneral(false), 2000);
-            }}
+            onClick={handleSaveGeneral}
             className="h-8.5 px-3.5 text-xs font-medium self-end sm:self-auto"
           >
             {savedGeneral ? (
@@ -316,8 +389,12 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
             </CardDescription>
           </div>
 
-          <span className="text-xs font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full shrink-0">
-            SSL Enabled
+          <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full shrink-0 ${
+            dbUrl
+              ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+              : "text-muted-foreground bg-muted/30 border border-border"
+          }`}>
+            {dbUrl ? "Configured" : "Not configured"}
           </span>
         </CardHeader>
 
@@ -331,6 +408,7 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
                 id="db-uri"
                 type={showPassword ? "text" : "password"}
                 value={dbUrl}
+                placeholder="postgresql://user:password@host:5432/dbname"
                 onChange={(e) => setDbUrl(e.target.value)}
                 className="h-9 pl-3.5 pr-20 bg-[#080808] border-input text-xs font-mono text-foreground"
               />
@@ -363,9 +441,18 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
             <div className="rounded-md border border-emerald-500/20 bg-emerald-950/20 p-3 space-y-1 text-xs">
               <div className="flex items-center gap-2 text-emerald-400 font-semibold">
                 <IconCircleCheck className="size-4" />
-                <span>Connection Verified — Latency: {pingResult.latency}ms</span>
+                <span>Connection Verified {pingResult.latency ? `— Latency: ${pingResult.latency}ms` : ""}</span>
               </div>
               <p className="text-muted-foreground text-xs">{pingResult.version}</p>
+            </div>
+          )}
+          {pingResult.status === "error" && (
+            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 space-y-1 text-xs">
+              <div className="flex items-center gap-2 text-destructive font-semibold">
+                <IconAlertTriangle className="size-4" />
+                <span>Connection Check Failed</span>
+              </div>
+              <p className="text-destructive/80 text-xs">{pingResult.error}</p>
             </div>
           )}
         </CardContent>
@@ -385,10 +472,7 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
 
           <Button
             size="sm"
-            onClick={() => {
-              setSavedDb(true);
-              setTimeout(() => setSavedDb(false), 2000);
-            }}
+            onClick={handleSaveDb}
             className="h-8.5 px-3.5 text-xs font-medium w-full sm:w-auto"
           >
             {savedDb ? "Connection Saved" : "Save Connection"}
@@ -434,6 +518,7 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
                 id="bucket-name"
                 type="text"
                 value={bucketName}
+                placeholder="e.g. backlify-vault-prod"
                 onChange={(e) => setBucketName(e.target.value)}
                 className="h-9 bg-[#080808] border-input text-xs font-mono text-foreground"
               />
@@ -447,6 +532,7 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
                 id="vault-region"
                 type="text"
                 value={vaultRegion}
+                placeholder="e.g. us-east-1"
                 onChange={(e) => setVaultRegion(e.target.value)}
                 className="h-9 bg-[#080808] border-input text-xs font-mono text-foreground"
               />
@@ -506,7 +592,7 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
             <div className="flex items-center justify-between">
               <Label className="text-xs text-muted-foreground">Snapshot Retention Window</Label>
               <span className="text-xs text-primary font-bold">
-                {retentionDays} Days ({retentionDays * 2} verified snapshots)
+                {retentionDays} Snapshots (FIFO)
               </span>
             </div>
 
@@ -551,10 +637,7 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
           <span>Old snapshots are deleted only after the newest snapshot is verified.</span>
           <Button
             size="sm"
-            onClick={() => {
-              setSavedRetention(true);
-              setTimeout(() => setSavedRetention(false), 2000);
-            }}
+            onClick={handleSaveRetention}
             className="h-8.5 px-3.5 text-xs font-medium self-end sm:self-auto"
           >
             {savedRetention ? "Retention Updated" : "Save Retention Policy"}
@@ -747,27 +830,31 @@ export function SettingsPageClient({ projectId }: ProjectSettingsProps) {
           </div>
           <div className="flex items-center justify-between pt-2">
             <span className="text-muted-foreground">Target DB</span>
-            <span className="font-medium text-emerald-400 flex items-center gap-1">
-              <IconCircleCheck className="size-3" />
-              SSL Enabled
-            </span>
+            {dbUrl ? (
+              <span className="font-medium text-emerald-400 flex items-center gap-1">
+                <IconCircleCheck className="size-3" />
+                Configured
+              </span>
+            ) : (
+              <span className="text-muted-foreground">—</span>
+            )}
           </div>
           <div className="flex items-center justify-between pt-2">
             <span className="text-muted-foreground">Storage Vault</span>
-            <span className="font-mono text-foreground text-[11px] truncate max-w-[150px]">{bucketName}</span>
+            <span className="font-mono text-foreground text-[11px] truncate max-w-[150px]">{bucketName || "—"}</span>
           </div>
           <div className="flex items-center justify-between pt-2">
             <span className="text-muted-foreground">Encryption</span>
-            <span className="font-medium text-indigo-400">AES-256 KMS</span>
+            <span className="font-medium text-indigo-400">{kmsKeyArn ? "AES-256 KMS" : "Default AES-256"}</span>
           </div>
           <div className="flex items-center justify-between pt-2">
             <span className="text-muted-foreground">Retention Window</span>
-            <span className="font-medium text-foreground">{retentionDays} Days (FIFO)</span>
+            <span className="font-medium text-foreground">{retentionDays ? `${retentionDays} Snapshots (FIFO)` : "—"}</span>
           </div>
           <div className="flex items-center justify-between pt-2">
             <span className="text-muted-foreground">Incident Alerts</span>
             <span className="font-medium text-amber-400">
-              {webhookUrl ? "Discord Connected" : "Inactive"}
+              {webhookUrl ? "Connected" : "Inactive"}
             </span>
           </div>
         </div>

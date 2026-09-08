@@ -10,19 +10,11 @@ export interface StorageSlice {
 }
 
 export function StorageDonut({ slices }: { slices?: StorageSlice[] }) {
-  // If actual slices are passed, calculate total and percentage; otherwise use Figma mock specs
-  const hasRealData = slices && slices.length > 0 && slices.some((s) => s.bytes > 0);
-
-  const usedBytes = hasRealData
-    ? slices.reduce((acc, s) => acc + s.bytes, 0)
-    : 600 * 1024 * 1024; // 600MB
-
-  const totalBytes = hasRealData
-    ? Math.max(usedBytes * 1.66, 1024 * 1024 * 1024) // total capacity baseline
-    : 1024 * 1024 * 1024; // 1GB
-
+  const hasRealData = slices && slices.length > 0;
+  const usedBytes = hasRealData ? slices.reduce((acc, s) => acc + (s.bytes || 0), 0) : 0;
+  const totalBytes = Math.max(usedBytes * 1.66, 1024 * 1024 * 1024); // baseline 1GB capacity
   const availableBytes = Math.max(totalBytes - usedBytes, 0);
-  const percentage = Math.round((usedBytes / totalBytes) * 100);
+  const percentage = totalBytes > 0 ? Math.round((usedBytes / totalBytes) * 100) : 0;
 
   const chartData = [
     { name: "Used", value: usedBytes, color: "#FFB31F" },

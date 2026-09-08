@@ -12,11 +12,9 @@ import { logger } from "shared/config/logger";
 
 
 const UpdateProjectInputSchema = z.object({
-
   name: z.string().min(1, "Name is required").max(255).optional(),
-
   databaseUrl: z.string().url("Invalid database URL format").optional(),
-
+  retentionCount: z.number().int().positive().optional(),
 });
 
 

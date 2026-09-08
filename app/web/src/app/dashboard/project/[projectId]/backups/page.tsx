@@ -59,7 +59,7 @@ export default async function BackupsPage({
     <BackupsPageClient
       orgId={orgId}
       projectId={projectId}
-      initialBackups={initialBackups.length > 0 ? initialBackups : undefined}
+      initialBackups={initialBackups}
     />
   );
 }

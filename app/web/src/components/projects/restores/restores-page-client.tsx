@@ -51,6 +51,15 @@ interface IntegrityCheck {
   details?: string;
 }
 
+export interface RecoveryPoint {
+  id: string;
+  day: string;
+  date: string;
+  time: string;
+  size: string;
+  snapshotId: string;
+}
+
 interface RestoreDrill {
   id: string;
   type: DrillType;
@@ -66,138 +75,46 @@ interface RestoreDrill {
   logs: string[];
 }
 
-const MOCK_DRILLS: RestoreDrill[] = [
-  {
-    id: "drill-104",
-    type: "automated_drill",
-    status: "passed",
-    targetDb: "ephemeral-sandbox-drill-104",
-    sourceSnapshot: "Daily Production Snapshot (bk-001)",
-    sourceTimestamp: "Aug 28 · 14:00 UTC",
-    executedAt: "Today at 04:00 UTC",
-    durationSec: 68,
-    sizeMb: 142,
-    initiatedBy: "Automated Cron Scheduler",
-    integrityChecks: [
-      { name: "Schema Parity", passed: true },
-      { name: "Row Counts", passed: true },
-      { name: "SHA-256", passed: true },
-      { name: "Foreign Keys", passed: true },
-    ],
-    logs: [
-      "[04:00:01 UTC] [INFO] Initiating automated disaster recovery drill #104",
-      "[04:00:02 UTC] [SANDBOX] Provisioning isolated PostgreSQL 16.3 instance on eu-central-1...",
-      "[04:00:06 UTC] [SANDBOX] Container ready: ephemeral-sandbox-drill-104",
-      "[04:00:08 UTC] [S3] Fetching snapshot bk-001 (142 MB, AES-256 encrypted)...",
-      "[04:00:11 UTC] [KMS] Decrypted payload with KMS key alias/backlify-prod-key",
-      "[04:00:14 UTC] [RESTORE] Executing pg_restore --clean --if-exists --no-owner...",
-      "[04:00:22 UTC] [RESTORE] Restoring table public.users (48,200 rows) ... [OK]",
-      "[04:00:30 UTC] [RESTORE] Restoring table public.transactions (182,410 rows) ... [OK]",
-      "[04:00:42 UTC] [INDEX] Rebuilding B-Tree & GIN indexes (42/42) ... [OK]",
-      "[04:00:52 UTC] [VERIFY] Running schema parity check against live production catalog...",
-      "[04:00:58 UTC] [VERIFY] Validating table row counts & sequences: 124,800 / 124,800 [MATCH]",
-      "[04:01:04 UTC] [VERIFY] SHA-256 block checksum comparison: e3b0c442... [MATCH]",
-      "[04:01:07 UTC] [TEARDOWN] Dropping ephemeral sandbox database cleanly...",
-      "[04:01:08 UTC] [SUCCESS] DR Drill passed in 1m 08s. RTO benchmark satisfied.",
-    ],
-  },
-  {
-    id: "drill-103",
-    type: "staging_clone",
-    status: "complete",
-    targetDb: "postgres://staging-clone.internal:5432/staging_db",
-    sourceSnapshot: "Pre-deploy Snapshot (bk-002)",
-    sourceTimestamp: "Aug 26 · 09:14 UTC",
-    executedAt: "Aug 26 at 18:30 UTC",
-    durationSec: 74,
-    sizeMb: 141,
-    initiatedBy: "michael@backlify.dev",
-    integrityChecks: [
-      { name: "Schema Parity", passed: true },
-      { name: "Row Counts", passed: true },
-      { name: "DB Online", passed: true },
-      { name: "Sequences", passed: true },
-    ],
-    logs: [
-      "[18:30:00 UTC] [INFO] Staging clone requested by user michael@backlify.dev",
-      "[18:30:05 UTC] [S3] Downloaded snapshot bk-002 from s3://backlify-vault-eu-central-1",
-      "[18:30:15 UTC] [RESTORE] Connecting to target database postgres://staging-clone.internal...",
-      "[18:30:30 UTC] [RESTORE] Streaming dump into staging database...",
-      "[18:31:05 UTC] [RESTORE] Schema and data restored successfully.",
-      "[18:31:14 UTC] [SUCCESS] Staging database clone complete in 1m 14s.",
-    ],
-  },
-  {
-    id: "drill-102",
-    type: "automated_drill",
-    status: "passed",
-    targetDb: "ephemeral-sandbox-drill-102",
-    sourceSnapshot: "Daily Production Snapshot (bk-003)",
-    sourceTimestamp: "Aug 25 · 14:00 UTC",
-    executedAt: "Aug 25 at 04:00 UTC",
-    durationSec: 65,
-    sizeMb: 139,
-    initiatedBy: "Automated Cron Scheduler",
-    integrityChecks: [
-      { name: "Schema Parity", passed: true },
-      { name: "Row Counts", passed: true },
-      { name: "SHA-256", passed: true },
-      { name: "Foreign Keys", passed: true },
-    ],
-    logs: [
-      "[04:00:00 UTC] [INFO] Daily automated disaster recovery drill #102 started",
-      "[04:00:05 UTC] [SANDBOX] Ephemeral container launched",
-      "[04:00:45 UTC] [RESTORE] Database restored into sandbox",
-      "[04:01:00 UTC] [VERIFY] Schema & Row counts verified",
-      "[04:01:05 UTC] [SUCCESS] Drill completed in 1m 05s.",
-    ],
-  },
-  {
-    id: "drill-101",
-    type: "live_restore",
-    status: "complete",
-    targetDb: "postgres://prod-recovery-mirror.internal:5432/main",
-    sourceSnapshot: "Hotfix Snapshot (bk-004)",
-    sourceTimestamp: "Aug 24 · 18:32 UTC",
-    executedAt: "Aug 24 at 19:10 UTC",
-    durationSec: 69,
-    sizeMb: 138,
-    initiatedBy: "michael@backlify.dev",
-    integrityChecks: [
-      { name: "Schema Parity", passed: true },
-      { name: "Row Counts", passed: true },
-      { name: "Tablespaces", passed: true },
-      { name: "Indexes", passed: true },
-    ],
-    logs: [
-      "[19:10:00 UTC] [INFO] Production recovery mirror restore triggered",
-      "[19:10:40 UTC] [RESTORE] pg_restore complete",
-      "[19:11:09 UTC] [SUCCESS] Recovery mirror ready in 1m 09s.",
-    ],
-  },
-];
-
-const PITR_POINTS = [
-  { id: "p1", day: "Mon", date: "Aug 24", time: "14:00 UTC", size: "137 MB", snapshotId: "bk-005" },
-  { id: "p2", day: "Mon", date: "Aug 24", time: "18:32 UTC", size: "138 MB", snapshotId: "bk-004" },
-  { id: "p3", day: "Tue", date: "Aug 25", time: "14:00 UTC", size: "139 MB", snapshotId: "bk-003" },
-  { id: "p4", day: "Wed", date: "Aug 26", time: "09:14 UTC", size: "141 MB", snapshotId: "bk-002" },
-  { id: "p5", day: "Wed", date: "Aug 26", time: "14:00 UTC", size: "142 MB", snapshotId: "bk-001" },
-  { id: "p6", day: "Today", date: "Aug 28", time: "14:00 UTC", size: "142 MB", snapshotId: "bk-latest" },
-];
 
 /* ─────────────────────────────────────────────────────────────────
    Clean, De-noised PITR Scrubber
 ───────────────────────────────────────────────────────────────────*/
 
 function PitrScrubber({
+  points = [],
   onSelectPoint,
 }: {
-  onSelectPoint: (point: typeof PITR_POINTS[0]) => void;
+  points?: RecoveryPoint[];
+  onSelectPoint: (point: RecoveryPoint) => void;
 }) {
-  const [selectedIndex, setSelectedIndex] = useState(PITR_POINTS.length - 1);
-  const current = PITR_POINTS[selectedIndex];
-  const percent = (selectedIndex / (PITR_POINTS.length - 1)) * 100;
+  const [selectedIndex, setSelectedIndex] = useState(Math.max(0, points.length - 1));
+
+  if (points.length === 0) {
+    return (
+      <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
+        <CardHeader className="p-5 sm:p-6 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <CardTitle className="text-sm sm:text-base font-semibold text-foreground">
+                Point-in-Time Recovery
+              </CardTitle>
+            </div>
+            <CardDescription className="text-xs text-muted-foreground font-normal">
+              No completed backup snapshots available for point-in-time recovery.
+            </CardDescription>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 text-center text-xs text-muted-foreground font-mono">
+          Run your first backup to establish recovery checkpoints.
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const clampedIndex = Math.min(selectedIndex, points.length - 1);
+  const current = points[clampedIndex];
+  const maxIdx = Math.max(1, points.length - 1);
+  const percent = points.length > 1 ? (clampedIndex / maxIdx) * 100 : 0;
 
   return (
     <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
@@ -216,7 +133,7 @@ function PitrScrubber({
           </CardDescription>
         </div>
         <span className="text-xs font-medium text-muted-foreground bg-muted/40 border border-border/60 rounded-md px-3 py-1 self-start sm:self-auto">
-          7-Day Window
+          {points.length} Checkpoint{points.length === 1 ? "" : "s"}
         </span>
       </CardHeader>
 
@@ -251,8 +168,8 @@ function PitrScrubber({
           <input
             type="range"
             min={0}
-            max={PITR_POINTS.length - 1}
-            value={selectedIndex}
+            max={points.length - 1}
+            value={clampedIndex}
             onChange={(e) => setSelectedIndex(Number(e.target.value))}
             className="absolute inset-0 w-full h-full opacity-0 cursor-grab active:cursor-grabbing z-30"
           />
@@ -260,11 +177,11 @@ function PitrScrubber({
 
         {/* Checkpoint Ticks & Labels with no mobile text overlap */}
         <div className="relative w-full h-8">
-          {PITR_POINTS.map((pt, idx) => {
-            const ptPercent = (idx / (PITR_POINTS.length - 1)) * 100;
-            const isSelected = idx === selectedIndex;
+          {points.map((pt, idx) => {
+            const ptPercent = points.length > 1 ? (idx / (points.length - 1)) * 100 : 50;
+            const isSelected = idx === clampedIndex;
             const isFirst = idx === 0;
-            const isLast = idx === PITR_POINTS.length - 1;
+            const isLast = idx === points.length - 1;
             const showOnMobile = isSelected || isFirst || isLast;
 
             return (
@@ -322,6 +239,7 @@ function PitrScrubber({
     </Card>
   );
 }
+
 
 /* ─────────────────────────────────────────────────────────────────
    Clean, De-noised Recovery Drill Card
@@ -492,7 +410,7 @@ function RestoreWizardDrawer({
 }: {
   open: boolean;
   defaultMode: "drill" | "restore";
-  defaultPoint: typeof PITR_POINTS[0] | null;
+  defaultPoint: RecoveryPoint | null;
   onClose: () => void;
   projectId?: string;
   onDrillCompleted?: (drill: any) => void;
@@ -879,14 +797,18 @@ function RestoreWizardDrawer({
 export function RestoresPageClient({
   orgId,
   projectId,
+  recoveryPoints = [],
+  initialDrills = [],
 }: {
   orgId: string;
   projectId: string;
+  recoveryPoints?: RecoveryPoint[];
+  initialDrills?: RestoreDrill[];
 }) {
-  const [drills, setDrills] = useState<RestoreDrill[]>(MOCK_DRILLS);
+  const [drills, setDrills] = useState<RestoreDrill[]>(initialDrills);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<"drill" | "restore">("drill");
-  const [selectedPoint, setSelectedPoint] = useState<typeof PITR_POINTS[0] | null>(null);
+  const [selectedPoint, setSelectedPoint] = useState<RecoveryPoint | null>(null);
   const [search, setSearch] = useState("");
   const [viewingLogsDrill, setViewingLogsDrill] = useState<RestoreDrill | null>(null);
 
@@ -902,7 +824,7 @@ export function RestoresPageClient({
     setDrawerOpen(true);
   }
 
-  function handleSelectPoint(point: typeof PITR_POINTS[0]) {
+  function handleSelectPoint(point: RecoveryPoint) {
     setSelectedPoint(point);
     setDrawerMode("restore");
     setDrawerOpen(true);
@@ -917,6 +839,12 @@ export function RestoresPageClient({
     d.targetDb.toLowerCase().includes(search.toLowerCase()) ||
     d.sourceSnapshot.toLowerCase().includes(search.toLowerCase())
   );
+
+  const passedDrills = drills.filter((d) => d.status === "passed" || d.status === "complete");
+  const lastVerifiedDrill = passedDrills.length > 0 ? passedDrills[0] : null;
+  const avgDuration = drills.length > 0
+    ? Math.round(drills.reduce((sum, d) => sum + d.durationSec, 0) / drills.length)
+    : 0;
 
   return (
     <div className="space-y-16 sm:space-y-20 pb-28 sm:pb-24">
@@ -955,35 +883,35 @@ export function RestoresPageClient({
         <StatCard
           icon={IconClock}
           label="Recovery Point (RPO)"
-          value="2h 14m"
-          sub="Max data loss based on last snapshot"
+          value={recoveryPoints.length > 0 ? recoveryPoints[recoveryPoints.length - 1].time : "—"}
+          sub={recoveryPoints.length > 0 ? `Latest: ${recoveryPoints[recoveryPoints.length - 1].snapshotId}` : "No completed backups yet"}
           accent="text-amber-400"
         />
         <StatCard
           icon={IconBolt}
           label="Estimated RTO"
-          value="1m 08s"
-          sub="Calculated recovery spin-up duration"
+          value={drills.length > 0 ? `${avgDuration}s` : "—"}
+          sub={drills.length > 0 ? "Average drill duration" : "Run a drill to benchmark RTO"}
           accent="text-indigo-400"
         />
         <StatCard
           icon={IconShieldCheck}
           label="Last Verified Drill"
-          value="Today, 04:00"
-          sub="Passed with 0 schema drift"
+          value={lastVerifiedDrill ? lastVerifiedDrill.executedAt : "—"}
+          sub={lastVerifiedDrill ? "Verification passed" : "No drills executed yet"}
           accent="text-emerald-400"
         />
         <StatCard
           icon={IconRefresh}
           label="DR Readiness Score"
-          value="100%"
-          sub="14 of 14 drills passed"
+          value={drills.length > 0 ? `${Math.round((passedDrills.length / drills.length) * 100)}%` : "—"}
+          sub={drills.length > 0 ? `${passedDrills.length} of ${drills.length} drills passed` : "No verification drills"}
           accent="text-emerald-400"
         />
       </div>
 
       {/* ── PITR Timeline Scrubber (Clean & Quiet) ── */}
-      <PitrScrubber onSelectPoint={handleSelectPoint} />
+      <PitrScrubber points={recoveryPoints} onSelectPoint={handleSelectPoint} />
 
       {/* ── Recent Recovery Events ── */}
       <div className="space-y-6 sm:space-y-8">
@@ -1010,17 +938,32 @@ export function RestoresPageClient({
         </div>
 
         {/* Clean Drill Cards */}
-        <div className="space-y-4 sm:space-y-5">
-          {filteredDrills.map((d) => (
-            <DrillCard
-              key={d.id}
-              drill={d}
-              onViewLogs={(drill) => setViewingLogsDrill(drill)}
-              onRerun={handleRerun}
-            />
-          ))}
-        </div>
+        {filteredDrills.length === 0 ? (
+          <div className="rounded-xl border border-border/60 bg-card/60 p-12 text-center space-y-4">
+            <IconShieldCheck className="size-8 text-muted-foreground/60 mx-auto" />
+            <p className="text-sm text-muted-foreground">No restore drills or recovery events recorded</p>
+            <Button
+              onClick={handleOpenDrill}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 text-xs font-semibold h-9 px-4"
+            >
+              <IconShieldCheck className="size-4 mr-1.5" />
+              Run Disaster Recovery Drill
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4 sm:space-y-5">
+            {filteredDrills.map((d) => (
+              <DrillCard
+                key={d.id}
+                drill={d}
+                onViewLogs={(drill) => setViewingLogsDrill(drill)}
+                onRerun={handleRerun}
+              />
+            ))}
+          </div>
+        )}
       </div>
+
 
       {/* ── Slide-in Wizard Drawer ── */}
       <RestoreWizardDrawer

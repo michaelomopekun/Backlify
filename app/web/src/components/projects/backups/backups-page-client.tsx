@@ -47,30 +47,6 @@ interface Backup {
   label?: string;
 }
 
-const MOCK_BACKUPS: Backup[] = [
-  { id: "bk-001", timestamp: "Aug 26, 2026 · 14:00 UTC", type: "scheduled", status: "complete",     sizeMb: 142, durationSec: 72  },
-  { id: "bk-002", timestamp: "Aug 26, 2026 · 09:14 UTC", type: "manual",    status: "complete",     sizeMb: 141, durationSec: 68, label: "pre-deploy" },
-  { id: "bk-003", timestamp: "Aug 25, 2026 · 14:00 UTC", type: "scheduled", status: "complete",     sizeMb: 139, durationSec: 71  },
-  { id: "bk-004", timestamp: "Aug 24, 2026 · 18:32 UTC", type: "manual",    status: "complete",     sizeMb: 138, durationSec: 65, label: "hotfix-2.1" },
-  { id: "bk-005", timestamp: "Aug 24, 2026 · 14:00 UTC", type: "scheduled", status: "complete",     sizeMb: 137, durationSec: 70  },
-  { id: "bk-006", timestamp: "Aug 23, 2026 · 14:00 UTC", type: "scheduled", status: "failed",       sizeMb: 0,   durationSec: 8   },
-  { id: "bk-007", timestamp: "Aug 22, 2026 · 21:05 UTC", type: "manual",    status: "complete",     sizeMb: 135, durationSec: 63, label: "v2.0-release" },
-  { id: "bk-008", timestamp: "Aug 22, 2026 · 14:00 UTC", type: "scheduled", status: "complete",     sizeMb: 134, durationSec: 67  },
-  { id: "bk-009", timestamp: "Aug 21, 2026 · 14:00 UTC", type: "scheduled", status: "complete",     sizeMb: 133, durationSec: 66  },
-  { id: "bk-010", timestamp: "Aug 20, 2026 · 14:00 UTC", type: "scheduled", status: "complete",     sizeMb: 131, durationSec: 64  },
-  { id: "bk-011", timestamp: "Aug 20, 2026 · 08:00 UTC", type: "manual",    status: "in_progress",  sizeMb: 0,   durationSec: 0,  label: "migration-test" },
-];
-
-// 7-day activity data: each day has an array of backup events {type, status}
-const ACTIVITY_DAYS = [
-  { label: "Mon", date: "Aug 20", events: [{ type: "scheduled", status: "complete" }, { type: "manual", status: "in_progress" }] },
-  { label: "Tue", date: "Aug 21", events: [{ type: "scheduled", status: "complete" }] },
-  { label: "Wed", date: "Aug 22", events: [{ type: "scheduled", status: "complete" }, { type: "manual", status: "complete" }] },
-  { label: "Thu", date: "Aug 23", events: [{ type: "scheduled", status: "failed" }] },
-  { label: "Fri", date: "Aug 24", events: [{ type: "scheduled", status: "complete" }, { type: "manual", status: "complete" }] },
-  { label: "Sat", date: "Aug 25", events: [{ type: "scheduled", status: "complete" }] },
-  { label: "Sun", date: "Aug 26", events: [{ type: "scheduled", status: "complete" }, { type: "manual", status: "complete" }] },
-];
 
 /* ─────────────────────────────────────────────────────────────────
    Sub-components
@@ -318,7 +294,7 @@ export function BackupsPageClient({
   projectId: string;
   initialBackups?: Backup[];
 }) {
-  const [backupsList, setBackupsList] = useState<Backup[]>(initialBackups ?? MOCK_BACKUPS);
+  const [backupsList, setBackupsList] = useState<Backup[]>(initialBackups ?? []);
   const [showPanel, setShowPanel] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | BackupType>("all");
@@ -348,12 +324,27 @@ export function BackupsPageClient({
     return matchSearch && matchType && matchStatus;
   });
 
+  const scheduledCount = backupsList.filter((b) => b.type === "scheduled").length;
+  const manualCount = backupsList.filter((b) => b.type === "manual").length;
+  const failedCount = backupsList.filter((b) => b.status === "failed").length;
+  const inProgressCount = backupsList.filter((b) => b.status === "in_progress").length;
   const totalMb = backupsList.filter((b) => b.status === "complete").reduce(
     (sum, b) => sum + b.sizeMb,
     0
   );
   const successCount = backupsList.filter((b) => b.status === "complete").length;
-  const successRate = backupsList.length > 0 ? Math.round((successCount / backupsList.length) * 100) : 100;
+  const successRate = backupsList.length > 0 ? Math.round((successCount / backupsList.length) * 100) : null;
+
+  const past7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setDate(d.getDate() - (6 - i));
+    const dayLabel = d.toLocaleDateString("en-US", { weekday: "short" });
+    const dateLabel = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const dayEvents = backupsList
+      .filter((b) => b.timestamp.toLowerCase().includes(dateLabel.toLowerCase()))
+      .map((b) => ({ type: b.type, status: b.status }));
+    return { label: dayLabel, date: dateLabel, events: dayEvents };
+  });
 
   return (
     <div className="space-y-16 sm:space-y-20 pb-28 sm:pb-24">
@@ -362,7 +353,9 @@ export function BackupsPageClient({
         <div className="space-y-1.5">
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Backups</h1>
           <p className="text-xs sm:text-sm text-muted-foreground font-normal">
-            {totalMb} MB stored · Last run 2h ago · Next: today at 14:00 UTC
+            {backupsList.length > 0
+              ? `${totalMb} MB stored · ${backupsList.length} snapshot${backupsList.length === 1 ? "" : "s"}`
+              : "No snapshots created yet"}
           </p>
         </div>
         <Button
@@ -379,29 +372,29 @@ export function BackupsPageClient({
         <StatCard
           icon={IconDatabaseImport}
           label="Total Snapshots"
-          value={String(MOCK_BACKUPS.length)}
-          sub="7 scheduled · 4 manual"
+          value={String(backupsList.length)}
+          sub={`${scheduledCount} scheduled · ${manualCount} manual`}
           accent="text-emerald-400"
         />
         <StatCard
           icon={IconCloudUpload}
           label="Total Stored"
           value={`${totalMb} MB`}
-          sub="AES-256 · S3 eu-central-1"
+          sub={backupsList.length > 0 ? "AES-256 Encrypted" : "Storage Standby"}
           accent="text-blue-400"
         />
         <StatCard
           icon={IconShieldCheck}
           label="Success Rate"
-          value={`${successRate}%`}
-          sub={`${successCount} of ${MOCK_BACKUPS.length} succeeded`}
+          value={successRate !== null ? `${successRate}%` : "—"}
+          sub={backupsList.length > 0 ? `${successCount} of ${backupsList.length} succeeded` : "No backups recorded"}
           accent="text-emerald-400"
         />
         <StatCard
           icon={IconClock}
           label="Next Scheduled"
-          value="14:00 UTC"
-          sub="Daily · in ~3h 40m"
+          value="—"
+          sub="Check schedules page"
           accent="text-amber-400"
         />
       </div>
@@ -423,7 +416,7 @@ export function BackupsPageClient({
 
         {/* Chart columns */}
         <div className="grid grid-cols-7 gap-2 sm:gap-4 pt-2">
-          {ACTIVITY_DAYS.map((day, i) => (
+          {past7Days.map((day, i) => (
             <div key={i} className="flex flex-col items-center gap-2.5">
               <ActivityBar events={day.events} isToday={i === 6} />
               <div className="text-center">
@@ -438,15 +431,15 @@ export function BackupsPageClient({
 
         {/* Summary strip */}
         <div className="pt-4 border-t border-border/50 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-          <span><span className="text-foreground font-medium">11</span> total backups</span>
+          <span><span className="text-foreground font-medium">{backupsList.length}</span> total backups</span>
           <span>·</span>
-          <span><span className="text-emerald-400 font-medium">10</span> succeeded</span>
+          <span><span className="text-emerald-400 font-medium">{successCount}</span> succeeded</span>
           <span>·</span>
-          <span><span className="text-red-400 font-medium">1</span> failed</span>
+          <span><span className="text-red-400 font-medium">{failedCount}</span> failed</span>
           <span>·</span>
-          <span><span className="text-blue-400 font-medium">4</span> manual</span>
+          <span><span className="text-blue-400 font-medium">{manualCount}</span> manual</span>
           <span>·</span>
-          <span><span className="text-amber-400 font-medium">1</span> in progress</span>
+          <span><span className="text-amber-400 font-medium">{inProgressCount}</span> in progress</span>
         </div>
       </div>
 
@@ -621,7 +614,7 @@ export function BackupsPageClient({
 
         {/* Footer count */}
         <p className="text-[11px] text-[#444444] font-mono px-1">
-          Showing {filtered.length} of {MOCK_BACKUPS.length} snapshots
+          Showing {filtered.length} of {backupsList.length} snapshot{backupsList.length === 1 ? "" : "s"}
         </p>
       </div>
 

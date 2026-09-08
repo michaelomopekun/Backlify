@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation";
+import { ProjectRepository } from "db";
 import { SettingsPageClient } from "@/components/projects/settings/settings-page-client";
 
 export const metadata = {
@@ -11,6 +13,12 @@ export default async function ProjectSettingsPage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
+  const project = await ProjectRepository.getProjectById(projectId);
 
-  return <SettingsPageClient projectId={projectId} />;
+  if (!project) {
+    notFound();
+  }
+
+  return <SettingsPageClient projectId={projectId} project={project} />;
 }
+
