@@ -27,6 +27,31 @@ export async function triggerBackup(projectId: string) {
     const project = await ProjectRepository.getProjectById(projectId);
     if (!project) return { error: "That project no longer exists." };
 
+    // Enforce 50 MB Free Tier Storage Quota
+    const FREE_TIER_STORAGE_LIMIT_BYTES = 50 * 1024 * 1024; // 50 MB
+    let currentStorageBytes = 0;
+    try {
+      if (project.orgId) {
+        const orgProjects = (await ProjectRepository.getAllProjects()).filter((p) => p.orgId === project.orgId);
+        const orgProjectIds = new Set(orgProjects.map((p) => p.id));
+        const allBackups = await BackupRepository.listBackups({});
+        currentStorageBytes = allBackups
+          .filter((b) => b.projectId && orgProjectIds.has(b.projectId))
+          .reduce((sum, b) => sum + (b.fileSize || 0), 0);
+      } else {
+        const projectBackups = await BackupRepository.listBackups({ projectId });
+        currentStorageBytes = projectBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+      }
+    } catch (err) {
+      console.warn("Storage quota check failed, continuing backup:", err);
+    }
+
+    if (currentStorageBytes >= FREE_TIER_STORAGE_LIMIT_BYTES) {
+      return {
+        error: "Free tier storage limit reached (50 MB). Upgrade to Pro to continue backing up.",
+      };
+    }
+
     const jobId = `backlify-backupJob-${uuidv4().substring(0, 12)}`;
 
     await BackupRepository.saveBackupJob({

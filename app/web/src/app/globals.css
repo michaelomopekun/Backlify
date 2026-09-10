@@ -1531,3 +1531,69 @@ body {
   color: var(--foreground);
   font-size: 1.25rem;
 }
+
+/* ── Project Header Nested Breadcrumb Slide-Out Animation ── */
+@keyframes project-slide-open {
+  0% {
+    grid-template-columns: 0fr;
+    opacity: 0;
+  }
+  35% {
+    opacity: 1;
+  }
+  100% {
+    grid-template-columns: 1fr;
+    opacity: 1;
+  }
+}
+
+@keyframes project-slide-content {
+  0% {
+    transform: translateX(-36px);
+    opacity: 0;
+    filter: blur(2px);
+  }
+  40% {
+    opacity: 0.85;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes project-connect-enter {
+  0% {
+    transform: translateX(-16px) scale(0.95);
+    opacity: 0;
+  }
+  100% {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-project-slide-open {
+  animation: project-slide-open 360ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.animate-project-slide-content {
+  animation: project-slide-content 360ms cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+.animate-project-connect {
+  animation: project-connect-enter 320ms cubic-bezier(0.23, 1, 0.32, 1) 100ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-project-slide-open,
+  .animate-project-slide-content,
+  .animate-project-connect {
+    animation: none !important;
+    grid-template-columns: 1fr !important;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+}

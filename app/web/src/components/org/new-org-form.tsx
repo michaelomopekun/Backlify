@@ -140,7 +140,7 @@ export function NewOrgForm() {
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
-                Free tier includes 2 database projects and 50 snapshots.
+                Free tier includes 2 database projects, 50 snapshots, and 50 MB storage.
               </p>
             </div>
           </div>

@@ -51,8 +51,10 @@ export default async function OrgProjectsPage({ params }: Props) {
   let totalStorageBytes = 0;
   try {
     const allBackups = await BackupRepository.listBackups({});
-    totalBackupsCount = allBackups.length;
-    totalStorageBytes = allBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+    const orgProjectIds = new Set(dbProjects.map((p) => p.id));
+    const orgBackups = allBackups.filter((b) => b.projectId && orgProjectIds.has(b.projectId));
+    totalBackupsCount = orgBackups.length;
+    totalStorageBytes = orgBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
   } catch {}
 
   let activeSchedulesCount = 0;
@@ -61,11 +63,17 @@ export default async function OrgProjectsPage({ params }: Props) {
     activeSchedulesCount = activeSchedules.length;
   } catch {}
 
+  const FREE_TIER_STORAGE_BYTES = 50 * 1024 * 1024; // 50 MB
+  const storagePercentage = Math.min(100, Math.round((totalStorageBytes / FREE_TIER_STORAGE_BYTES) * 100));
+  const isNearStorageLimit = storagePercentage >= 80;
+
   const storageUsedStr = totalStorageBytes === 0
     ? "0 MB"
+    : totalStorageBytes < 1024 * 1024
+    ? `${(totalStorageBytes / (1024 * 1024)).toFixed(1)} MB`
     : totalStorageBytes > 1024 * 1024 * 1024
     ? `${(totalStorageBytes / (1024 * 1024 * 1024)).toFixed(1)} GB`
-    : `${Math.round(totalStorageBytes / (1024 * 1024))} MB`;
+    : `${(totalStorageBytes / (1024 * 1024)).toFixed(1)} MB`;
 
   const displayProjects = dbProjects;
 
@@ -249,7 +257,7 @@ export default async function OrgProjectsPage({ params }: Props) {
                     {[
                       { label: "Projects", value: `${displayProjects.length}`, limit: "2" },
                       { label: "Total backups", value: `${totalBackupsCount}`, limit: "50" },
-                      { label: "Storage used", value: storageUsedStr, limit: "5 GB" },
+                      { label: "Storage used", value: storageUsedStr, limit: "50 MB" },
                       { label: "Active schedules", value: `${activeSchedulesCount}`, limit: "3" },
                     ].map((item) => (
                       <div key={item.label} className="flex items-center justify-between text-[12px]">
@@ -262,6 +270,41 @@ export default async function OrgProjectsPage({ params }: Props) {
                         </span>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Storage Quota Bar & Upgrade Trigger */}
+                  <div className="pt-2 border-t border-[#1e1e1e]/80 space-y-2">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-[#888888]">Storage limit</span>
+                      <span className={`font-mono text-[11px] ${
+                        storagePercentage >= 90
+                          ? "text-red-400 font-semibold"
+                          : storagePercentage >= 70
+                          ? "text-amber-400 font-semibold"
+                          : "text-[#888888]"
+                      }`}>
+                        {storagePercentage}% ({storageUsedStr} / 50 MB)
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-[#1e1e1e] rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all ${
+                          storagePercentage >= 90
+                            ? "bg-red-500"
+                            : storagePercentage >= 70
+                            ? "bg-amber-400"
+                            : "bg-[#3ecf8e]"
+                        }`}
+                        style={{ width: `${Math.max(storagePercentage > 0 ? 4 : 0, storagePercentage)}%` }}
+                      />
+                    </div>
+                    {isNearStorageLimit && (
+                      <div className="rounded bg-amber-500/10 border border-amber-500/20 p-2.5 text-[11px] text-amber-200/90 leading-relaxed">
+                        {storagePercentage >= 100
+                          ? "You've hit the 50 MB free storage limit. Upgrade to Pro for unlimited storage and backups."
+                          : "You're getting close to your 50 MB free storage limit. Upgrade to Pro to keep backups running smoothly."}
+                      </div>
+                    )}
                   </div>
                 </div>
 

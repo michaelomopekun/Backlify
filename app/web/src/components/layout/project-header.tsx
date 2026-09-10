@@ -45,6 +45,7 @@ export function ProjectHeader({
 }: Props) {
   const [orgSearch, setOrgSearch] = useState("");
   const [projectSearch, setProjectSearch] = useState("");
+  const [isSlideComplete, setIsSlideComplete] = useState(false);
 
   const triggerMobileMenu = () => {
     if (typeof window !== "undefined") {
@@ -122,7 +123,7 @@ export function ProjectHeader({
         <span className="text-[#444444] text-[13px] font-light select-none">/</span>
 
         {/* ── Org Selector + Dropdown ── */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 shrink-0 relative z-10 bg-[#0e0e0e]">
           <Link
             href={`/dashboard/org/${orgId}`}
             className="flex items-center gap-1.5 text-[#dddddd] hover:text-white transition-colors text-[13px] font-normal"
@@ -201,131 +202,144 @@ export function ProjectHeader({
           </DropdownMenu>
         </div>
 
-        <span className="text-[#444444] text-[13px] font-light select-none">/</span>
-
-        {/* ── Project Selector + Dropdown ── */}
-        <div className="flex items-center gap-1.5">
-          <Link
-            href={`/dashboard/project/${projectId}`}
-            className="flex items-center gap-1.5 text-[#dddddd] hover:text-white transition-colors text-[13px] font-normal truncate max-w-[200px]"
+        {/* ── Nested Project & Branch Breadcrumb Segment (Sliding out from Org) ── */}
+        <div
+          key={projectId}
+          className="grid grid-cols-[0fr] animate-project-slide-open shrink-0"
+        >
+          <div
+            onAnimationEnd={() => setIsSlideComplete(true)}
+            className={`flex items-center min-w-0 ${isSlideComplete ? "overflow-visible" : "overflow-hidden"}`}
           >
-            <WireframeCubeIcon className="size-3.5 text-[#888888] shrink-0" />
-            <span className="truncate">{projectName}</span>
-          </Link>
+            <div className="flex items-center gap-2 shrink-0 animate-project-slide-content">
+              <span className="text-[#444444] text-[13px] font-light select-none">/</span>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Switch project"
-                className="size-6 rounded flex items-center justify-center text-[#888888] hover:text-white hover:bg-[#1f1f1f] border border-transparent hover:border-[#2e2e2e] data-[state=open]:bg-[#1c1c1c] data-[state=open]:border-[#2e2e2e] data-[state=open]:text-white transition-all cursor-pointer outline-none"
-              >
-                <IconSelector className="size-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              sideOffset={6}
-              className="w-64 bg-[#171717] border border-[#2c2c2c] rounded-lg shadow-2xl p-0 text-xs text-white z-50 overflow-hidden"
-            >
-              {/* Search input */}
-              <div className="flex items-center gap-2 px-3 py-2 border-b border-[#262626]" onClick={(e) => e.stopPropagation()}>
-                <IconSearch className="size-3.5 text-[#666666] shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Find project..."
-                  value={projectSearch}
-                  onChange={(e) => setProjectSearch(e.target.value)}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  className="bg-transparent text-xs text-white placeholder-[#666666] outline-none w-full font-sans"
-                  autoFocus
-                />
-              </div>
+              {/* ── Project Selector + Dropdown ── */}
+              <div className="flex items-center gap-1.5">
+                <Link
+                  href={`/dashboard/project/${projectId}`}
+                  className="flex items-center gap-1.5 text-[#dddddd] hover:text-white transition-colors text-[13px] font-normal truncate max-w-[200px]"
+                >
+                  <WireframeCubeIcon className="size-3.5 text-[#888888] shrink-0" />
+                  <span className="truncate">{projectName}</span>
+                </Link>
 
-              {/* Project List */}
-              <div className="py-1 max-h-52 overflow-y-auto">
-                {projectName.toLowerCase().includes(projectSearch.toLowerCase()) && (
-                  <Link
-                    href={`/dashboard/project/${projectId}`}
-                    className="flex items-center justify-between px-3 py-2 text-xs text-white hover:bg-[#222222] rounded-sm mx-1 cursor-pointer font-medium transition-colors"
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Switch project"
+                      className="size-6 rounded flex items-center justify-center text-[#888888] hover:text-white hover:bg-[#1f1f1f] border border-transparent hover:border-[#2e2e2e] data-[state=open]:bg-[#1c1c1c] data-[state=open]:border-[#2e2e2e] data-[state=open]:text-white transition-all cursor-pointer outline-none"
+                    >
+                      <IconSelector className="size-3.5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    sideOffset={6}
+                    className="w-64 bg-[#171717] border border-[#2c2c2c] rounded-lg shadow-2xl p-0 text-xs text-white z-50 overflow-hidden"
                   >
-                    <span className="truncate">{projectName}</span>
-                    <IconCheck className="size-3.5 text-white shrink-0 ml-2" />
-                  </Link>
-                )}
+                    {/* Search input */}
+                    <div className="flex items-center gap-2 px-3 py-2 border-b border-[#262626]" onClick={(e) => e.stopPropagation()}>
+                      <IconSearch className="size-3.5 text-[#666666] shrink-0" />
+                      <input
+                        type="text"
+                        placeholder="Find project..."
+                        value={projectSearch}
+                        onChange={(e) => setProjectSearch(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
+                        className="bg-transparent text-xs text-white placeholder-[#666666] outline-none w-full font-sans"
+                        autoFocus
+                      />
+                    </div>
 
-                <Link
-                  href={`/dashboard/org/${orgId}`}
-                  className="flex items-center px-3 py-2 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm mx-1 cursor-pointer transition-colors"
-                >
-                  <span>All Projects</span>
-                </Link>
+                    {/* Project List */}
+                    <div className="py-1 max-h-52 overflow-y-auto">
+                      {projectName.toLowerCase().includes(projectSearch.toLowerCase()) && (
+                        <Link
+                          href={`/dashboard/project/${projectId}`}
+                          className="flex items-center justify-between px-3 py-2 text-xs text-white hover:bg-[#222222] rounded-sm mx-1 cursor-pointer font-medium transition-colors"
+                        >
+                          <span className="truncate">{projectName}</span>
+                          <IconCheck className="size-3.5 text-white shrink-0 ml-2" />
+                        </Link>
+                      )}
+
+                      <Link
+                        href={`/dashboard/org/${orgId}`}
+                        className="flex items-center px-3 py-2 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm mx-1 cursor-pointer transition-colors"
+                      >
+                        <span>All Projects</span>
+                      </Link>
+                    </div>
+
+                    {/* Separator */}
+                    <div className="h-px bg-[#262626]" />
+
+                    {/* New Project Action */}
+                    <div className="p-1">
+                      <Link
+                        href={`/dashboard/project/new`}
+                        className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm cursor-pointer transition-colors"
+                      >
+                        <IconPlus className="size-3.5 text-[#888888]" />
+                        <span>New project</span>
+                      </Link>
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
 
-              {/* Separator */}
-              <div className="h-px bg-[#262626]" />
+              <span className="text-[#444444] text-[13px] font-light select-none">/</span>
 
-              {/* New Project Action */}
-              <div className="p-1">
-                <Link
-                  href={`/dashboard/project/new`}
-                  className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm cursor-pointer transition-colors"
-                >
-                  <IconPlus className="size-3.5 text-[#888888]" />
-                  <span>New project</span>
-                </Link>
+              {/* ── Branch / Env Selector + Dropdown ── */}
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#dddddd] text-[13px] font-normal font-sans">main</span>
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[#f59e0b]/30 bg-[#f59e0b]/10 text-[#f59e0b] font-mono tracking-wider select-none">
+                  PRODUCTION
+                </span>
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Switch branch"
+                      className="size-6 rounded flex items-center justify-center text-[#888888] hover:text-white hover:bg-[#1f1f1f] border border-transparent hover:border-[#2e2e2e] data-[state=open]:bg-[#1c1c1c] data-[state=open]:border-[#2e2e2e] data-[state=open]:text-white transition-all cursor-pointer outline-none"
+                    >
+                      <IconSelector className="size-3.5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="start"
+                    sideOffset={6}
+                    className="w-56 bg-[#171717] border border-[#2c2c2c] rounded-lg shadow-2xl p-1 text-xs text-white z-50"
+                  >
+                    <div className="px-2.5 py-1.5 text-[11px] font-medium text-[#777777] uppercase tracking-wider">
+                      Branches
+                    </div>
+                    <div className="flex items-center justify-between px-2.5 py-1.5 text-xs text-white bg-[#222222] rounded cursor-pointer font-medium">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono">main</span>
+                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#f59e0b]/10 border border-[#f59e0b]/25 text-[#f59e0b] uppercase font-mono">
+                          PRODUCTION
+                        </span>
+                      </div>
+                      <IconCheck className="size-3.5 text-white shrink-0" />
+                    </div>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-
-        <span className="text-[#444444] text-[13px] font-light select-none">/</span>
-
-        {/* ── Branch / Env Selector + Dropdown ── */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[#dddddd] text-[13px] font-normal font-sans">main</span>
-          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[#f59e0b]/30 bg-[#f59e0b]/10 text-[#f59e0b] font-mono tracking-wider select-none">
-            PRODUCTION
-          </span>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label="Switch branch"
-                className="size-6 rounded flex items-center justify-center text-[#888888] hover:text-white hover:bg-[#1f1f1f] border border-transparent hover:border-[#2e2e2e] data-[state=open]:bg-[#1c1c1c] data-[state=open]:border-[#2e2e2e] data-[state=open]:text-white transition-all cursor-pointer outline-none"
-              >
-                <IconSelector className="size-3.5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="start"
-              sideOffset={6}
-              className="w-56 bg-[#171717] border border-[#2c2c2c] rounded-lg shadow-2xl p-1 text-xs text-white z-50"
-            >
-              <div className="px-2.5 py-1.5 text-[11px] font-medium text-[#777777] uppercase tracking-wider">
-                Branches
-              </div>
-              <div className="flex items-center justify-between px-2.5 py-1.5 text-xs text-white bg-[#222222] rounded cursor-pointer font-medium">
-                <div className="flex items-center gap-2">
-                  <span className="font-mono">main</span>
-                  <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#f59e0b]/10 border border-[#f59e0b]/25 text-[#f59e0b] uppercase font-mono">
-                    PRODUCTION
-                  </span>
-                </div>
-                <IconCheck className="size-3.5 text-white shrink-0" />
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </div>
+          </div>
         </div>
 
         {/* Sidebar Trigger */}
-        <SidebarTrigger className="size-7 text-muted-foreground hover:text-foreground ml-1" />
+        <SidebarTrigger className="size-7 text-muted-foreground hover:text-foreground ml-1 shrink-0" />
 
         {/* Connect CTA Pill */}
         <button
           type="button"
-          className="hidden md:flex items-center gap-1.5 h-7 px-3 rounded-full border border-border bg-[#181818] hover:border-border/80 hover:bg-[#202020] text-foreground transition-colors ml-2 font-medium cursor-pointer"
+          className="hidden md:flex items-center gap-1.5 h-7 px-3 rounded-full border border-border bg-[#181818] hover:border-border/80 hover:bg-[#202020] text-foreground transition-colors ml-2 font-medium cursor-pointer shrink-0 animate-project-connect"
         >
           <IconPlugConnected className="size-3.5 text-muted-foreground" />
           <span>Connect</span>

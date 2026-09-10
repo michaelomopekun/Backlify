@@ -38,22 +38,15 @@ export async function GET(
     }
 
 
-    const project = await ProjectRepository.getProjectById(id);
-
+    const project = await ProjectRepository.getProjectWithMaskedUrl(id);
 
     if (!project) {
-
       return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
-
     }
 
-
     return NextResponse.json({
-
       success: true,
-
       project,
-
     });
 
   } catch (error) {
