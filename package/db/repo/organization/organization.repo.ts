@@ -1,7 +1,6 @@
-import { db, eq } from "../../index";
-
-import { organizations } from "../../schema/organization";
-
+import { db, eq, and } from "../../index";
+import { organizations, organizationMembers } from "../../schema/organization";
+import { projects } from "../../schema/project";
 import { logger } from "shared/config/logger";
 
 
@@ -175,29 +174,122 @@ export class OrganizationRepository {
 
 
   static async deleteOrganization(id: string) {
-
     try {
+      logger.info({ orgId: id }, "Deleting organization and associated resources");
 
-      logger.info({ orgId: id }, "Deleting organization");
+      // Clean up members
+      await db.delete(organizationMembers).where(eq(organizationMembers.orgId, id));
+
+      // Clean up projects belonging to this org
+      await db.delete(projects).where(eq(projects.orgId, id));
 
       const result = await db
-
         .delete(organizations)
-
         .where(eq(organizations.id, id))
-
         .returning();
 
       return result[0];
-
     } catch (error) {
-
       logger.error({ orgId: id, error }, "Failed to delete organization");
-
       throw error;
-
     }
-
   }
 
+  // ─── Team Members ──────────────────────────────────────────────────────────
+
+  static async getOrganizationMembers(orgId: string) {
+    try {
+      const members = await db
+        .select()
+        .from(organizationMembers)
+        .where(eq(organizationMembers.orgId, orgId));
+
+      return members;
+    } catch (error) {
+      logger.error({ orgId, error }, "Failed to fetch organization members");
+      throw error;
+    }
+  }
+
+  static async addMember(params: {
+    id: string;
+    orgId: string;
+    email: string;
+    name?: string;
+    role?: string;
+    userId?: string;
+  }) {
+    try {
+      logger.info({ orgId: params.orgId, email: params.email }, "Adding organization member");
+
+      const result = await db
+        .insert(organizationMembers)
+        .values({
+          id: params.id,
+          orgId: params.orgId,
+          email: params.email.toLowerCase().trim(),
+          name: params.name || params.email.split("@")[0],
+          role: params.role || "member",
+          userId: params.userId || null,
+          invitedAt: new Date(),
+          joinedAt: params.userId ? new Date() : null,
+        })
+        .returning();
+
+      return result[0];
+    } catch (error) {
+      logger.error({ orgId: params.orgId, email: params.email, error }, "Failed to add member");
+      throw error;
+    }
+  }
+
+  static async updateMemberRole(orgId: string, memberId: string, role: string) {
+    try {
+      logger.info({ orgId, memberId, role }, "Updating member role");
+
+      const result = await db
+        .update(organizationMembers)
+        .set({ role })
+        .where(and(eq(organizationMembers.id, memberId), eq(organizationMembers.orgId, orgId)))
+        .returning();
+
+      return result[0];
+    } catch (error) {
+      logger.error({ orgId, memberId, error }, "Failed to update member role");
+      throw error;
+    }
+  }
+
+  static async removeMember(orgId: string, memberId: string) {
+    try {
+      logger.info({ orgId, memberId }, "Removing organization member");
+
+      const member = await db
+        .select()
+        .from(organizationMembers)
+        .where(and(eq(organizationMembers.id, memberId), eq(organizationMembers.orgId, orgId)));
+
+      if (member[0]?.role === "owner") {
+        // Check if there are other owners
+        const owners = await db
+          .select()
+          .from(organizationMembers)
+          .where(and(eq(organizationMembers.orgId, orgId), eq(organizationMembers.role, "owner")));
+
+        if (owners.length <= 1) {
+          throw new Error("Cannot remove the sole organization owner.");
+        }
+      }
+
+      const result = await db
+        .delete(organizationMembers)
+        .where(and(eq(organizationMembers.id, memberId), eq(organizationMembers.orgId, orgId)))
+        .returning();
+
+      return result[0];
+    } catch (error) {
+      logger.error({ orgId, memberId, error }, "Failed to remove member");
+      throw error;
+    }
+  }
 }
