@@ -453,12 +453,13 @@ function RestoreWizardDrawer({
       : targetUrl.startsWith("postgres://") && confirmWord === "RESTORE";
 
   async function startExecution() {
+    if (!projectId) return;
     setIsExecuting(true);
     setExecutionStep(1);
     setLiveLogs([`[${new Date().toISOString()}] Initializing ${mode === "drill" ? "Headless DR Drill Verification" : "Point-in-Time Database Restore"}...`]);
 
     if (mode === "drill") {
-      const res = await triggerDrill(projectId || "proj-1", defaultPoint?.id);
+      const res = await triggerDrill(projectId, defaultPoint?.id);
       if (res.success && res.drill) {
         setExecutionStep(5);
         setLiveLogs(res.drill.logs);
@@ -468,8 +469,8 @@ function RestoreWizardDrawer({
       }
     } else {
       const formData = new FormData();
-      formData.append("projectId", projectId || "proj-1");
-      formData.append("backupFileId", defaultPoint?.id || "bk-001");
+      formData.append("projectId", projectId);
+      formData.append("backupFileId", defaultPoint?.id || "");
       formData.append("targetDatabaseUrl", targetUrl);
       formData.append("confirm", confirmWord);
 

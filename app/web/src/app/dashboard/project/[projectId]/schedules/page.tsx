@@ -1,5 +1,6 @@
 import { SchedulesPageClient } from "@/components/projects/schedules/schedules-page-client";
 import { ProjectRepository, ScheduleRepository } from "db";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Schedules | Backlify",
@@ -23,7 +24,11 @@ export default async function SchedulesPage({
     console.error("Failed to fetch schedules:", err);
   }
 
-  const orgId = project?.orgId ?? "default-org";
+  if (!project) {
+    redirect("/dashboard/org");
+  }
+
+  const orgId = project.orgId ?? "default-org";
 
   const initialSchedules = rawSchedules.map((s) => {
     let name = "Custom Backup Schedule";

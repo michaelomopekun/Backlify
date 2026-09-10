@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import {
@@ -29,6 +29,7 @@ import {
   IconDatabaseImport,
   IconCalendarClock,
   IconRestore,
+  IconGripVertical,
 } from "@tabler/icons-react";
 
 interface SearchItem {
@@ -50,6 +51,98 @@ export function FloatingSupportDock() {
   const [searchQuery, setSearchQuery] = useState("");
   const [feedbackText, setFeedbackText] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
+
+  // Draggable floating dock positioning on mobile
+  const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const dockRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const dragStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const pointerStartPosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
+  const hasDraggedRef = useRef(false);
+  const isPointerDownRef = useRef(false);
+  const capturedElRef = useRef<HTMLElement | null>(null);
+  const activePointerIdRef = useRef<number | null>(null);
+
+  // Keep dock clamped within screen viewport on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      if (!position || !dockRef.current) return;
+      const dockW = dockRef.current.offsetWidth || 180;
+      const dockH = dockRef.current.offsetHeight || 48;
+      const maxX = Math.max(8, window.innerWidth - dockW - 8);
+      const maxY = Math.max(8, window.innerHeight - dockH - 8);
+      setPosition((prev) => {
+        if (!prev) return null;
+        return {
+          x: Math.min(Math.max(8, prev.x), maxX),
+          y: Math.min(Math.max(8, prev.y), maxY),
+        };
+      });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [position]);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!dockRef.current) return;
+    const rect = dockRef.current.getBoundingClientRect();
+    dragStartPosRef.current = { x: rect.left, y: rect.top };
+    pointerStartPosRef.current = { x: e.clientX, y: e.clientY };
+    hasDraggedRef.current = false;
+    isPointerDownRef.current = true;
+    capturedElRef.current = e.currentTarget as HTMLElement;
+    activePointerIdRef.current = e.pointerId;
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isPointerDownRef.current || !dockRef.current) return;
+    const dx = e.clientX - pointerStartPosRef.current.x;
+    const dy = e.clientY - pointerStartPosRef.current.y;
+
+    if (!hasDraggedRef.current && Math.hypot(dx, dy) > 4) {
+      hasDraggedRef.current = true;
+      try {
+        if (activePointerIdRef.current !== null && capturedElRef.current) {
+          capturedElRef.current.setPointerCapture(activePointerIdRef.current);
+        }
+      } catch {}
+    }
+
+    if (hasDraggedRef.current) {
+      const dockW = dockRef.current.offsetWidth || 180;
+      const dockH = dockRef.current.offsetHeight || 48;
+      const minX = 8;
+      const maxX = Math.max(8, window.innerWidth - dockW - 8);
+      const minY = 8;
+      const maxY = Math.max(8, window.innerHeight - dockH - 8);
+      const newX = Math.min(Math.max(minX, dragStartPosRef.current.x + dx), maxX);
+      const newY = Math.min(Math.max(minY, dragStartPosRef.current.y + dy), maxY);
+      setPosition({ x: newX, y: newY });
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    isPointerDownRef.current = false;
+    if (activePointerIdRef.current !== null && capturedElRef.current) {
+      try {
+        capturedElRef.current.releasePointerCapture(activePointerIdRef.current);
+      } catch {}
+    }
+
+    if (hasDraggedRef.current) {
+      // Keep hasDraggedRef true for a brief window to prevent triggering button onClick
+      setTimeout(() => {
+        hasDraggedRef.current = false;
+      }, 100);
+    } else {
+      hasDraggedRef.current = false;
+    }
+  };
+
+  const handleAction = (cb: () => void) => {
+    if (hasDraggedRef.current) return;
+    cb();
+  };
 
   // Global hotkey listeners (Cmd+K / Ctrl+K and Esc)
   useEffect(() => {
@@ -81,51 +174,56 @@ export function FloatingSupportDock() {
 
   // Determine current org or project ID from pathname
   const orgMatch = pathname.match(/\/dashboard\/org\/([^/]+)/);
-  const orgId = orgMatch ? orgMatch[1] : "default-org";
+  const orgId = orgMatch ? orgMatch[1] : null;
 
   const projectMatch = pathname.match(/\/dashboard\/project\/([^/]+)/);
-  const projectId = projectMatch ? projectMatch[1] : "proj-1";
-
-  const isProjectRoute = pathname.startsWith("/dashboard/project") && !pathname.endsWith("/new");
+  const rawProjectId = projectMatch ? projectMatch[1] : null;
+  const isProjectRoute = Boolean(rawProjectId && rawProjectId !== "new");
+  const projectId = isProjectRoute ? rawProjectId : null;
 
   // Navigation items for the sidebar drawer
   const orgNavItems = [
-    { label: "Projects", href: `/dashboard/org/${orgId}`, icon: IconFolder, exact: true },
-    { label: "Team", href: `/dashboard/org/${orgId}/team`, icon: IconUsers },
-    { label: "Integrations", href: `/dashboard/org/${orgId}/integrations`, icon: IconLayoutDashboard },
-    { label: "Usage", href: `/dashboard/org/${orgId}/usage`, icon: IconChartBar },
-    { label: "Billing", href: `/dashboard/org/${orgId}/billing`, icon: IconCreditCard },
-    { label: "Organization settings", href: `/dashboard/org/${orgId}/settings`, icon: IconSettings },
+    { label: "Projects", href: orgId ? `/dashboard/org/${orgId}` : "/dashboard/org", icon: IconFolder, exact: true },
+    { label: "Team", href: orgId ? `/dashboard/org/${orgId}/team` : "/dashboard/org", icon: IconUsers },
+    { label: "Integrations", href: orgId ? `/dashboard/org/${orgId}/integrations` : "/dashboard/org", icon: IconLayoutDashboard },
+    { label: "Usage", href: orgId ? `/dashboard/org/${orgId}/usage` : "/dashboard/org", icon: IconChartBar },
+    { label: "Billing", href: orgId ? `/dashboard/org/${orgId}/billing` : "/dashboard/org", icon: IconCreditCard },
+    { label: "Organization settings", href: orgId ? `/dashboard/org/${orgId}/settings` : "/dashboard/org", icon: IconSettings },
   ];
 
-  const projectNavItems = [
+  const projectNavItems = projectId ? [
     { label: "Project Overview", href: `/dashboard/project/${projectId}`, icon: IconLayoutDashboard, exact: true },
     { label: "Backups", href: `/dashboard/project/${projectId}/backups`, icon: IconDatabaseImport },
     { label: "Schedules", href: `/dashboard/project/${projectId}/schedules`, icon: IconCalendarClock },
     { label: "Restores", href: `/dashboard/project/${projectId}/restores`, icon: IconRestore },
     { label: "Project Settings", href: `/dashboard/project/${projectId}/settings`, icon: IconSettings },
-  ];
+  ] : orgNavItems;
 
   const activeNavList = isProjectRoute ? projectNavItems : orgNavItems;
 
   // Search items
   const searchItems: SearchGroup[] = [
     {
-      title: "Projects",
+      title: "Navigation & Actions",
       items: [
-        { name: "roadRescue's Project", href: "/dashboard/project/proj-1", icon: IconDatabase, tag: "PROD" },
-        { name: "Create New Project", href: "/dashboard/project/new", icon: IconPlus, tag: "ACTION" },
+        { name: "Create New Project", href: orgId ? `/dashboard/project/new?orgId=${orgId}` : "/dashboard/project/new", icon: IconPlus, tag: "ACTION" },
+        { name: "All Organizations", href: "/dashboard/org", icon: IconFolder, tag: "NAV" },
       ],
     },
-    {
-      title: "Quick Navigation",
-      items: [
-        { name: "Snapshots & Backups", href: "/dashboard/project/proj-1/backups", icon: IconDatabase },
-        { name: "Automated Schedules", href: "/dashboard/project/proj-1/schedules", icon: IconCalendar },
-        { name: "Disaster Recovery & Restores", href: "/dashboard/project/proj-1/restores", icon: IconRotateClockwise },
-        { name: "Security & Encryption Keys", href: "/dashboard/project/proj-1/settings", icon: IconShieldCheck },
-      ],
-    },
+    ...(isProjectRoute && projectId
+      ? [
+          {
+            title: "Current Project Navigation",
+            items: [
+              { name: "Project Overview", href: `/dashboard/project/${projectId}`, icon: IconLayoutDashboard },
+              { name: "Snapshots & Backups", href: `/dashboard/project/${projectId}/backups`, icon: IconDatabase },
+              { name: "Automated Schedules", href: `/dashboard/project/${projectId}/schedules`, icon: IconCalendar },
+              { name: "Disaster Recovery & Restores", href: `/dashboard/project/${projectId}/restores`, icon: IconRotateClockwise },
+              { name: "Project Settings", href: `/dashboard/project/${projectId}/settings`, icon: IconShieldCheck },
+            ],
+          },
+        ]
+      : []),
     {
       title: "Documentation & Playbooks",
       items: [
@@ -157,52 +255,83 @@ export function FloatingSupportDock() {
 
   return (
     <>
-      {/* ── Floating Bottom Pill Dock (MOBILE ONLY: sm:hidden) ── */}
+      {/* ── Floating Bottom Pill Dock (MOBILE ONLY: sm:hidden, DRAGGABLE) ── */}
       <div
-        className={`fixed bottom-5 left-1/2 -translate-x-1/2 flex sm:hidden items-center gap-1 p-1.5 rounded-full border border-[#3e3e3e] bg-[#222222]/95 backdrop-blur-xl shadow-2xl shadow-black/95 ring-1 ring-white/10 transition-all hover:border-[#505050] ${
+        ref={dockRef}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        onClickCapture={(e) => {
+          if (hasDraggedRef.current) {
+            e.stopPropagation();
+            e.preventDefault();
+          }
+        }}
+        style={
+          position
+            ? {
+                left: `${position.x}px`,
+                top: `${position.y}px`,
+                bottom: "auto",
+                transform: "none",
+              }
+            : undefined
+        }
+        className={`fixed ${
+          position ? "" : "bottom-5 left-1/2 -translate-x-1/2"
+        } flex sm:hidden items-center gap-1 p-1.5 rounded-full border border-[#3e3e3e] bg-[#222222]/95 backdrop-blur-xl shadow-2xl shadow-black/95 ring-1 ring-white/10 transition-shadow hover:border-[#505050] cursor-grab active:cursor-grabbing touch-none select-none ${
           activeModal !== "none" ? "z-[90]" : "z-40"
         }`}
       >
+        {/* Subtle Grip Drag Handle */}
+        <div
+          className="flex items-center justify-center pl-1.5 pr-0.5 py-1 text-[#666666] hover:text-[#aaaaaa] shrink-0 cursor-grab active:cursor-grabbing"
+          title="Drag anywhere"
+        >
+          <IconGripVertical className="size-3.5 pointer-events-none" />
+        </div>
+
         {/* Search button */}
         <button
           type="button"
           aria-label="Search"
-          onClick={() => setActiveModal((prev) => (prev === "search" ? "none" : "search"))}
-          className={`size-8.5 rounded-full flex items-center justify-center transition-all ${
+          onClick={() => handleAction(() => setActiveModal((prev) => (prev === "search" ? "none" : "search")))}
+          className={`size-8.5 rounded-full flex items-center justify-center transition-all cursor-pointer ${
             activeModal === "search"
               ? "bg-white text-black font-semibold shadow-xs"
               : "text-[#d1d1d1] hover:text-white hover:bg-white/10"
           }`}
         >
-          <IconSearch className="size-4" />
+          <IconSearch className="size-4 pointer-events-none" />
         </button>
 
         {/* Help button */}
         <button
           type="button"
           aria-label="Help"
-          onClick={() => setActiveModal((prev) => (prev === "help" ? "none" : "help"))}
-          className={`size-8.5 rounded-full flex items-center justify-center transition-all ${
+          onClick={() => handleAction(() => setActiveModal((prev) => (prev === "help" ? "none" : "help")))}
+          className={`size-8.5 rounded-full flex items-center justify-center transition-all cursor-pointer ${
             activeModal === "help"
               ? "bg-white text-black font-semibold shadow-xs"
               : "text-[#d1d1d1] hover:text-white hover:bg-white/10"
           }`}
         >
-          <IconHelp className="size-4" />
+          <IconHelp className="size-4 pointer-events-none" />
         </button>
 
         {/* Feedback button */}
         <button
           type="button"
           aria-label="Feedback"
-          onClick={() => setActiveModal((prev) => (prev === "feedback" ? "none" : "feedback"))}
-          className={`size-8.5 rounded-full flex items-center justify-center transition-all ${
+          onClick={() => handleAction(() => setActiveModal((prev) => (prev === "feedback" ? "none" : "feedback")))}
+          className={`size-8.5 rounded-full flex items-center justify-center transition-all cursor-pointer ${
             activeModal === "feedback"
               ? "bg-white text-black font-semibold shadow-xs"
               : "text-[#d1d1d1] hover:text-white hover:bg-white/10"
           }`}
         >
-          <IconBulb className="size-4" />
+          <IconBulb className="size-4 pointer-events-none" />
         </button>
 
         {/* Sidebar Navigation Menu Button — only on pages with sidebar */}
@@ -210,14 +339,14 @@ export function FloatingSupportDock() {
           <button
             type="button"
             aria-label="Toggle sidebar menu"
-            onClick={() => setActiveModal((prev) => (prev === "sidebar" ? "none" : "sidebar"))}
-            className={`size-8.5 rounded-full flex items-center justify-center transition-all ${
+            onClick={() => handleAction(() => setActiveModal((prev) => (prev === "sidebar" ? "none" : "sidebar")))}
+            className={`size-8.5 rounded-full flex items-center justify-center transition-all cursor-pointer ${
               activeModal === "sidebar"
                 ? "bg-white text-black font-semibold shadow-xs"
                 : "text-[#d1d1d1] hover:text-white hover:bg-white/10"
             }`}
           >
-            <IconMenu2 className="size-4" />
+            <IconMenu2 className="size-4 pointer-events-none" />
           </button>
         )}
 
@@ -226,10 +355,10 @@ export function FloatingSupportDock() {
           <button
             type="button"
             aria-label="Close modal"
-            onClick={closeAll}
-            className="size-8.5 rounded-full flex items-center justify-center bg-[#333333] text-white hover:bg-[#444444] border border-white/10 transition-all ml-0.5 shadow-xs"
+            onClick={() => handleAction(closeAll)}
+            className="size-8.5 rounded-full flex items-center justify-center bg-[#333333] text-white hover:bg-[#444444] border border-white/10 transition-all ml-0.5 shadow-xs cursor-pointer"
           >
-            <IconX className="size-4" />
+            <IconX className="size-4 pointer-events-none" />
           </button>
         )}
       </div>

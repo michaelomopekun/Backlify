@@ -1,5 +1,6 @@
 import { BackupsPageClient } from "@/components/projects/backups/backups-page-client";
 import { ProjectRepository, BackupRepository } from "db";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Backups | Backlify",
@@ -23,7 +24,11 @@ export default async function BackupsPage({
     console.error("Failed to load project backups:", err);
   }
 
-  const orgId = project?.orgId ?? "default-org";
+  if (!project) {
+    redirect("/dashboard/org");
+  }
+
+  const orgId = project.orgId ?? "default-org";
 
   const initialBackups = rawBackups.map((b) => {
     const started = b.startedAt ? new Date(b.startedAt).getTime() : 0;

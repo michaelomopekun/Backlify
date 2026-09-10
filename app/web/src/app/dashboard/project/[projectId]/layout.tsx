@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ProjectRepository, OrganizationRepository } from "db";
 import { getCurrentUser } from "@/lib/current-user";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
@@ -29,16 +29,24 @@ export default async function ProjectLayout({ children, params }: Props) {
 
   try {
     project = await ProjectRepository.getProjectById(projectId);
-  } catch {}
+  } catch (err) {
+    console.error("Failed to load project:", err);
+  }
 
-  const orgId = project?.orgId ?? "default-org";
+  // If the project doesn't exist in the database, redirect immediately.
+  // Never render a project dashboard shell for non-existent projects.
+  if (!project) {
+    redirect("/dashboard/org");
+  }
+
+  const orgId = project.orgId ?? "default-org";
 
   try {
     org = await OrganizationRepository.getOrganizationById(orgId);
   } catch {}
 
   const orgName = org?.name ?? "Organization";
-  const projectName = project?.name ?? (project ? "Untitled Project" : "Project");
+  const projectName = project.name;
 
   return (
     <SidebarProvider className="h-screen w-screen overflow-hidden flex flex-col bg-[#0c0c0c]">

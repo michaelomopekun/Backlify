@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { ProjectRepository } from "db";
 import { SettingsPageClient } from "@/components/projects/settings/settings-page-client";
 
@@ -16,7 +16,7 @@ export default async function ProjectSettingsPage({
   const project = await ProjectRepository.getProjectById(projectId);
 
   if (!project) {
-    notFound();
+    redirect("/dashboard/org");
   }
 
   return <SettingsPageClient projectId={projectId} project={project} />;

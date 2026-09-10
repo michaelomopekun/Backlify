@@ -1,7 +1,6 @@
 import { ProjectRepository, ScheduleRepository, BackupRepository } from "db";
 import { ProjectOverviewHeader } from "@/components/projects/overview/project-overview-client";
-import Link from "next/link";
-import { IconArrowLeft, IconDatabase } from "@tabler/icons-react";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -27,26 +26,7 @@ export default async function ProjectOverviewPage({ params }: Props) {
   }
 
   if (!project) {
-    return (
-      <div className="w-full max-w-xl mx-auto py-16 text-center space-y-4">
-        <div className="size-12 rounded-xl bg-[#161616] border border-[#242424] flex items-center justify-center mx-auto text-muted-foreground">
-          <IconDatabase className="size-6" />
-        </div>
-        <h2 className="text-xl font-semibold text-white">Project Not Found</h2>
-        <p className="text-sm text-muted-foreground">
-          The requested project <code className="text-xs font-mono bg-muted/40 px-1.5 py-0.5 rounded">{projectId}</code> does not exist or has been deleted.
-        </p>
-        <div className="pt-2">
-          <Link
-            href="/dashboard/org"
-            className="inline-flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground hover:underline"
-          >
-            <IconArrowLeft className="size-3.5" />
-            <span>Return to organizations</span>
-          </Link>
-        </div>
-      </div>
-    );
+    redirect("/dashboard/org");
   }
 
   const orgId = project.orgId || "default-org";

@@ -1,5 +1,6 @@
 import { RestoresPageClient } from "@/components/projects/restores/restores-page-client";
 import { ProjectRepository, BackupRepository } from "db";
+import { redirect } from "next/navigation";
 
 export const metadata = {
   title: "Restores | Backlify",
@@ -20,7 +21,11 @@ export default async function RestoresPage({
     rawBackups = await BackupRepository.listBackups({ projectId });
   } catch {}
 
-  const orgId = project?.orgId ?? "default-org";
+  if (!project) {
+    redirect("/dashboard/org");
+  }
+
+  const orgId = project.orgId ?? "default-org";
 
   const recoveryPoints = rawBackups
     .filter((b) => b.status === "completed")
