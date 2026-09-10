@@ -28,17 +28,12 @@ export type BackupJobData =
 
 
 export interface RestoreJobData {
-
     jobId: string;
-
     backupFileId: string;
-
     targetDatabaseUrl: string;
-
+    isDrill?: boolean;
     jobStatus: typeof RESTORE_JOB_STATUS_VALUES[number];
-
     timestamp?: number;
-
 }
 
 

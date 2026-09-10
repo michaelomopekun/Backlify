@@ -3,9 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
-import { BackupFileRepository, RestoreRepository } from "db";
+import { BackupFileRepository, BackupRepository, RestoreRepository } from "db";
 import { RESTORE_JOB_STATUS } from "shared/constants/restoreJobStatus";
+import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 import type { RestoreJobStatusType } from "shared/constants/restoreJobStatus";
+import { emitJobTelemetry } from "shared/config/job-telemetry";
 
 import { restoreQueue } from "@/lib/queues";
 
@@ -83,13 +85,70 @@ export async function triggerDrill(projectId: string, backupFileId?: string) {
   if (!projectId) return { error: "Project ID is required" };
 
   try {
-    const drillId = `drill-${uuidv4().substring(0, 8)}`;
-    const startTime = Date.now();
+    let targetFile: any = null;
 
-    // Small realistic latency simulation for archive header inspection
-    await new Promise((r) => setTimeout(r, 600));
+    if (backupFileId) {
+      targetFile = await BackupFileRepository.getBackupFileById(backupFileId);
+      if (!targetFile) {
+        targetFile = await BackupFileRepository.getBackupFileByJobId(backupFileId);
+      }
+    }
 
-    const durationSec = Math.max(1, Math.round((Date.now() - startTime) / 1000) + 1);
+    if (!targetFile) {
+      // Look for the latest completed backup for this project
+      const latest = await BackupRepository.listBackups({
+        projectId,
+        statuses: [BACKUP_JOB_STATUS.COMPLETED],
+        limit: 1,
+      });
+
+      if (latest && latest.length > 0 && latest[0].fileId) {
+        targetFile = await BackupFileRepository.getBackupFileById(latest[0].fileId);
+      }
+    }
+
+    if (!targetFile) {
+      return {
+        error: "No completed backup snapshots found for this project. Run a backup first to execute a disaster recovery drill."
+      };
+    }
+
+    const jobId = `backlify-drill-${uuidv4().substring(0, 12)}`;
+
+    // Write job row before queueing so untracked operations are impossible
+    await RestoreRepository.saveRestoreJob({
+      jobId,
+      backupFileId: targetFile.id,
+      targetDatabaseUrl: "headless:drill",
+      jobStatus: RESTORE_JOB_STATUS.PENDING as RestoreJobStatusType,
+    });
+
+    await restoreQueue.add(
+      "restore",
+      {
+        jobId,
+        backupFileId: targetFile.id,
+        targetDatabaseUrl: "headless:drill",
+        isDrill: true,
+        jobStatus: RESTORE_JOB_STATUS.PENDING as RestoreJobStatusType,
+        timestamp: Date.now(),
+      },
+      { jobId }
+    );
+
+    await RestoreRepository.updateJobStatus(
+      jobId,
+      RESTORE_JOB_STATUS.PENDING as RestoreJobStatusType,
+      RESTORE_JOB_STATUS.QUEUED as RestoreJobStatusType
+    );
+
+    await emitJobTelemetry({
+      jobId,
+      level: "info",
+      phase: "INIT",
+      message: `Enqueued Headless DR Drill for snapshot ${targetFile.fileName || targetFile.id.slice(0, 12)}. Initializing sandbox pipeline...`,
+      progress: 5,
+    });
 
     if (projectId) {
       revalidatePath(`/dashboard/project/${projectId}/restores`);
@@ -97,30 +156,13 @@ export async function triggerDrill(projectId: string, backupFileId?: string) {
 
     return {
       success: true,
-      drill: {
-        id: drillId,
-        timestamp: new Date().toISOString(),
-        targetDb: "headless-sandbox (verified in memory)",
-        sourceSnapshot: backupFileId || "latest-verified-snapshot",
-        status: "passed" as const,
-        durationSec,
-        checksTotal: 4,
-        checksPassed: 4,
-        tablesVerified: 18,
-        rowsRestored: 4120,
-        logs: [
-          `[${new Date().toISOString()}] Initiating Headless DR Drill for snapshot: ${backupFileId || "latest"}`,
-          `[${new Date().toISOString()}] [Check 1/4] SHA-256 Checksum validation: PASSED (zero bit-rot detected)`,
-          `[${new Date().toISOString()}] [Check 2/4] AWS KMS envelope key handshake: PASSED (AES-256 header valid)`,
-          `[${new Date().toISOString()}] [Check 3/4] pg_restore TOC inspection: PASSED (18 tables, 42 indexes parsed)`,
-          `[${new Date().toISOString()}] [Check 4/4] Schema DDL & constraint verification: PASSED`,
-          `[${new Date().toISOString()}] Drill completed successfully in ${durationSec}s. Database integrity confirmed.`
-        ]
-      }
+      jobId,
+      backupFileId: targetFile.id,
+      fileName: targetFile.fileName,
     };
   } catch (error) {
     console.error("Failed to execute DR drill:", error);
-    return { error: "Could not complete the DR drill. Try again in a moment." };
+    return { error: "Could not initiate the DR drill. Please try again in a moment." };
   }
 }
 

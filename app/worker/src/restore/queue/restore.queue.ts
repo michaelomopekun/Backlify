@@ -12,17 +12,12 @@ import { RESTORE_JOB_STATUS_VALUES } from "shared/constants/restoreJobStatus";
 
 // validate job data
 export const RestoreJobDataSchema = z.object({
-
     jobId: z.string(),
-
     backupFileId: z.string(),
-
-    targetDatabaseUrl: z.string().url("Invalid database URL format"),
-
+    targetDatabaseUrl: z.string(),
+    isDrill: z.boolean().optional(),
     jobStatus: z.enum(RESTORE_JOB_STATUS_VALUES),
-
     timestamp: z.number().optional(),
-
 });
 
 

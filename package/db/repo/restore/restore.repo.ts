@@ -1,8 +1,10 @@
 import { RestoreJobStatusType, RESTORE_JOB_STATUS } from "shared/constants/restoreJobStatus";
 
-import { db, and, eq } from "../../index";
+import { db, and, eq, desc } from "../../index";
 
 import { restoreJobs } from "../../schema/restore-job";
+import { backupFiles } from "../../schema/backup-file";
+import { backupJobs } from "../../schema/backup-job";
 
 import { logger } from "shared/config/logger";
 
@@ -112,29 +114,73 @@ export class RestoreRepository {
     } 
 
     static async getJobById(jobId: string) {
-
         try {
-
             logger.info({ jobId }, "Fetching restore job");
-
             const result = await db.select().from(restoreJobs).where(eq(restoreJobs.id, jobId));
-
             if (!result || result.length === 0) {
-
                 return null;
-
             }
-
             return result[0];
-
         } catch (error) {
-
             logger.error({ jobId, error }, "Failed to fetch restore job");
-
             throw error;
-
         }
-
     }
 
+    static async updateJobDetails(jobId: string, params: {
+        status?: RestoreJobStatusType;
+        startedAt?: Date;
+        completedAt?: Date;
+        errorMessage?: string;
+    }) {
+        try {
+            logger.info({ jobId, params }, "Updating restore job details");
+            const updatePayload: Record<string, unknown> = {};
+            if (params.status) updatePayload.status = params.status;
+            if (params.startedAt) updatePayload.startedAt = params.startedAt;
+            if (params.completedAt) updatePayload.completedAt = params.completedAt;
+            if (params.errorMessage !== undefined) updatePayload.errorMessage = params.errorMessage;
+
+            const result = await db.update(restoreJobs)
+                .set(updatePayload as any)
+                .where(eq(restoreJobs.id, jobId))
+                .returning();
+
+            return result[0] || null;
+        } catch (error) {
+            logger.error({ jobId, error }, "Failed to update restore job details");
+            throw error;
+        }
+    }
+
+    static async listRestoreJobsByProjectId(projectId: string) {
+        try {
+            logger.info({ projectId }, "Listing restore and drill jobs for project");
+            const rows = await db
+                .select({
+                    id: restoreJobs.id,
+                    backupFileId: restoreJobs.backupFileId,
+                    targetDatabaseUrl: restoreJobs.targetDatabaseUrl,
+                    status: restoreJobs.status,
+                    startedAt: restoreJobs.startedAt,
+                    completedAt: restoreJobs.completedAt,
+                    errorMessage: restoreJobs.errorMessage,
+                    createdAt: restoreJobs.createdAt,
+                    fileName: backupFiles.fileName,
+                    fileSize: backupFiles.fileSize,
+                    checksum: backupFiles.checksum,
+                    backupJobId: backupFiles.backupJobId,
+                })
+                .from(restoreJobs)
+                .innerJoin(backupFiles, eq(restoreJobs.backupFileId, backupFiles.id))
+                .innerJoin(backupJobs, eq(backupFiles.backupJobId, backupJobs.id))
+                .where(eq(backupJobs.projectId, projectId))
+                .orderBy(desc(restoreJobs.createdAt));
+
+            return rows;
+        } catch (error) {
+            logger.error({ projectId, error }, "Failed to list restore jobs by project ID");
+            return [];
+        }
+    }
 }
