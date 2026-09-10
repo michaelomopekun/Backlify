@@ -12,8 +12,19 @@ export interface CreateProjectParams {
 
 export interface UpdateProjectParams {
   name?: string;
+  environment?: string;
   databaseUrl?: string;
+  vaultProvider?: string;
+  vaultBucket?: string;
+  vaultRegion?: string;
+  kmsKeyArn?: string;
   retentionCount?: number;
+  keepWeekly?: boolean;
+  keepMonthly?: boolean;
+  webhookUrl?: string;
+  notifyOnFailure?: boolean;
+  notifyOnDrill?: boolean;
+  notifyOnStorage?: boolean;
 }
 
 export class ProjectRepository {

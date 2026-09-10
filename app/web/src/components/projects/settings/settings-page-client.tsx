@@ -47,8 +47,19 @@ interface ProjectSettingsProps {
   project?: {
     id: string;
     name: string;
+    environment?: string | null;
     databaseUrl: string;
+    vaultProvider?: string | null;
+    vaultBucket?: string | null;
+    vaultRegion?: string | null;
+    kmsKeyArn?: string | null;
     retentionCount?: number | null;
+    keepWeekly?: boolean | null;
+    keepMonthly?: boolean | null;
+    webhookUrl?: string | null;
+    notifyOnFailure?: boolean | null;
+    notifyOnDrill?: boolean | null;
+    notifyOnStorage?: boolean | null;
   } | null;
 }
 
@@ -56,7 +67,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
   // Active section for in-page navigation rail
   const [activeSection, setActiveSection] = useState("general");
   const [projectName, setProjectName] = useState(project?.name ?? "");
-  const [environment, setEnvironment] = useState("production");
+  const [environment, setEnvironment] = useState(project?.environment ?? "production");
   const [savedGeneral, setSavedGeneral] = useState(false);
 
   // Database Connection
@@ -74,32 +85,45 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
   }>({ status: "idle" });
 
   // Storage & KMS
-  const [vaultProvider, setVaultProvider] = useState("s3");
-  const [bucketName, setBucketName] = useState("");
-  const [vaultRegion, setVaultRegion] = useState("");
-  const [kmsKeyArn, setKmsKeyArn] = useState("");
+  const [vaultProvider, setVaultProvider] = useState(project?.vaultProvider ?? "s3");
+  const [bucketName, setBucketName] = useState(project?.vaultBucket ?? "");
+  const [vaultRegion, setVaultRegion] = useState(project?.vaultRegion ?? "");
+  const [kmsKeyArn, setKmsKeyArn] = useState(project?.kmsKeyArn ?? "");
   const [savedVault, setSavedVault] = useState(false);
 
   // Retention
   const [retentionDays, setRetentionDays] = useState(project?.retentionCount ?? 7);
-  const [keepWeekly, setKeepWeekly] = useState(true);
-  const [keepMonthly, setKeepMonthly] = useState(true);
+  const [keepWeekly, setKeepWeekly] = useState(project?.keepWeekly ?? true);
+  const [keepMonthly, setKeepMonthly] = useState(project?.keepMonthly ?? true);
   const [savedRetention, setSavedRetention] = useState(false);
 
   // Notifications
-  const [webhookUrl, setWebhookUrl] = useState("");
-  const [notifyOnFailure, setNotifyOnFailure] = useState(true);
-  const [notifyOnDrill, setNotifyOnDrill] = useState(true);
-  const [notifyOnStorage, setNotifyOnStorage] = useState(false);
+  const [webhookUrl, setWebhookUrl] = useState(project?.webhookUrl ?? "");
+  const [notifyOnFailure, setNotifyOnFailure] = useState(project?.notifyOnFailure ?? true);
+  const [notifyOnDrill, setNotifyOnDrill] = useState(project?.notifyOnDrill ?? true);
+  const [notifyOnStorage, setNotifyOnStorage] = useState(project?.notifyOnStorage ?? false);
   const [sendingTestAlert, setSendingTestAlert] = useState(false);
   const [alertSent, setAlertSent] = useState(false);
+  const [testAlertMessage, setTestAlertMessage] = useState<string | null>(null);
+  const [testAlertError, setTestAlertError] = useState<string | null>(null);
   const [savedAlerts, setSavedAlerts] = useState(false);
 
   useEffect(() => {
     if (project) {
       if (project.name !== undefined) setProjectName(project.name);
+      if (project.environment) setEnvironment(project.environment);
       if (project.databaseUrl !== undefined) setDbUrl(project.databaseUrl);
+      if (project.vaultProvider) setVaultProvider(project.vaultProvider);
+      if (project.vaultBucket !== undefined && project.vaultBucket !== null) setBucketName(project.vaultBucket);
+      if (project.vaultRegion !== undefined && project.vaultRegion !== null) setVaultRegion(project.vaultRegion);
+      if (project.kmsKeyArn !== undefined && project.kmsKeyArn !== null) setKmsKeyArn(project.kmsKeyArn);
       if (project.retentionCount != null) setRetentionDays(project.retentionCount);
+      if (project.keepWeekly != null) setKeepWeekly(project.keepWeekly);
+      if (project.keepMonthly != null) setKeepMonthly(project.keepMonthly);
+      if (project.webhookUrl !== undefined && project.webhookUrl !== null) setWebhookUrl(project.webhookUrl);
+      if (project.notifyOnFailure != null) setNotifyOnFailure(project.notifyOnFailure);
+      if (project.notifyOnDrill != null) setNotifyOnDrill(project.notifyOnDrill);
+      if (project.notifyOnStorage != null) setNotifyOnStorage(project.notifyOnStorage);
     }
   }, [project]);
 
@@ -142,7 +166,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
       const res = await fetch(`/api/projects/${projectId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: projectName }),
+        body: JSON.stringify({ name: projectName, environment }),
       });
       if (res.ok) {
         setSavedGeneral(true);
@@ -169,16 +193,62 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
     }
   };
 
+  const handleSaveVault = async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vaultProvider,
+          vaultBucket: bucketName,
+          vaultRegion,
+          kmsKeyArn,
+        }),
+      });
+      if (res.ok) {
+        setSavedVault(true);
+        setTimeout(() => setSavedVault(false), 2000);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const handleSaveRetention = async () => {
     try {
       const res = await fetch(`/api/projects/${projectId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ retentionCount: retentionDays }),
+        body: JSON.stringify({
+          retentionCount: retentionDays,
+          keepWeekly,
+          keepMonthly,
+        }),
       });
       if (res.ok) {
         setSavedRetention(true);
         setTimeout(() => setSavedRetention(false), 2000);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleSaveAlerts = async () => {
+    try {
+      const res = await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          webhookUrl,
+          notifyOnFailure,
+          notifyOnDrill,
+          notifyOnStorage,
+        }),
+      });
+      if (res.ok) {
+        setSavedAlerts(true);
+        setTimeout(() => setSavedAlerts(false), 2000);
       }
     } catch (e) {
       console.error(e);
@@ -230,12 +300,39 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
   };
 
   const handleSendTestAlert = async () => {
-    if (!webhookUrl) return;
+    if (!webhookUrl) {
+      setTestAlertError("Enter a destination webhook URL first.");
+      setTimeout(() => setTestAlertError(null), 3500);
+      return;
+    }
     setSendingTestAlert(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setSendingTestAlert(false);
-    setAlertSent(true);
-    setTimeout(() => setAlertSent(false), 3000);
+    setTestAlertError(null);
+    setTestAlertMessage(null);
+    try {
+      const res = await fetch(`/api/projects/${projectId}/test-alert`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ webhookUrl }),
+      });
+      const data = await res.json();
+      setSendingTestAlert(false);
+
+      if (res.ok && data.success) {
+        setAlertSent(true);
+        setTestAlertMessage(data.message || "Test alert delivered successfully!");
+        setTimeout(() => {
+          setAlertSent(false);
+          setTestAlertMessage(null);
+        }, 4000);
+      } else {
+        setTestAlertError(data.error || "Failed to deliver test alert.");
+        setTimeout(() => setTestAlertError(null), 5000);
+      }
+    } catch (err: any) {
+      setSendingTestAlert(false);
+      setTestAlertError(err?.message || "Network error while testing webhook.");
+      setTimeout(() => setTestAlertError(null), 5000);
+    }
   };
 
   const [downloadingConfig, setDownloadingConfig] = useState(false);
@@ -579,10 +676,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
           <span>Ensure the IAM role has PutObject and GetObject permissions on this bucket.</span>
           <Button
             size="sm"
-            onClick={() => {
-              setSavedVault(true);
-              setTimeout(() => setSavedVault(false), 2000);
-            }}
+            onClick={handleSaveVault}
             className="h-8.5 px-3.5 text-xs font-medium self-end sm:self-auto"
           >
             {savedVault ? "Vault Saved" : "Update Vault"}
@@ -712,23 +806,34 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
         </CardContent>
 
         <CardFooter className="px-5 sm:px-6 py-3.5 bg-muted/30 border-t border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-muted-foreground font-normal">
-          <Button
-            type="button"
-            onClick={handleSendTestAlert}
-            disabled={sendingTestAlert}
-            variant="outline"
-            size="sm"
-            className="h-8.5 px-3 text-xs border-border bg-card hover:bg-muted font-medium w-full sm:w-auto"
-          >
-            {sendingTestAlert ? "Dispatching…" : alertSent ? "Test Alert Delivered!" : "Send Test Alert"}
-          </Button>
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <Button
+              type="button"
+              onClick={handleSendTestAlert}
+              disabled={sendingTestAlert}
+              variant="outline"
+              size="sm"
+              className="h-8.5 px-3 text-xs border-border bg-card hover:bg-muted font-medium w-full sm:w-auto"
+            >
+              {sendingTestAlert ? "Dispatching…" : alertSent ? "Test Alert Delivered!" : "Send Test Alert"}
+            </Button>
+            {testAlertMessage && (
+              <span className="text-[11px] text-emerald-400 font-mono flex items-center gap-1">
+                <IconCircleCheck className="size-3" />
+                {testAlertMessage}
+              </span>
+            )}
+            {testAlertError && (
+              <span className="text-[11px] text-destructive font-mono flex items-center gap-1">
+                <IconAlertTriangle className="size-3" />
+                {testAlertError}
+              </span>
+            )}
+          </div>
 
           <Button
             size="sm"
-            onClick={() => {
-              setSavedAlerts(true);
-              setTimeout(() => setSavedAlerts(false), 2000);
-            }}
+            onClick={handleSaveAlerts}
             className="h-8.5 px-3.5 text-xs font-medium w-full sm:w-auto"
           >
             {savedAlerts ? "Alerts Saved" : "Save Alerts"}

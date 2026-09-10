@@ -13,9 +13,21 @@ import { logger } from "shared/config/logger";
 
 const UpdateProjectInputSchema = z.object({
   name: z.string().min(1, "Name is required").max(255).optional(),
+  environment: z.string().max(50).optional(),
   databaseUrl: z.string().url("Invalid database URL format").optional(),
+  vaultProvider: z.string().max(50).optional(),
+  vaultBucket: z.string().max(255).optional(),
+  vaultRegion: z.string().max(50).optional(),
+  kmsKeyArn: z.string().max(255).optional(),
   retentionCount: z.number().int().positive().optional(),
+  keepWeekly: z.boolean().optional(),
+  keepMonthly: z.boolean().optional(),
+  webhookUrl: z.string().url("Invalid webhook URL").or(z.literal("")).optional(),
+  notifyOnFailure: z.boolean().optional(),
+  notifyOnDrill: z.boolean().optional(),
+  notifyOnStorage: z.boolean().optional(),
 });
+
 
 
 export async function GET(

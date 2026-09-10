@@ -13,7 +13,7 @@ export default async function ProjectSettingsPage({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  const project = await ProjectRepository.getProjectById(projectId);
+  const project = await ProjectRepository.getProjectWithMaskedUrl(projectId);
 
   if (!project) {
     redirect("/dashboard/org");
@@ -21,4 +21,5 @@ export default async function ProjectSettingsPage({
 
   return <SettingsPageClient projectId={projectId} project={project} />;
 }
+
 
