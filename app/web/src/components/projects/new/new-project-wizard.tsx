@@ -92,14 +92,34 @@ export function NewProjectWizard({ orgId, orgName }: Props) {
     setIsTesting(true);
     setPingResult(null);
 
-    await new Promise((r) => setTimeout(r, 700));
+    try {
+      const res = await fetch("/api/projects/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ databaseUrl }),
+      });
+      const data = await res.json();
+      setIsTesting(false);
 
-    setIsTesting(false);
-    setPingResult({
-      status: "success",
-      latency: 38,
-      version: "PostgreSQL 16.2 on x86_64",
-    });
+      if (res.ok && data.success) {
+        setPingResult({
+          status: "success",
+          latency: data.latencyMs,
+          version: `${data.version}${data.database ? ` • Database: ${data.database}` : ""}${data.ssl ? " • SSL Active" : ""}`,
+        });
+      } else {
+        setPingResult({
+          status: "error",
+          error: data.error || "Could not establish connection to the PostgreSQL database.",
+        });
+      }
+    } catch (err: any) {
+      setIsTesting(false);
+      setPingResult({
+        status: "error",
+        error: err?.message || "Failed to reach the database connection diagnostic service.",
+      });
+    }
   };
 
   const handleFinish = async () => {

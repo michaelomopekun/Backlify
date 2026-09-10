@@ -196,20 +196,35 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
     setTestingPing(true);
     setPingResult({ status: "idle" });
     try {
-      new URL(dbUrl);
-      await new Promise((r) => setTimeout(r, 600));
-      setTestingPing(false);
-      setPingResult({
-        status: "success",
-        latency: 28,
-        version: "PostgreSQL Connection Configured",
-        ssl: dbUrl.includes("sslmode=require") || dbUrl.includes("ssl=true"),
+      const res = await fetch("/api/projects/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId,
+          databaseUrl: dbUrl,
+        }),
       });
-    } catch {
+      const data = await res.json();
+      setTestingPing(false);
+
+      if (res.ok && data.success) {
+        setPingResult({
+          status: "success",
+          latency: data.latencyMs,
+          version: `${data.version}${data.database ? ` • Database: ${data.database}` : ""}${data.ssl ? " • SSL Active" : ""}${data.isStandby ? " • (Standby/Replica)" : ""}`,
+          ssl: data.ssl,
+        });
+      } else {
+        setPingResult({
+          status: "error",
+          error: data.error || "Connection check failed. Verify credentials and network access.",
+        });
+      }
+    } catch (err: any) {
       setTestingPing(false);
       setPingResult({
         status: "error",
-        error: "Invalid database URL format. Ensure it is a valid URI (e.g. postgresql://user:pass@host:5432/db).",
+        error: err?.message || "Failed to reach the database connection diagnostic service.",
       });
     }
   };
