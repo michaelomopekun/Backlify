@@ -17,8 +17,8 @@ import { BackupFileUploadService } from "../service/backup_file_upload.service";
 import { v4 as uuidv4 } from "uuid";
 
 import { CleanupService } from "../service/cleanup.service";
-
 import { emitJobTelemetry } from "shared/config/job-telemetry";
+import { dispatchIncidentAlert } from "shared/config/alert-dispatcher";
 
 
 async function transitionBackupStatus(job: any, fromStatus: BackupJobStatusType, toStatus: BackupJobStatusType, opts?: { forceOnMismatch?: boolean; errorMessage?: string }) {
@@ -368,30 +368,30 @@ backupWorker.on("failed", async (job, err) => {
     }
 
         try {
-
             const updated = await BackupRepository.updateJobStatus(
-
                 job.data.jobId,
-
                 job.data.jobStatus,
-
                 BACKUP_JOB_STATUS.FAILED,
-
             );
 
             if (!updated) {
-
                 await BackupRepository.forceUpdateJobStatus(job.data.jobId, BACKUP_JOB_STATUS.FAILED, err.message);
-
             }
-            
-        
-        } catch (updateErr) {
-        
-            logger.error({ jobId: job.id, err: updateErr }, "Failed to update job status to FAILED");
-        
-        }
 
+            // Dispatch automated incident alert (webhook + email)
+            const dbJob = await BackupRepository.getJobById(job.data.jobId);
+            if (dbJob && dbJob.projectId) {
+                await dispatchIncidentAlert({
+                    jobId: job.data.jobId,
+                    projectId: dbJob.projectId,
+                    type: "backup",
+                    errorMessage: err.message,
+                    attemptsMade: job.attemptsMade,
+                });
+            }
+        } catch (updateErr) {
+            logger.error({ jobId: job.id, err: updateErr }, "Failed to update job status or dispatch incident alert");
+        }
 });
 
 backupWorker.on("error", (err) => {

@@ -10,13 +10,14 @@ import { RESTORE_JOB_STATUS } from "shared/constants/restoreJobStatus";
 
 import { PgRestoreService } from "../service/pgrestore.service";
 
-import { RestoreRepository, BackupFileRepository } from "db";
+import { RestoreRepository, BackupFileRepository, BackupRepository } from "db";
 
 import { EncryptionService } from "../../shared/service/encryption.service";
 
 import { createHash } from "crypto";
 
 import { emitJobTelemetry } from "shared/config/job-telemetry";
+import { dispatchIncidentAlert } from "shared/config/alert-dispatcher";
 
 
 
@@ -373,30 +374,42 @@ export const restoreWorker = new Worker<RestoreJobData>(
 
 // listener for failed jobs (exhausted retries)
 restoreWorker.on("failed", async (job, err) => {
-
     if (!job) return;
 
     logger.error({ jobId: job.id, err: err.message }, "Restore job failed after retries");
 
     try {
-
-        // update status to failed only when all retries are exhausted
         await RestoreRepository.updateJobStatus(
-
             job.data.jobId,
-
-            job.data.jobStatus, // Note: ideally transition from whatever status it currently is, or just forcefully set to FAILED.
-
+            job.data.jobStatus,
             RESTORE_JOB_STATUS.FAILED
-
         );
 
+        // Resolve project and dispatch incident alert
+        let projectId: string | null = (job.data as any).projectId || null;
+        if (!projectId && job.data.backupFileId) {
+            const backupFile = await BackupFileRepository.getBackupFileById(job.data.backupFileId);
+            if (backupFile && backupFile.backupJobId) {
+                const dbBackupJob = await BackupRepository.getJobById(backupFile.backupJobId);
+                if (dbBackupJob) {
+                    projectId = dbBackupJob.projectId;
+                }
+            }
+        }
+
+        if (projectId) {
+            const isDrill = (job.data as any).isDrill || (job.data as any).dryRun;
+            await dispatchIncidentAlert({
+                jobId: job.data.jobId,
+                projectId,
+                type: isDrill ? "drill" : "restore",
+                errorMessage: err.message,
+                attemptsMade: job.attemptsMade,
+            });
+        }
     } catch (dbError) {
-
-        logger.error({ jobId: job.id, dbError }, "Failed to update status to FAILED after job failure");
-
+        logger.error({ jobId: job.id, dbError }, "Failed to update status to FAILED or dispatch incident alert");
     }
-
 });
 
 

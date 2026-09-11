@@ -474,11 +474,11 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
           <Button
             size="sm"
             onClick={handleSaveGeneral}
-            className="h-8.5 px-3.5 text-xs font-medium self-end sm:self-auto"
+            className="h-8.5 px-3.5 text-xs font-medium self-end sm:self-auto bg-white text-black hover:bg-neutral-200 transition-colors"
           >
             {savedGeneral ? (
               <>
-                <IconCheck className="size-3.5 mr-1 text-primary-foreground" />
+                <IconCheck className="size-3.5 mr-1 text-black" />
                 Saved
               </>
             ) : (
@@ -585,7 +585,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
           <Button
             size="sm"
             onClick={handleSaveDb}
-            className="h-8.5 px-3.5 text-xs font-medium w-full sm:w-auto"
+            className="h-8.5 px-3.5 text-xs font-medium w-full sm:w-auto bg-white text-black hover:bg-neutral-200 transition-colors"
           >
             {savedDb ? "Connection Saved" : "Save Connection"}
           </Button>
@@ -677,7 +677,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
           <Button
             size="sm"
             onClick={handleSaveVault}
-            className="h-8.5 px-3.5 text-xs font-medium self-end sm:self-auto"
+            className="h-8.5 px-3.5 text-xs font-medium self-end sm:self-auto bg-white text-black hover:bg-neutral-200 transition-colors"
           >
             {savedVault ? "Vault Saved" : "Update Vault"}
           </Button>
@@ -711,7 +711,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
               max={90}
               value={retentionDays}
               onChange={(e) => setRetentionDays(Number(e.target.value))}
-              className="w-full h-1.5 bg-[#1c1c1c] rounded-lg appearance-none cursor-pointer accent-primary"
+              className="w-full h-1.5 bg-[#1c1c1c] rounded-lg appearance-none cursor-pointer accent-white"
             />
           </div>
 
@@ -747,7 +747,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
           <Button
             size="sm"
             onClick={handleSaveRetention}
-            className="h-8.5 px-3.5 text-xs font-medium self-end sm:self-auto"
+            className="h-8.5 px-3.5 text-xs font-medium self-end sm:self-auto bg-white text-black hover:bg-neutral-200 transition-colors"
           >
             {savedRetention ? "Retention Updated" : "Save Retention Policy"}
           </Button>
@@ -834,7 +834,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
           <Button
             size="sm"
             onClick={handleSaveAlerts}
-            className="h-8.5 px-3.5 text-xs font-medium w-full sm:w-auto"
+            className="h-8.5 px-3.5 text-xs font-medium w-full sm:w-auto bg-white text-black hover:bg-neutral-200 transition-colors"
           >
             {savedAlerts ? "Alerts Saved" : "Save Alerts"}
           </Button>
