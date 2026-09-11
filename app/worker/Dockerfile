@@ -40,5 +40,7 @@ ENV NODE_ENV=production
 ENV PG_DUMP_PATH=pg_dump
 ENV PG_RESTORE_PATH=pg_restore
 
-# 7. Start the worker daemon
-CMD ["npm", "run", "dev", "--workspace=worker"]
+# 7. Start the worker daemon using the pre-compiled production bundle
+WORKDIR /app/app/worker
+CMD ["node", "dist/index.js"]
+
