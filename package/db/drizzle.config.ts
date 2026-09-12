@@ -1,6 +1,10 @@
 import type { Config } from 'drizzle-kit';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
 
-// const connectionString = process.env.DATABASE_URL!;
+// Load the root .env file
+dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+dotenv.config();
 
 export default {
   schema: './schema',
