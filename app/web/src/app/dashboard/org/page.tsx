@@ -1,20 +1,24 @@
 import Link from "next/link";
 import { IconSearch, IconBuilding, IconPlus } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
-import { OrganizationRepository, ProjectRepository } from "db";
-import { getCurrentUser } from "@/lib/current-user";
+import { OrganizationRepository, ProjectRepository, UserRepository } from "db";
+import { requireCurrentUser } from "@/lib/current-user";
 import { OrgPickerHeader } from "@/components/layout/org-picker-header";
 import { EmptyState } from "@/components/shared/empty-state";
 
 export const dynamic = "force-dynamic";
 
 export default async function OrgSelectionPage() {
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
 
-  // Fetch orgs for this user.
+  // Fetch orgs for this user (both owned and member memberships)
   let orgs: Array<{ id: string; name: string; slug: string; userId: string; createdAt: Date; updatedAt: Date }> = [];
   try {
-    orgs = await OrganizationRepository.getOrganizationsByUser(user.id);
+    orgs = await UserRepository.getUserOrganizations(user.id);
+    if (orgs.length === 0) {
+      // Fallback check directly on owner userId
+      orgs = await OrganizationRepository.getOrganizationsByUser(user.id);
+    }
   } catch {
     // DB not yet migrated or unavailable
   }

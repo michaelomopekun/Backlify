@@ -1,4 +1,4 @@
-﻿FROM node:20-bookworm-slim AS base
+FROM node:20-bookworm-slim AS base
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ COPY package/db/package.json ./package/db/
 COPY app/web/package.json ./app/web/
 
 # 2. Install dependencies
-RUN npm ci --workspace=shared --workspace=db --workspace=web
+RUN npm ci --workspace=shared --workspace=db --workspace=web --no-audit
 
 # 3. Copy source code
 COPY package/shared ./package/shared

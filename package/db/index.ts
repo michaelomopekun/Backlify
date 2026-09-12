@@ -2,6 +2,7 @@ export * from 'drizzle-orm';
 
 export { db } from './client';
 
+export * from './schema/user';
 export * from './schema/organization';
 
 export * from './schema/backup-job';
@@ -26,4 +27,5 @@ export * from './repo/project/project.repo';
 export * from './repo/schedule/schedule.repo';
 
 export * from './repo/organization/organization.repo';
+export * from './repo/user/user.repo';
 

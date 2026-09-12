@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { ProjectRepository, OrganizationRepository } from "db";
-import { getCurrentUser } from "@/lib/current-user";
+import { requireCurrentUser } from "@/lib/current-user";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { ProjectSidebar } from "@/components/layout/app-sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -22,7 +22,7 @@ interface Props {
 
 export default async function ProjectLayout({ children, params }: Props) {
   const { projectId } = await params;
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
 
   let project: { id: string; name: string; databaseUrl: string; orgId?: string | null } | null = null;
   let org: { id: string; name: string; slug: string } | null = null;

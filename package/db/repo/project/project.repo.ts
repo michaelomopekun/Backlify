@@ -1,4 +1,4 @@
-import { db, eq } from "../../index";
+import { db, eq, inArray } from "../../index";
 import { projects } from "../../schema/project";
 import { logger } from "shared/config/logger";
 import { encryptDatabaseUrl, decryptDatabaseUrl, maskDatabaseUrl } from "shared/config/encryption";
@@ -108,6 +108,26 @@ export class ProjectRepository {
       }));
     } catch (error) {
       logger.error({ error }, "Failed to fetch projects");
+      throw error;
+    }
+  }
+
+  static async getProjectsByOrgIds(orgIds: string[]) {
+    try {
+      if (!orgIds || orgIds.length === 0) {
+        return [];
+      }
+      const result = await db
+        .select()
+        .from(projects)
+        .where(inArray(projects.orgId, orgIds));
+
+      return result.map((project) => ({
+        ...project,
+        databaseUrl: decryptDatabaseUrl(project.databaseUrl),
+      }));
+    } catch (error) {
+      logger.error({ orgIds, error }, "Failed to fetch projects by orgIds");
       throw error;
     }
   }

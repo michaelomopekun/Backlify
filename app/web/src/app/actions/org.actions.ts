@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { OrganizationRepository } from "db";
-import { getCurrentUser } from "@/lib/current-user";
+import { requireCurrentUser } from "@/lib/current-user";
 
 export async function createOrganizationAction(formData: FormData) {
   const name = formData.get("name")?.toString().trim();
@@ -12,7 +12,7 @@ export async function createOrganizationAction(formData: FormData) {
     return { error: "Organization name is required." };
   }
 
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
   const id = `org_${uuidv4().replace(/-/g, "").substring(0, 16)}`;
   const baseSlug = name
     .toLowerCase()
@@ -25,6 +25,15 @@ export async function createOrganizationAction(formData: FormData) {
       id,
       name,
       slug,
+      userId: user.id,
+    });
+
+    await OrganizationRepository.addMember({
+      id: `mem_${uuidv4().replace(/-/g, "").substring(0, 16)}`,
+      orgId: id,
+      email: user.email,
+      name: user.name,
+      role: "owner",
       userId: user.id,
     });
   } catch (error) {

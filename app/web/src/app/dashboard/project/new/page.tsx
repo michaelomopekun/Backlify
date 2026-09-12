@@ -1,5 +1,5 @@
-import { getCurrentUser } from "@/lib/current-user";
-import { OrganizationRepository } from "db";
+import { requireCurrentUser } from "@/lib/current-user";
+import { OrganizationRepository, UserRepository } from "db";
 import { OrgPickerHeader } from "@/components/layout/org-picker-header";
 import { NewProjectForm } from "@/components/projects/new/new-project-form";
 import { redirect } from "next/navigation";
@@ -15,11 +15,14 @@ interface Props {
 
 export default async function NewProjectPage({ searchParams }: Props) {
   const { orgId: queryOrgId } = await searchParams;
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
 
   let userOrgs: Array<{ id: string; name: string }> = [];
   try {
-    userOrgs = await OrganizationRepository.getOrganizationsByUser(user.id);
+    userOrgs = await UserRepository.getUserOrganizations(user.id);
+    if (userOrgs.length === 0) {
+      userOrgs = await OrganizationRepository.getOrganizationsByUser(user.id);
+    }
   } catch {}
 
   // If user has no organizations yet, redirect to create one first

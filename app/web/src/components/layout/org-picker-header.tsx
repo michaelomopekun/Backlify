@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/current-user";
+import { requireCurrentUser } from "@/lib/current-user";
 import { OrgPickerClientActions } from "./org-picker-client-actions";
 
 interface OrgPickerHeaderProps {
@@ -8,7 +8,7 @@ interface OrgPickerHeaderProps {
 }
 
 export async function OrgPickerHeader({ title = "Organizations" }: OrgPickerHeaderProps) {
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
 
   return (
     <header className="h-12 flex items-center justify-between px-4 border-b border-border shrink-0 bg-background text-xs">
@@ -31,7 +31,11 @@ export async function OrgPickerHeader({ title = "Organizations" }: OrgPickerHead
       </div>
 
       {/* Right: Client actions + User profile avatar */}
-      <OrgPickerClientActions userInitials={user.initials} />
+      <OrgPickerClientActions
+        userInitials={user.initials}
+        userEmail={user.email}
+        userName={user.name}
+      />
     </header>
   );
 }

@@ -12,7 +12,7 @@ import {
   IconX,
 } from "@tabler/icons-react";
 import { ProjectRepository, OrganizationRepository, BackupRepository, ScheduleRepository } from "db";
-import { getCurrentUser } from "@/lib/current-user";
+import { requireCurrentUser } from "@/lib/current-user";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { OrgSidebar } from "@/components/layout/app-sidebar";
 import { OrgPickerClientActions } from "@/components/layout/org-picker-client-actions";
@@ -27,7 +27,7 @@ interface Props {
 
 export default async function OrgProjectsPage({ params }: Props) {
   const { orgId } = await params;
-  const user = await getCurrentUser();
+  const user = await requireCurrentUser();
 
   let org: { id: string; name: string; slug: string } | null = null;
   try {
