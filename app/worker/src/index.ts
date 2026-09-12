@@ -1,5 +1,7 @@
 import 'dotenv/config';
 
+import http from "node:http";
+
 import {logger} from 'shared/config/logger';
 
 import {redis} from 'shared/config/redis';
@@ -117,3 +119,13 @@ async function main() {
 
 
 main();
+
+
+const port = Number(process.env.PORT) || 8080;
+
+http.createServer((_, res) => res.end("Backlify Worker is running!")).listen(port, () => {
+
+  logger.info(`Health check server listening on port ${port}`);
+
+});
+

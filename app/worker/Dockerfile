@@ -35,12 +35,23 @@ RUN mkdir -p /app/app/worker/src/temp
 # 5. Build worker TypeScript
 RUN npm run build --workspace=worker
 
-# 6. Set production environment defaults
+# 6. Prune devDependencies to minimize RAM and disk consumption
+RUN npm prune --omit=dev --workspace=shared --workspace=db --workspace=worker && npm cache clean --force
+
+# 7. Set production environment defaults
 ENV NODE_ENV=production
 ENV PG_DUMP_PATH=pg_dump
 ENV PG_RESTORE_PATH=pg_restore
 
-# 7. Start the worker daemon using the pre-compiled production bundle
+# 8. Enforce Node.js memory safety for 512MB container environments
+# Caps V8 heap at 384MB so it never triggers OOM-killer (leaves 128MB for OS & pg_dump)
+ENV NODE_OPTIONS="--max-old-space-size=384"
+ENV PORT=8080
+
+EXPOSE 8080
+
+# 9. Start the worker daemon using the pre-compiled production bundle
 WORKDIR /app/app/worker
 CMD ["node", "dist/index.js"]
+
 

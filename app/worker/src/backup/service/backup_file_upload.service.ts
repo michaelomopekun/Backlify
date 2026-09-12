@@ -1,4 +1,4 @@
-import { promises as fs } from "fs";
+import { promises as fs, createReadStream } from "fs";
 
 import { createHash } from "crypto";
 
@@ -214,14 +214,19 @@ export class BackupFileUploadService {
      */
     private async generateChecksum(filePath: string): Promise<string> {
 
-        const fileBuffer = await fs.readFile(filePath);
-
-        const hash = createHash("sha256");
-
-        hash.update(fileBuffer);
-
-        return hash.digest("hex");
-
+        return new Promise((resolve, reject) => {
+        
+            const hash = createHash("sha256");
+        
+            const stream = createReadStream(filePath);
+        
+            stream.on("data", (chunk) => hash.update(chunk));
+        
+            stream.on("end", () => resolve(hash.digest("hex")));
+        
+            stream.on("error", reject);
+        
+        });
     }
 
 }
