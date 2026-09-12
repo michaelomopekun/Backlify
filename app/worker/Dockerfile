@@ -16,13 +16,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 
 # 1. Copy workspace manifests for optimal Docker layer caching
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json* ./
 COPY package/shared/package.json ./package/shared/
 COPY package/db/package.json ./package/db/
 COPY app/worker/package.json ./app/worker/
 
 # 2. Install dependencies for worker and its internal workspace dependencies
-RUN npm ci --workspace=shared --workspace=db --workspace=worker
+RUN if [ -f package-lock.json ]; then \
+        npm ci --workspace=shared --workspace=db --workspace=worker; \
+    else \
+        npm install --workspace=shared --workspace=db --workspace=worker; \
+    fi
 
 # 3. Copy source code
 COPY package/shared ./package/shared
