@@ -4,6 +4,8 @@ import { OrgPickerHeader } from "@/components/layout/org-picker-header";
 import { NewProjectForm } from "@/components/projects/new/new-project-form";
 import { redirect } from "next/navigation";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "New Project | Backlify",
   description: "Connect a PostgreSQL database and configure automated backups.",

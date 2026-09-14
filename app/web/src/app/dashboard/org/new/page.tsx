@@ -1,6 +1,8 @@
 import { OrgPickerHeader } from "@/components/layout/org-picker-header";
 import { NewOrgForm } from "@/components/org/new-org-form";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "New Organization | Backlify",
   description: "Create a new organization to manage your PostgreSQL projects.",
