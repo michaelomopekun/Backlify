@@ -65,8 +65,65 @@ export interface ProjectOverviewProps {
   };
   schedules?: any[];
   backupJobs?: any[];
+  restoreJobs?: any[];
   orgId: string;
   projectId: string;
+}
+
+/**
+ * Buckets an array of jobs (each with a `createdAt` timestamp) into `bucketCount`
+ * equal-width time slots across the full time range. Returns an array of
+ * percentage heights (0-100) suitable for rendering sparkline bars.
+ * When no jobs exist, returns all zeros so the bars render as empty.
+ */
+function buildSparkline(jobs: any[], bucketCount = 12): number[] {
+  if (jobs.length === 0) return new Array(bucketCount).fill(0);
+
+  const timestamps = jobs.map((j) => {
+    const d = new Date(j.createdAt);
+    return isNaN(d.getTime()) ? Date.now() : d.getTime();
+  });
+
+  const minTs = Math.min(...timestamps);
+  const maxTs = Math.max(...timestamps);
+  // If all jobs share the same timestamp, spread across last hour
+  const range = maxTs > minTs ? maxTs - minTs : 3600_000;
+  const bucketWidth = range / bucketCount;
+
+  const buckets = new Array(bucketCount).fill(0);
+  for (const ts of timestamps) {
+    const idx = Math.min(Math.floor((ts - minTs) / bucketWidth), bucketCount - 1);
+    buckets[idx]++;
+  }
+
+  const maxCount = Math.max(...buckets, 1);
+  return buckets.map((count: number) => Math.round((count / maxCount) * 100));
+}
+
+/**
+ * Same as buildSparkline but sums `fileSize` per bucket instead of counting jobs.
+ */
+function buildStorageSparkline(jobs: any[], bucketCount = 12): number[] {
+  if (jobs.length === 0) return new Array(bucketCount).fill(0);
+
+  const entries = jobs.map((j) => {
+    const d = new Date(j.createdAt);
+    return { ts: isNaN(d.getTime()) ? Date.now() : d.getTime(), size: j.fileSize || 0 };
+  });
+
+  const minTs = Math.min(...entries.map((e) => e.ts));
+  const maxTs = Math.max(...entries.map((e) => e.ts));
+  const range = maxTs > minTs ? maxTs - minTs : 3600_000;
+  const bucketWidth = range / bucketCount;
+
+  const buckets = new Array(bucketCount).fill(0);
+  for (const { ts, size } of entries) {
+    const idx = Math.min(Math.floor((ts - minTs) / bucketWidth), bucketCount - 1);
+    buckets[idx] += size;
+  }
+
+  const maxVal = Math.max(...buckets, 1);
+  return buckets.map((val: number) => Math.round((val / maxVal) * 100));
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -457,9 +514,11 @@ function TopPanelContent({
 function TelemetryPanelContent({
   backupJobs = [],
   schedules = [],
+  restoreJobs = [],
 }: {
   backupJobs?: any[];
   schedules?: any[];
+  restoreJobs?: any[];
 }) {
   const { activatorRef, listeners } = React.useContext(WidgetDragContext);
 
@@ -469,10 +528,19 @@ function TelemetryPanelContent({
   const scheduledErrors = scheduledBackups.filter((j) => j.status === "failed");
   const manualErrors = manualBackups.filter((j) => j.status === "failed");
 
+  const completedRestores = restoreJobs.filter((j) => j.status === "completed");
+  const failedRestores = restoreJobs.filter((j) => j.status === "failed");
+
   const totalBytes = completedBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
   const successRate = backupJobs.length > 0
     ? `${((completedBackups.length / backupJobs.length) * 100).toFixed(1)}%`
     : "—";
+
+  // Build sparklines from real data
+  const scheduledSparkline = buildSparkline(scheduledBackups);
+  const manualSparkline = buildSparkline(manualBackups);
+  const restoreSparkline = buildSparkline(restoreJobs);
+  const storageSparkline = buildStorageSparkline(completedBackups);
 
   return (
     <div className="space-y-4 pt-4">
@@ -510,8 +578,10 @@ function TelemetryPanelContent({
             <p className="text-2xl font-normal text-foreground tracking-tight">{scheduledBackups.length}</p>
           </CardContent>
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-center justify-center h-16 border-b border-border pb-0.5 text-[11px] font-mono text-muted-foreground">
-              {scheduledBackups.length === 0 ? "No scheduled backups run" : `${scheduledBackups.length} scheduled execution(s)`}
+            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
+              {scheduledSparkline.map((h,i) => (
+                <div key={i} className="flex-1 rounded-t-[1px] bg-emerald-400 hover:bg-emerald-300 transition-colors" style={{ height:`${h || 8}%`, opacity: h ? 1 : 0.15 }} />
+              ))}
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
               <span>Status</span><span>{scheduledErrors.length > 0 ? "Errors detected" : "Operational"}</span>
@@ -533,8 +603,10 @@ function TelemetryPanelContent({
             <p className="text-2xl font-normal text-foreground tracking-tight">{manualBackups.length}</p>
           </CardContent>
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-center justify-center h-16 border-b border-border pb-0.5 text-[11px] font-mono text-muted-foreground">
-              {manualBackups.length === 0 ? "No manual backups triggered" : `${manualBackups.length} manual trigger(s)`}
+            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
+              {manualSparkline.map((h,i) => (
+                <div key={i} className="flex-1 rounded-t-[1px] bg-primary hover:bg-primary/80 transition-colors" style={{ height:`${h||8}%`, opacity: h ? 1 : 0.15 }} />
+              ))}
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
               <span>Activity</span><span>{manualBackups.length > 0 ? "Active" : "None"}</span>
@@ -547,18 +619,20 @@ function TelemetryPanelContent({
           <CardHeader className="pb-0">
             <div className="flex items-start justify-between">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">RESTORE DRILLS</p>
-              <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-emerald-400" />ERRORS 0</Badge>
+              <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className={`size-1.5 rounded-full ${failedRestores.length > 0 ? "bg-red-400" : "bg-emerald-400"}`} />ERRORS {failedRestores.length}</Badge>
             </div>
           </CardHeader>
           <CardContent className="-mt-2">
-            <p className="text-2xl font-normal text-foreground tracking-tight">0</p>
+            <p className="text-2xl font-normal text-foreground tracking-tight">{restoreJobs.length}</p>
           </CardContent>
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-center justify-center h-16 border-b border-border pb-0.5 text-[11px] font-mono text-muted-foreground">
-              No restore drills recorded
+            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
+              {restoreSparkline.map((h,i) => (
+                <div key={i} className="flex-1 rounded-t-[1px] bg-blue-400 hover:bg-blue-300 transition-colors" style={{ height:`${h||8}%`, opacity: h ? 1 : 0.15 }} />
+              ))}
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
-              <span>Standby</span><span>0 completed</span>
+              <span>{restoreJobs.length > 0 ? "Active" : "Standby"}</span><span>{completedRestores.length} completed</span>
             </div>
           </CardFooter>
         </Card>
@@ -575,8 +649,10 @@ function TelemetryPanelContent({
             <p className="text-2xl font-normal text-foreground tracking-tight">{formatBytes(totalBytes)}</p>
           </CardContent>
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-center justify-center h-16 border-b border-border pb-0.5 text-[11px] font-mono text-muted-foreground">
-              {completedBackups.length === 0 ? "No storage consumed" : `${completedBackups.length} snapshot(s) encrypted`}
+            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
+              {storageSparkline.map((h,i) => (
+                <div key={i} className="flex-1 rounded-t-[1px] bg-emerald-400 hover:bg-emerald-300 transition-colors" style={{ height:`${h||8}%`, opacity: h ? 1 : 0.15 }} />
+              ))}
             </div>
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
               <span>Vault</span><span>Encrypted</span>
@@ -620,6 +696,7 @@ export function ProjectOverviewHeader({
   project,
   schedules = [],
   backupJobs = [],
+  restoreJobs = [],
   orgId,
   projectId,
 }: ProjectOverviewProps) {
@@ -679,6 +756,7 @@ export function ProjectOverviewHeader({
       <TelemetryPanelContent
         backupJobs={backupJobs}
         schedules={schedules}
+        restoreJobs={restoreJobs}
       />
     ),
   };

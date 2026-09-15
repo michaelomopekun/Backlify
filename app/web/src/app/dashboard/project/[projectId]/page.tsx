@@ -1,4 +1,4 @@
-import { ProjectRepository, ScheduleRepository, BackupRepository } from "db";
+import { ProjectRepository, ScheduleRepository, BackupRepository, RestoreRepository } from "db";
 import { ProjectOverviewHeader } from "@/components/projects/overview/project-overview-client";
 import { redirect } from "next/navigation";
 
@@ -14,12 +14,14 @@ export default async function ProjectOverviewPage({ params }: Props) {
   let project: { id: string; name: string; databaseUrl: string; orgId?: string | null; retentionCount?: number | null } | null = null;
   let schedules: any[] = [];
   let backupJobs: any[] = [];
+  let restoreJobs: any[] = [];
 
   try {
     project = await ProjectRepository.getProjectById(projectId);
     if (project) {
       schedules = await ScheduleRepository.getSchedulesByProjectId(projectId);
       backupJobs = await BackupRepository.listBackups({ projectId });
+      restoreJobs = await RestoreRepository.listRestoreJobsByProjectId(projectId);
     }
   } catch (err) {
     console.error("Failed to load project overview data:", err);
@@ -37,9 +39,11 @@ export default async function ProjectOverviewPage({ params }: Props) {
         project={project}
         schedules={schedules}
         backupJobs={backupJobs}
+        restoreJobs={restoreJobs}
         orgId={orgId}
         projectId={projectId}
       />
     </div>
   );
 }
+
