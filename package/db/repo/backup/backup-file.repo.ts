@@ -25,6 +25,8 @@ export interface BackupFile {
 
     isEncrypted?: boolean;
 
+    purgedAt?: Date | null;
+
 }
 
 
@@ -162,6 +164,40 @@ export class BackupFileRepository {
         } catch (error) {
 
             logger.error({ backupJobId, error }, "Failed to delete backup file");
+
+            throw error;
+
+        }
+
+    }
+
+    static async markAsPurgedByJobId(backupJobId: string) {
+
+        try {
+
+            logger.info({ backupJobId }, "Marking backup file as purged by job ID");
+
+            const result = await db
+
+                .update(backupFiles)
+
+                .set({
+
+                    purgedAt: new Date(),
+
+                    updatedAt: new Date(),
+
+                })
+
+                .where(eq(backupFiles.backupJobId, backupJobId))
+
+                .returning();
+
+            return result[0];
+
+        } catch (error) {
+
+            logger.error({ backupJobId, error }, "Failed to mark backup file as purged");
 
             throw error;
 

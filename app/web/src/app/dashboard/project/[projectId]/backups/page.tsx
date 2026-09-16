@@ -31,10 +31,19 @@ export default async function BackupsPage({
   const orgId = project.orgId ?? "default-org";
 
   const initialBackups = rawBackups.map((b) => {
-    const started = b.startedAt ? new Date(b.startedAt).getTime() : 0;
-    const completed = b.completedAt ? new Date(b.completedAt).getTime() : 0;
+    const started = b.startedAt
+      ? new Date(b.startedAt).getTime()
+      : b.createdAt
+      ? new Date(b.createdAt).getTime()
+      : 0;
+    const completed = b.completedAt
+      ? new Date(b.completedAt).getTime()
+      : b.failedAt
+      ? new Date(b.failedAt).getTime()
+      : 0;
     const durationSec = completed > started ? Math.round((completed - started) / 1000) : 0;
-    const sizeMb = b.fileSize ? Math.round(b.fileSize / (1024 * 1024)) : 0;
+    const fileSize = typeof b.fileSize === "number" ? b.fileSize : 0;
+    const isPurged = Boolean(b.purgedAt);
 
     let status: "complete" | "in_progress" | "failed" = "in_progress";
     if (b.status === "completed") status = "complete";
@@ -54,8 +63,10 @@ export default async function BackupsPage({
         : "Just now",
       type: (b.id.includes("manual") ? "manual" : "scheduled") as "manual" | "scheduled",
       status,
-      sizeMb,
+      fileSize,
       durationSec,
+      isPurged,
+      purgedAt: b.purgedAt ? new Date(b.purgedAt).toISOString() : null,
       label: b.fileName ?? undefined,
     };
   });

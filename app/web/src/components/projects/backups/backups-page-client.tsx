@@ -30,6 +30,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import { formatBytes } from "@/lib/format";
+
 /* ─────────────────────────────────────────────────────────────────
    Types & Mock Data
 ───────────────────────────────────────────────────────────────────*/
@@ -42,8 +44,10 @@ interface Backup {
   timestamp: string;
   type: BackupType;
   status: BackupStatus;
-  sizeMb: number;
+  fileSize: number;
   durationSec: number;
+  isPurged?: boolean;
+  purgedAt?: string | null;
   label?: string;
 }
 
@@ -299,6 +303,7 @@ export function BackupsPageClient({
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | BackupType>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | BackupStatus>("all");
+  const [retentionFilter, setRetentionFilter] = useState<"all" | "active" | "pruned">("all");
   const [activeTelemetryJobId, setActiveTelemetryJobId] = useState<string | null>(null);
 
   const handleBackupSuccess = (jobId: string, label?: string) => {
@@ -307,8 +312,9 @@ export function BackupsPageClient({
       timestamp: "Just now",
       type: "manual",
       status: "in_progress",
-      sizeMb: 0,
+      fileSize: 0,
       durationSec: 0,
+      isPurged: false,
       label: label ?? "manual-trigger",
     };
     setBackupsList((prev) => [newEntry, ...prev]);
@@ -321,17 +327,26 @@ export function BackupsPageClient({
       (b.label ?? "").toLowerCase().includes(search.toLowerCase());
     const matchType = typeFilter === "all" || b.type === typeFilter;
     const matchStatus = statusFilter === "all" || b.status === statusFilter;
-    return matchSearch && matchType && matchStatus;
+    const matchRetention =
+      retentionFilter === "all"
+        ? true
+        : retentionFilter === "active"
+        ? !b.isPurged
+        : Boolean(b.isPurged);
+    return matchSearch && matchType && matchStatus && matchRetention;
   });
 
   const scheduledCount = backupsList.filter((b) => b.type === "scheduled").length;
   const manualCount = backupsList.filter((b) => b.type === "manual").length;
   const failedCount = backupsList.filter((b) => b.status === "failed").length;
   const inProgressCount = backupsList.filter((b) => b.status === "in_progress").length;
-  const totalMb = backupsList.filter((b) => b.status === "complete").reduce(
-    (sum, b) => sum + b.sizeMb,
-    0
-  );
+  
+  // Storage is only consumed by active (non-purged) snapshots
+  const activeCompletedBackups = backupsList.filter((b) => b.status === "complete" && !b.isPurged);
+  const totalStorageBytes = activeCompletedBackups.reduce((sum, b) => sum + b.fileSize, 0);
+  const activeCount = backupsList.filter((b) => !b.isPurged).length;
+  const prunedCount = backupsList.filter((b) => b.isPurged).length;
+
   const successCount = backupsList.filter((b) => b.status === "complete").length;
   const successRate = backupsList.length > 0 ? Math.round((successCount / backupsList.length) * 100) : null;
 
@@ -354,7 +369,7 @@ export function BackupsPageClient({
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Backups</h1>
           <p className="text-xs sm:text-sm text-muted-foreground font-normal">
             {backupsList.length > 0
-              ? `${totalMb} MB stored · ${backupsList.length} snapshot${backupsList.length === 1 ? "" : "s"}`
+              ? `${formatBytes(totalStorageBytes)} active vault storage · ${backupsList.length} total snapshot${backupsList.length === 1 ? "" : "s"} (${activeCount} active, ${prunedCount} pruned)`
               : "No snapshots created yet"}
           </p>
         </div>
@@ -373,14 +388,14 @@ export function BackupsPageClient({
           icon={IconDatabaseImport}
           label="Total Snapshots"
           value={String(backupsList.length)}
-          sub={`${scheduledCount} scheduled · ${manualCount} manual`}
+          sub={`${activeCount} active · ${prunedCount} pruned`}
           accent="text-emerald-400"
         />
         <StatCard
           icon={IconCloudUpload}
           label="Total Stored"
-          value={`${totalMb} MB`}
-          sub={backupsList.length > 0 ? "AES-256 Encrypted" : "Storage Standby"}
+          value={formatBytes(totalStorageBytes)}
+          sub={activeCompletedBackups.length > 0 ? "AES-256 Encrypted in Vault" : "Storage Standby"}
           accent="text-blue-400"
         />
         <StatCard
@@ -499,6 +514,22 @@ export function BackupsPageClient({
                 <DropdownMenuItem onClick={() => setStatusFilter("failed")}>Failed</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            {/* Retention filter */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-1.5 h-8 px-3 text-[12px] text-[#888888] border border-[#1e1e1e] bg-[#111111] rounded hover:text-white hover:border-[#2a2a2a] transition-colors font-mono">
+                  <IconClock className="size-3" />
+                  {retentionFilter === "all" ? "Retention: All" : retentionFilter === "active" ? "Active Only" : "Pruned Only"}
+                  <IconChevronDown className="size-3" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-36 bg-[#111111] border-[#222222] text-[12px]">
+                <DropdownMenuItem onClick={() => setRetentionFilter("all")}>All Snapshots</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setRetentionFilter("active")}>Active Only</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setRetentionFilter("pruned")}>Pruned Only</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 
@@ -527,12 +558,14 @@ export function BackupsPageClient({
                     idx !== filtered.length - 1 ? "border-b border-[#161616]" : ""
                   }`}
                 >
-                  {/* Timestamp + label */}
+                  {/* Timestamp + label + Pruned badge */}
                   <div className="flex items-center gap-2.5 min-w-0">
                     <span
                       className={`size-1.5 rounded-full shrink-0 ${
                         backup.status === "complete"
-                          ? "bg-emerald-400"
+                          ? backup.isPurged
+                            ? "bg-zinc-500"
+                            : "bg-emerald-400"
                           : backup.status === "in_progress"
                           ? "bg-amber-400 animate-pulse"
                           : "bg-red-500"
@@ -544,23 +577,33 @@ export function BackupsPageClient({
                         {backup.label}
                       </span>
                     )}
+                    {backup.isPurged && (
+                      <span
+                        className="inline-flex items-center px-1.5 py-0.5 rounded text-[9.5px] font-mono uppercase tracking-wider bg-zinc-800/90 text-zinc-400 border border-zinc-700/60 shrink-0"
+                        title={`Dump purged per retention policy${backup.purgedAt ? ` on ${new Date(backup.purgedAt).toLocaleDateString()}` : ""}`}
+                      >
+                        Pruned
+                      </span>
+                    )}
                   </div>
 
                   {/* Type */}
                   <TypeBadge type={backup.type} />
 
-                  {/* Size */}
-                  <span className="text-[13px] font-mono text-[#888888]">
-                    {backup.sizeMb > 0 ? `${backup.sizeMb} MB` : "—"}
+                  {/* Size (Accurately formatted, preserved even if pruned) */}
+                  <span className={`text-[13px] font-mono tabular-nums ${backup.isPurged ? "text-zinc-500" : "text-[#888888]"}`}>
+                    {formatBytes(backup.fileSize)}
                   </span>
 
                   {/* Status */}
                   <StatusBadge status={backup.status} />
 
                   {/* Duration */}
-                  <span className="text-[13px] font-mono text-[#888888]">
+                  <span className="text-[13px] font-mono tabular-nums text-[#888888]">
                     {backup.durationSec > 0
-                      ? `${Math.floor(backup.durationSec / 60)}m ${backup.durationSec % 60}s`
+                      ? backup.durationSec >= 60
+                        ? `${Math.floor(backup.durationSec / 60)}m ${backup.durationSec % 60}s`
+                        : `${backup.durationSec}s`
                       : "—"}
                   </span>
 
@@ -578,7 +621,7 @@ export function BackupsPageClient({
                       </DropdownMenuTrigger>
                       <DropdownMenuContent
                         align="end"
-                        className="w-44 bg-[#111111] border-[#222222] text-[12px]"
+                        className="w-48 bg-[#111111] border-[#222222] text-[12px]"
                       >
                         <DropdownMenuItem
                           onClick={() => setActiveTelemetryJobId(backup.id)}
@@ -586,19 +629,35 @@ export function BackupsPageClient({
                         >
                           <IconTerminal2 className="size-3.5 text-muted-foreground" /> Live Console & Logs
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="gap-2 cursor-pointer text-white">
-                          <IconDownload className="size-3.5 text-[#888888]" /> Download dump
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => {
-                            window.dispatchEvent(
-                              new CustomEvent("backlify:open-modal", { detail: "restore" })
-                            );
-                          }}
-                          className="gap-2 cursor-pointer text-white"
-                        >
-                          <IconRotateClockwise className="size-3.5 text-[#888888]" /> Restore database
-                        </DropdownMenuItem>
+
+                        {backup.isPurged ? (
+                          <DropdownMenuItem disabled className="gap-2 text-[#555555] cursor-not-allowed">
+                            <IconDownload className="size-3.5 text-[#444444]" /> Download dump (Pruned)
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem asChild className="gap-2 cursor-pointer text-white">
+                            <a href={`/api/backups/${backup.id}/download`}>
+                              <IconDownload className="size-3.5 text-[#888888]" /> Download dump
+                            </a>
+                          </DropdownMenuItem>
+                        )}
+
+                        {backup.isPurged ? (
+                          <DropdownMenuItem disabled className="gap-2 text-[#555555] cursor-not-allowed">
+                            <IconRotateClockwise className="size-3.5 text-[#444444]" /> Restore (Pruned)
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem
+                            onClick={() => {
+                              window.dispatchEvent(
+                                new CustomEvent("backlify:open-modal", { detail: "restore" })
+                              );
+                            }}
+                            className="gap-2 cursor-pointer text-white"
+                          >
+                            <IconRotateClockwise className="size-3.5 text-[#888888]" /> Restore database
+                          </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator className="bg-[#1e1e1e]" />
                         <DropdownMenuItem className="gap-2 cursor-pointer text-red-400 focus:text-red-400">
                           <IconTrash className="size-3.5" /> Delete snapshot

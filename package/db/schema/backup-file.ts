@@ -26,6 +26,8 @@ export const backupFiles = pgTable('backup_files', {
 
   isEncrypted: boolean('is_encrypted').notNull().default(false),
 
+  purgedAt: timestamp('purged_at'),
+
   createdAt: timestamp('created_at').notNull().defaultNow(),
 
   updatedAt: timestamp('updated_at').notNull().defaultNow(),

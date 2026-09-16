@@ -71,13 +71,23 @@ export interface ProjectOverviewProps {
 }
 
 /**
- * Buckets an array of jobs (each with a `createdAt` timestamp) into `bucketCount`
- * equal-width time slots across the full time range. Returns an array of
- * percentage heights (0-100) suitable for rendering sparkline bars.
- * When no jobs exist, returns all zeros so the bars render as empty.
+ * A single sparkline data point: percentage height, raw value, and time label.
  */
-function buildSparkline(jobs: any[], bucketCount = 12): number[] {
-  if (jobs.length === 0) return new Array(bucketCount).fill(0);
+interface SparklineBucket {
+  pct: number;
+  raw: number;
+  label: string;
+}
+
+/**
+ * Buckets an array of jobs (each with a `createdAt` timestamp) into `bucketCount`
+ * equal-width time slots across the full time range.
+ * Returns an array of { pct, raw, label } objects for rendering sparkline bars with tooltips.
+ */
+function buildSparkline(jobs: any[], bucketCount = 12): SparklineBucket[] {
+  if (jobs.length === 0) {
+    return new Array(bucketCount).fill(null).map(() => ({ pct: 0, raw: 0, label: "" }));
+  }
 
   const timestamps = jobs.map((j) => {
     const d = new Date(j.createdAt);
@@ -86,7 +96,6 @@ function buildSparkline(jobs: any[], bucketCount = 12): number[] {
 
   const minTs = Math.min(...timestamps);
   const maxTs = Math.max(...timestamps);
-  // If all jobs share the same timestamp, spread across last hour
   const range = maxTs > minTs ? maxTs - minTs : 3600_000;
   const bucketWidth = range / bucketCount;
 
@@ -97,14 +106,24 @@ function buildSparkline(jobs: any[], bucketCount = 12): number[] {
   }
 
   const maxCount = Math.max(...buckets, 1);
-  return buckets.map((count: number) => Math.round((count / maxCount) * 100));
+  return buckets.map((count: number, i: number) => {
+    const bucketStart = new Date(minTs + i * bucketWidth);
+    const label = bucketStart.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+    return {
+      pct: Math.round((count / maxCount) * 100),
+      raw: count,
+      label,
+    };
+  });
 }
 
 /**
  * Same as buildSparkline but sums `fileSize` per bucket instead of counting jobs.
  */
-function buildStorageSparkline(jobs: any[], bucketCount = 12): number[] {
-  if (jobs.length === 0) return new Array(bucketCount).fill(0);
+function buildStorageSparkline(jobs: any[], bucketCount = 12): SparklineBucket[] {
+  if (jobs.length === 0) {
+    return new Array(bucketCount).fill(null).map(() => ({ pct: 0, raw: 0, label: "" }));
+  }
 
   const entries = jobs.map((j) => {
     const d = new Date(j.createdAt);
@@ -123,7 +142,102 @@ function buildStorageSparkline(jobs: any[], bucketCount = 12): number[] {
   }
 
   const maxVal = Math.max(...buckets, 1);
-  return buckets.map((val: number) => Math.round((val / maxVal) * 100));
+  return buckets.map((val: number, i: number) => {
+    const bucketStart = new Date(minTs + i * bucketWidth);
+    const label = bucketStart.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+    return {
+      pct: Math.round((val / maxVal) * 100),
+      raw: val,
+      label,
+    };
+  });
+}
+
+/**
+ * Interactive sparkline bar chart with hover tooltips.
+ * Each bar scales up, glows, and shows a floating tooltip with raw value and timestamp.
+ * Tooltip position is horizontally clamped so it never clips against card boundaries.
+ */
+function SparklineChart({
+  data,
+  color,
+  formatValue,
+}: {
+  data: SparklineBucket[];
+  /** Tailwind color class for the bars, e.g. "bg-emerald-400" */
+  color: string;
+  /** Optional value formatter for the tooltip (defaults to showing count) */
+  formatValue?: (raw: number) => string;
+}) {
+  const [hoveredIdx, setHoveredIdx] = React.useState<number | null>(null);
+  const displayValue = formatValue || ((v: number) => `${v}`);
+
+  return (
+    <div className="relative flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
+      {data.map((bucket, i) => {
+        const isEmpty = bucket.pct === 0;
+        const isHovered = hoveredIdx === i;
+
+        // Horizontally clamp tooltip so it never extends past chart / card edges
+        const isLeftEdge = i <= 2;
+        const isRightEdge = i >= data.length - 3;
+        const alignClass = isLeftEdge
+          ? "left-0 translate-x-0"
+          : isRightEdge
+          ? "right-0 left-auto translate-x-0"
+          : "left-1/2 -translate-x-1/2";
+
+        const caretClass = isLeftEdge
+          ? "left-2.5"
+          : isRightEdge
+          ? "right-2.5"
+          : "left-1/2 -translate-x-1/2";
+
+        return (
+          <div
+            key={i}
+            className="relative flex-1 flex flex-col items-center"
+            style={{ height: "100%" }}
+            onMouseEnter={() => setHoveredIdx(i)}
+            onMouseLeave={() => setHoveredIdx(null)}
+          >
+            {/* Tooltip */}
+            {isHovered && (
+              <div
+                className={`absolute bottom-[calc(100%+8px)] ${alignClass} z-50 pointer-events-none animate-in fade-in zoom-in-95 duration-150`}
+              >
+                <div className="relative whitespace-nowrap rounded-md border border-[#2e2e2e] bg-[#0c0c0c]/98 backdrop-blur-md px-2.5 py-1 text-[10.5px] font-mono text-white shadow-2xl drop-shadow-lg ring-1 ring-white/10">
+                  <span className="font-semibold tabular-nums text-foreground">{displayValue(bucket.raw)}</span>
+                  {bucket.label && <span className="text-muted-foreground ml-1.5">{bucket.label}</span>}
+
+                  {/* Micro-caret pointing down towards the bar */}
+                  <div
+                    className={`absolute -bottom-1 size-2 rotate-45 border-r border-b border-[#2e2e2e] bg-[#0c0c0c] ${caretClass}`}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Bar */}
+            <div
+              className={`w-full rounded-t-[1.5px] transition-all duration-150 mt-auto cursor-pointer ${color} ${
+                isHovered
+                  ? "brightness-125 scale-x-110 scale-y-105 shadow-[0_0_10px_rgba(255,255,255,0.25)]"
+                  : hoveredIdx !== null
+                  ? "opacity-35"
+                  : isEmpty
+                  ? "opacity-15"
+                  : "opacity-85 hover:opacity-100"
+              }`}
+              style={{
+                height: `${isEmpty ? 8 : bucket.pct}%`,
+              }}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -495,7 +609,7 @@ function TopPanelContent({
               </div>
             </CardContent>
             <CardFooter className="flex items-center justify-between text-[10.5px] text-muted-foreground font-mono">
-              <Badge variant="outline" className="text-[10px] font-mono">{completedBackups.length} Snapshots</Badge>
+              <Badge variant="outline" className="text-[10px] font-mono">{completedBackups.filter((b) => !b.purgedAt).length} Snapshots</Badge>
               <Badge variant="outline" className="text-[10px] font-mono">{activeSchedules.length} Schedules</Badge>
               <Badge variant="outline" className="text-[10px] font-mono">{project.retentionCount ? `Retention: ${project.retentionCount}` : "Retention: —"}</Badge>
             </CardFooter>
@@ -531,7 +645,8 @@ function TelemetryPanelContent({
   const completedRestores = restoreJobs.filter((j) => j.status === "completed");
   const failedRestores = restoreJobs.filter((j) => j.status === "failed");
 
-  const totalBytes = completedBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+  const activeCompletedBackups = completedBackups.filter((b) => !b.purgedAt);
+  const totalBytes = activeCompletedBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
   const successRate = backupJobs.length > 0
     ? `${((completedBackups.length / backupJobs.length) * 100).toFixed(1)}%`
     : "—";
@@ -565,7 +680,7 @@ function TelemetryPanelContent({
       {/* 4 Telemetry Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Scheduled Backups */}
-        <Card className="flex flex-col justify-between h-48">
+        <Card className="flex flex-col justify-between h-52 overflow-visible">
           <CardHeader className="pb-0">
             <div className="flex items-start justify-between">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">SCHEDULED BACKUPS</p>
@@ -577,12 +692,8 @@ function TelemetryPanelContent({
           <CardContent className="-mt-2">
             <p className="text-2xl font-normal text-foreground tracking-tight">{scheduledBackups.length}</p>
           </CardContent>
-          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
-              {scheduledSparkline.map((h,i) => (
-                <div key={i} className="flex-1 rounded-t-[1px] bg-emerald-400 hover:bg-emerald-300 transition-colors" style={{ height:`${h || 8}%`, opacity: h ? 1 : 0.15 }} />
-              ))}
-            </div>
+          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
+            <SparklineChart data={scheduledSparkline} color="bg-emerald-400" formatValue={(v) => `${v} job${v !== 1 ? "s" : ""}`} />
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
               <span>Status</span><span>{scheduledErrors.length > 0 ? "Errors detected" : "Operational"}</span>
             </div>
@@ -590,7 +701,7 @@ function TelemetryPanelContent({
         </Card>
 
         {/* Manual Triggers */}
-        <Card className="flex flex-col justify-between h-48">
+        <Card className="flex flex-col justify-between h-52 overflow-visible">
           <CardHeader className="pb-0">
             <div className="flex items-start justify-between">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">MANUAL TRIGGERS</p>
@@ -602,12 +713,8 @@ function TelemetryPanelContent({
           <CardContent className="-mt-2">
             <p className="text-2xl font-normal text-foreground tracking-tight">{manualBackups.length}</p>
           </CardContent>
-          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
-              {manualSparkline.map((h,i) => (
-                <div key={i} className="flex-1 rounded-t-[1px] bg-primary hover:bg-primary/80 transition-colors" style={{ height:`${h||8}%`, opacity: h ? 1 : 0.15 }} />
-              ))}
-            </div>
+          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
+            <SparklineChart data={manualSparkline} color="bg-primary" formatValue={(v) => `${v} trigger${v !== 1 ? "s" : ""}`} />
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
               <span>Activity</span><span>{manualBackups.length > 0 ? "Active" : "None"}</span>
             </div>
@@ -615,7 +722,7 @@ function TelemetryPanelContent({
         </Card>
 
         {/* Restore Drills */}
-        <Card className="flex flex-col justify-between h-48">
+        <Card className="flex flex-col justify-between h-52 overflow-visible">
           <CardHeader className="pb-0">
             <div className="flex items-start justify-between">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">RESTORE DRILLS</p>
@@ -625,12 +732,8 @@ function TelemetryPanelContent({
           <CardContent className="-mt-2">
             <p className="text-2xl font-normal text-foreground tracking-tight">{restoreJobs.length}</p>
           </CardContent>
-          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
-              {restoreSparkline.map((h,i) => (
-                <div key={i} className="flex-1 rounded-t-[1px] bg-blue-400 hover:bg-blue-300 transition-colors" style={{ height:`${h||8}%`, opacity: h ? 1 : 0.15 }} />
-              ))}
-            </div>
+          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
+            <SparklineChart data={restoreSparkline} color="bg-blue-400" formatValue={(v) => `${v} drill${v !== 1 ? "s" : ""}`} />
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
               <span>{restoreJobs.length > 0 ? "Active" : "Standby"}</span><span>{completedRestores.length} completed</span>
             </div>
@@ -638,22 +741,18 @@ function TelemetryPanelContent({
         </Card>
 
         {/* Total Storage Stored */}
-        <Card className="flex flex-col justify-between h-48">
+        <Card className="flex flex-col justify-between h-52 overflow-visible">
           <CardHeader className="pb-0">
             <div className="flex items-start justify-between">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">TOTAL STORAGE</p>
-              <Badge variant="outline" className="text-[10px] font-mono text-emerald-400">{completedBackups.length} Files</Badge>
+              <Badge variant="outline" className="text-[10px] font-mono text-emerald-400">{activeCompletedBackups.length} Active Files</Badge>
             </div>
           </CardHeader>
           <CardContent className="-mt-2">
             <p className="text-2xl font-normal text-foreground tracking-tight">{formatBytes(totalBytes)}</p>
           </CardContent>
-          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4">
-            <div className="flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
-              {storageSparkline.map((h,i) => (
-                <div key={i} className="flex-1 rounded-t-[1px] bg-emerald-400 hover:bg-emerald-300 transition-colors" style={{ height:`${h||8}%`, opacity: h ? 1 : 0.15 }} />
-              ))}
-            </div>
+          <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
+            <SparklineChart data={storageSparkline} color="bg-emerald-400" formatValue={(v) => formatBytes(v)} />
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
               <span>Vault</span><span>Encrypted</span>
             </div>

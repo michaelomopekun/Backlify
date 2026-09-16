@@ -1,6 +1,6 @@
 import { BackupJobStatusType, BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 
-import { db, and, eq, desc, lt, or, inArray } from "../../index";
+import { db, and, eq, desc, lt, or, inArray, isNull } from "../../index";
 
 import { backupJobs } from "../../schema/backup-job";
 
@@ -123,15 +123,21 @@ export class BackupRepository {
 
             logger.info({jobId, initialJobStatus, newJobStatus}, "Updating backup job status");
 
+            const updatePayload: Record<string, unknown> = {
+                status: newJobStatus as any,
+                updatedAt: new Date(),
+            };
+
+            if (newJobStatus === BACKUP_JOB_STATUS.IN_PROGRESS) {
+                updatePayload.startedAt = new Date();
+            } else if (newJobStatus === BACKUP_JOB_STATUS.COMPLETED) {
+                updatePayload.completedAt = new Date();
+            } else if (newJobStatus === BACKUP_JOB_STATUS.FAILED) {
+                updatePayload.failedAt = new Date();
+            }
+
             const result = await db.update(backupJobs)
-
-                .set({
-
-                    status: newJobStatus as any,
-                    
-                    updatedAt: new Date(),
-                
-                })
+                .set(updatePayload as any)
                 
                 .where(
                 
@@ -203,10 +209,12 @@ export class BackupRepository {
 
             }
 
-            if (newJobStatus === BACKUP_JOB_STATUS.FAILED) {
-
+            if (newJobStatus === BACKUP_JOB_STATUS.IN_PROGRESS) {
+                updatePayload.startedAt = new Date();
+            } else if (newJobStatus === BACKUP_JOB_STATUS.COMPLETED) {
+                updatePayload.completedAt = new Date();
+            } else if (newJobStatus === BACKUP_JOB_STATUS.FAILED) {
                 updatePayload.failedAt = new Date();
-
             }
 
             const result = await db.update(backupJobs)
@@ -315,6 +323,47 @@ export class BackupRepository {
 
     }
 
+    /**
+     * Fetches completed backups that still have active (unpurged) storage files in cloud storage.
+     * Used by the retention policy so it only prunes active files and leaves purged metadata alone.
+     */
+    static async getActiveRetainedBackupsForProject(projectId: string) {
+
+        try {
+
+            logger.info({ projectId }, "Fetching active retained backups for project");
+
+            const result = await db.select({
+                id: backupJobs.id,
+                projectId: backupJobs.projectId,
+                createdAt: backupJobs.createdAt,
+                fileId: backupFiles.id,
+                filePath: backupFiles.filePath,
+                fileSize: backupFiles.fileSize,
+            })
+                .from(backupJobs)
+                .innerJoin(backupFiles, eq(backupFiles.backupJobId, backupJobs.id))
+                .where(
+                    and(
+                        eq(backupJobs.projectId, projectId),
+                        eq(backupJobs.status, BACKUP_JOB_STATUS.COMPLETED as any),
+                        isNull(backupFiles.purgedAt)
+                    )
+                )
+                .orderBy(desc(backupJobs.createdAt));
+
+            return result;
+
+        } catch (error) {
+
+            logger.error({ projectId, error }, "Failed to fetch active retained backups");
+
+            throw error;
+
+        }
+
+    }
+
 
     /**
      * Cross-project backup feed. Joins the project (for its name) and the
@@ -367,6 +416,8 @@ export class BackupRepository {
                 fileName: backupFiles.fileName,
 
                 fileSize: backupFiles.fileSize,
+
+                purgedAt: backupFiles.purgedAt,
 
             })
 
