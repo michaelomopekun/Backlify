@@ -636,9 +636,14 @@ function TelemetryPanelContent({
 }) {
   const { activatorRef, listeners } = React.useContext(WidgetDragContext);
 
+  const isManualJob = (j: any) =>
+    j.triggerType === "manual" ||
+    j.jobType === "manual" ||
+    Boolean(j.id && j.id.toLowerCase().includes("manual"));
+
   const completedBackups = backupJobs.filter((j) => j.status === "completed");
-  const manualBackups = backupJobs.filter((j) => j.id?.includes("manual") || j.jobType === "manual");
-  const scheduledBackups = backupJobs.filter((j) => !j.id?.includes("manual") && j.jobType !== "manual");
+  const manualBackups = backupJobs.filter(isManualJob);
+  const scheduledBackups = backupJobs.filter((j) => !isManualJob(j));
   const scheduledErrors = scheduledBackups.filter((j) => j.status === "failed");
   const manualErrors = manualBackups.filter((j) => j.status === "failed");
 

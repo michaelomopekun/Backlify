@@ -52,13 +52,14 @@ export async function triggerBackup(projectId: string) {
       };
     }
 
-    const jobId = `backlify-backupJob-${uuidv4().substring(0, 12)}`;
+    const jobId = `backlify-manual-backupJob-${uuidv4().substring(0, 12)}`;
 
     await BackupRepository.saveBackupJob({
       jobId,
       databaseUrl: project.databaseUrl,
       projectId,
       jobStatus: BACKUP_JOB_STATUS.PENDING as BackupJobStatusType,
+      triggerType: "manual",
     });
 
     await backupQueue.add(

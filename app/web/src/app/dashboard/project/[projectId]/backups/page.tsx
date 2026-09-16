@@ -61,7 +61,9 @@ export default async function BackupsPage({
             timeZone: "UTC",
           }) + " UTC"
         : "Just now",
-      type: (b.id.includes("manual") ? "manual" : "scheduled") as "manual" | "scheduled",
+      type: (b.triggerType === "manual" || Boolean(b.id && b.id.toLowerCase().includes("manual"))
+        ? "manual"
+        : "scheduled") as "manual" | "scheduled",
       status,
       fileSize,
       durationSec,

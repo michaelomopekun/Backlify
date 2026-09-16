@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, pgEnum, varchar } from 'drizzle-orm/pg-core';
 
 import { BACKUP_JOB_STATUS_VALUES } from 'shared/constants/backupJobStatus';
 
@@ -19,6 +19,8 @@ export const backupJobs = pgTable('backup_jobs', {
   databaseUrl: text('database_url').notNull(),
 
   status: backupJobStatus('status').notNull().default('pending'),
+
+  triggerType: varchar('trigger_type', { length: 50 }).notNull().default('manual'),
 
   startedAt: timestamp('started_at'),
 

@@ -19,6 +19,7 @@ import {
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { OrgPickerClientActions } from "./org-picker-client-actions";
 import { Boxes } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 function WireframeCubeIcon({ className = "size-3.5" }: { className?: string }) {
   return (
@@ -28,12 +29,25 @@ function WireframeCubeIcon({ className = "size-3.5" }: { className?: string }) {
   );
 }
 
+export interface ProjectItem {
+  id: string;
+  name: string;
+  orgId?: string | null;
+}
+
+export interface OrgItem {
+  id: string;
+  name: string;
+}
+
 interface Props {
   orgId: string;
   orgName: string;
   projectId: string;
   projectName: string;
   userInitials: string;
+  projects?: ProjectItem[];
+  organizations?: OrgItem[];
 }
 
 export function ProjectHeader({
@@ -42,6 +56,8 @@ export function ProjectHeader({
   projectId,
   projectName,
   userInitials,
+  projects = [],
+  organizations = [],
 }: Props) {
   const [orgSearch, setOrgSearch] = useState("");
   const [projectSearch, setProjectSearch] = useState("");
@@ -55,32 +71,171 @@ export function ProjectHeader({
 
   const projectInitial = projectName ? projectName.charAt(0).toUpperCase() : "P";
 
+  const orgsList = organizations.length > 0
+    ? organizations
+    : [{ id: orgId, name: orgName }];
+
+  const projectListToUse = projects.length > 0
+    ? projects
+    : [{ id: projectId, name: projectName, orgId }];
+
+  const orgNameMap = new Map(orgsList.map((o) => [o.id, o.name]));
+
+  const query = projectSearch.toLowerCase().trim();
+  const currentOrgProjects = projectListToUse.filter((p) => (p.orgId ?? orgId) === orgId);
+  const otherOrgProjects = projectListToUse.filter((p) => p.orgId && p.orgId !== orgId);
+
+  const filteredCurrentProjects = currentOrgProjects.filter((p) =>
+    p.name.toLowerCase().includes(query)
+  );
+  const filteredOtherProjects = otherOrgProjects.filter((p) =>
+    p.name.toLowerCase().includes(query)
+  );
+  const totalFilteredProjects = filteredCurrentProjects.length + filteredOtherProjects.length;
+
+  const orgQuery = orgSearch.toLowerCase().trim();
+  const filteredOrgs = orgsList.filter((o) =>
+    o.name.toLowerCase().includes(orgQuery)
+  );
+
+  const projectDropdownContent = (
+    <>
+      {/* Search input */}
+      <div className="flex items-center gap-2 px-3 py-2 border-b border-[#262626]" onClick={(e) => e.stopPropagation()}>
+        <IconSearch className="size-3.5 text-[#666666] shrink-0" />
+        <input
+          type="text"
+          placeholder="Find project..."
+          value={projectSearch}
+          onChange={(e) => setProjectSearch(e.target.value)}
+          onKeyDown={(e) => e.stopPropagation()}
+          className="bg-transparent text-xs text-white placeholder-[#666666] outline-none w-full font-sans"
+          autoFocus
+        />
+      </div>
+
+      {/* Project List */}
+      <div className="py-1 max-h-56 overflow-y-auto">
+        {filteredCurrentProjects.map((p) => {
+          const isCurrent = p.id === projectId;
+          return (
+            <Link
+              key={p.id}
+              href={`/dashboard/project/${p.id}`}
+              className={cn(
+                "flex items-center justify-between px-3 py-2 text-xs rounded-sm mx-1 cursor-pointer font-medium transition-colors",
+                isCurrent
+                  ? "text-white bg-[#222222]"
+                  : "text-[#bbbbbb] hover:text-white hover:bg-[#1c1c1c]"
+              )}
+            >
+              <span className="truncate">{p.name}</span>
+              {isCurrent && <IconCheck className="size-3.5 text-white shrink-0 ml-2" />}
+            </Link>
+          );
+        })}
+
+        {filteredOtherProjects.length > 0 && (
+          <>
+            <div className="px-3 pt-2.5 pb-1 text-[10px] font-semibold text-[#666666] uppercase tracking-wider">
+              Other Organizations
+            </div>
+            {filteredOtherProjects.map((p) => {
+              const isCurrent = p.id === projectId;
+              const oName = p.orgId ? orgNameMap.get(p.orgId) : null;
+              return (
+                <Link
+                  key={p.id}
+                  href={`/dashboard/project/${p.id}`}
+                  className={cn(
+                    "flex items-center justify-between px-3 py-2 text-xs rounded-sm mx-1 cursor-pointer font-medium transition-colors",
+                    isCurrent
+                      ? "text-white bg-[#222222]"
+                      : "text-[#bbbbbb] hover:text-white hover:bg-[#1c1c1c]"
+                  )}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="truncate">{p.name}</span>
+                    {oName && (
+                      <span className="text-[9.5px] text-[#777777] px-1.5 py-0.2 rounded border border-[#2d2d2d] bg-[#141414] font-mono shrink-0">
+                        {oName}
+                      </span>
+                    )}
+                  </div>
+                  {isCurrent && <IconCheck className="size-3.5 text-white shrink-0 ml-2" />}
+                </Link>
+              );
+            })}
+          </>
+        )}
+
+        {totalFilteredProjects === 0 && (
+          <div className="px-3 py-3 text-xs text-[#666666] italic text-center">
+            No projects found
+          </div>
+        )}
+
+        <Link
+          href={`/dashboard/org/${orgId}`}
+          className="flex items-center px-3 py-2 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm mx-1 cursor-pointer transition-colors mt-0.5"
+        >
+          <span>All Projects</span>
+        </Link>
+      </div>
+
+      {/* Separator */}
+      <div className="h-px bg-[#262626]" />
+
+      {/* New Project Action */}
+      <div className="p-1">
+        <Link
+          href={`/dashboard/project/new?orgId=${orgId}`}
+          className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm cursor-pointer transition-colors"
+        >
+          <IconPlus className="size-3.5 text-[#888888]" />
+          <span>New project</span>
+        </Link>
+      </div>
+    </>
+  );
+
   return (
     <header className="relative z-30 flex h-12 shrink-0 items-center justify-between px-3.5 sm:px-4 border-b border-border/80 bg-[#0e0e0e] text-xs w-full">
       {/* ── MOBILE HEADER (sm:hidden) ── */}
       <div className="flex sm:hidden items-center justify-between w-full">
-        {/* Left: Project square avatar + Name + branch */}
-        <Link
-          href={`/dashboard/project/${projectId}`}
-          className="flex items-center gap-2.5 min-w-0 pr-2"
-        >
-          <div className="size-8 rounded-md bg-[#181818] border border-[#262626] flex items-center justify-center text-xs font-bold text-white shrink-0">
-            {projectInitial}
-          </div>
+        {/* Left: Project square avatar + Name + branch (with dropdown to switch projects) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="flex items-center gap-2.5 min-w-0 pr-2 text-left outline-none cursor-pointer group"
+            >
+              <div className="size-8 rounded-md bg-[#181818] border border-[#262626] group-hover:border-[#383838] flex items-center justify-center text-xs font-bold text-white shrink-0 transition-colors">
+                {projectInitial}
+              </div>
 
-          <div className="min-w-0">
-            <div className="flex items-center gap-1">
-              <span className="font-semibold text-white text-[13px] truncate">
-                {projectName}
-              </span>
-              <IconSelector className="size-3 text-muted-foreground shrink-0" />
-            </div>
-            <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground font-mono">
-              <IconGitBranch className="size-3 text-muted-foreground" />
-              <span>main</span>
-            </div>
-          </div>
-        </Link>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1">
+                  <span className="font-semibold text-white text-[13px] truncate">
+                    {projectName}
+                  </span>
+                  <IconSelector className="size-3 text-muted-foreground shrink-0" />
+                </div>
+                <div className="flex items-center gap-1 text-[10.5px] text-muted-foreground font-mono">
+                  <IconGitBranch className="size-3 text-muted-foreground" />
+                  <span>main</span>
+                </div>
+              </div>
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            sideOffset={8}
+            className="w-72 bg-[#171717] border border-[#2c2c2c] rounded-lg shadow-2xl p-0 text-xs text-white z-50 overflow-hidden"
+          >
+            {projectDropdownContent}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Right: Connect icon + Avatar + Sidebar trigger */}
         <div className="flex items-center gap-2 shrink-0">
@@ -167,19 +322,36 @@ export function ProjectHeader({
 
               {/* Organization List */}
               <div className="py-1 max-h-52 overflow-y-auto">
-                {orgName.toLowerCase().includes(orgSearch.toLowerCase()) && (
-                  <Link
-                    href={`/dashboard/org/${orgId}`}
-                    className="flex items-center justify-between px-3 py-2 text-xs text-white hover:bg-[#222222] rounded-sm mx-1 cursor-pointer font-medium transition-colors"
-                  >
-                    <span className="truncate">{orgName}</span>
-                    <IconCheck className="size-3.5 text-white shrink-0 ml-2" />
-                  </Link>
+                {filteredOrgs.map((o) => {
+                  const isCurrent = o.id === orgId;
+                  return (
+                    <Link
+                      key={o.id}
+                      href={`/dashboard/org/${o.id}`}
+                      className={cn(
+                        "flex items-center justify-between px-3 py-2 text-xs rounded-sm mx-1 cursor-pointer font-medium transition-colors",
+                        isCurrent
+                          ? "text-white bg-[#222222]"
+                          : "text-[#bbbbbb] hover:text-white hover:bg-[#1c1c1c]"
+                      )}
+                    >
+                      <span className="truncate">{o.name}</span>
+                      {isCurrent && (
+                        <IconCheck className="size-3.5 text-white shrink-0 ml-2" />
+                      )}
+                    </Link>
+                  );
+                })}
+
+                {filteredOrgs.length === 0 && (
+                  <div className="px-3 py-3 text-xs text-[#666666] italic text-center">
+                    No organizations found
+                  </div>
                 )}
 
                 <Link
                   href="/dashboard/org"
-                  className="flex items-center px-3 py-2 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm mx-1 cursor-pointer transition-colors"
+                  className="flex items-center px-3 py-2 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm mx-1 cursor-pointer transition-colors mt-0.5"
                 >
                   <span>All Organizations</span>
                 </Link>
@@ -239,53 +411,7 @@ export function ProjectHeader({
                     sideOffset={6}
                     className="w-64 bg-[#171717] border border-[#2c2c2c] rounded-lg shadow-2xl p-0 text-xs text-white z-50 overflow-hidden"
                   >
-                    {/* Search input */}
-                    <div className="flex items-center gap-2 px-3 py-2 border-b border-[#262626]" onClick={(e) => e.stopPropagation()}>
-                      <IconSearch className="size-3.5 text-[#666666] shrink-0" />
-                      <input
-                        type="text"
-                        placeholder="Find project..."
-                        value={projectSearch}
-                        onChange={(e) => setProjectSearch(e.target.value)}
-                        onKeyDown={(e) => e.stopPropagation()}
-                        className="bg-transparent text-xs text-white placeholder-[#666666] outline-none w-full font-sans"
-                        autoFocus
-                      />
-                    </div>
-
-                    {/* Project List */}
-                    <div className="py-1 max-h-52 overflow-y-auto">
-                      {projectName.toLowerCase().includes(projectSearch.toLowerCase()) && (
-                        <Link
-                          href={`/dashboard/project/${projectId}`}
-                          className="flex items-center justify-between px-3 py-2 text-xs text-white hover:bg-[#222222] rounded-sm mx-1 cursor-pointer font-medium transition-colors"
-                        >
-                          <span className="truncate">{projectName}</span>
-                          <IconCheck className="size-3.5 text-white shrink-0 ml-2" />
-                        </Link>
-                      )}
-
-                      <Link
-                        href={`/dashboard/org/${orgId}`}
-                        className="flex items-center px-3 py-2 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm mx-1 cursor-pointer transition-colors"
-                      >
-                        <span>All Projects</span>
-                      </Link>
-                    </div>
-
-                    {/* Separator */}
-                    <div className="h-px bg-[#262626]" />
-
-                    {/* New Project Action */}
-                    <div className="p-1">
-                      <Link
-                        href={`/dashboard/project/new`}
-                        className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded-sm cursor-pointer transition-colors"
-                      >
-                        <IconPlus className="size-3.5 text-[#888888]" />
-                        <span>New project</span>
-                      </Link>
-                    </div>
+                    {projectDropdownContent}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

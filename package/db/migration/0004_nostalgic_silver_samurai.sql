@@ -1,0 +1,1 @@
+ALTER TABLE "backup_jobs" ADD COLUMN "trigger_type" varchar(50) DEFAULT 'manual' NOT NULL;

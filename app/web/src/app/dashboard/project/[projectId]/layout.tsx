@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { ProjectRepository, OrganizationRepository } from "db";
+import { ProjectRepository, OrganizationRepository, UserRepository } from "db";
 import { requireCurrentUser } from "@/lib/current-user";
 import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
 import { ProjectSidebar } from "@/components/layout/app-sidebar";
@@ -48,6 +48,54 @@ export default async function ProjectLayout({ children, params }: Props) {
   const orgName = org?.name ?? "Organization";
   const projectName = project.name;
 
+  // Fetch user organizations for switcher
+  let userOrgs: Array<{ id: string; name: string }> = [];
+  try {
+    const orgs = await UserRepository.getUserOrganizations(user.id);
+    if (orgs && orgs.length > 0) {
+      userOrgs = orgs.map((o) => ({ id: o.id, name: o.name }));
+    } else {
+      const owned = await OrganizationRepository.getOrganizationsByUser(user.id);
+      userOrgs = owned.map((o) => ({ id: o.id, name: o.name }));
+    }
+  } catch (err) {
+    console.error("Failed to load user orgs for header:", err);
+  }
+
+  if (org && !userOrgs.some((o) => o.id === org.id)) {
+    userOrgs.unshift({ id: org.id, name: org.name });
+  } else if (!org && userOrgs.length === 0) {
+    userOrgs.push({ id: orgId, name: orgName });
+  }
+
+  // Fetch all visible projects for switcher
+  let allProjectsList: Array<{ id: string; name: string; orgId?: string | null }> = [];
+  try {
+    const all = await ProjectRepository.getAllProjects();
+    const userOrgIds = new Set(userOrgs.map((o) => o.id));
+    if (orgId) userOrgIds.add(orgId);
+
+    const visible = userOrgIds.size > 0
+      ? all.filter((p) => (p.orgId && userOrgIds.has(p.orgId)) || p.id === projectId)
+      : all;
+
+    allProjectsList = visible.map((p) => ({
+      id: p.id,
+      name: p.name,
+      orgId: p.orgId,
+    }));
+  } catch (err) {
+    console.error("Failed to load projects for switcher:", err);
+  }
+
+  if (!allProjectsList.some((p) => p.id === project.id)) {
+    allProjectsList.unshift({
+      id: project.id,
+      name: project.name,
+      orgId: project.orgId,
+    });
+  }
+
   return (
     <SidebarProvider className="h-screen w-screen overflow-hidden flex flex-col bg-[#0c0c0c]">
       {/* Responsive Project Topbar — full width across top (Supabase style) */}
@@ -57,6 +105,8 @@ export default async function ProjectLayout({ children, params }: Props) {
         projectId={projectId}
         projectName={projectName}
         userInitials={user.initials}
+        projects={allProjectsList}
+        organizations={userOrgs}
       />
 
       <div className="flex-1 flex w-full min-h-0 overflow-hidden">

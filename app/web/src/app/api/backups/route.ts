@@ -78,12 +78,18 @@ export async function POST(req: NextRequest) {
 
         const databaseUrl = project.databaseUrl;
 
-        const jobId = `backlify-backupJob-${uuidv4().substring(0, 12)}`;
+        const jobId = `backlify-manual-backupJob-${uuidv4().substring(0, 12)}`;
 
 
         // save metadata to database
 
-        await BackupRepository.saveBackupJob({ jobId, databaseUrl, projectId, jobStatus: BACKUP_JOB_STATUS.PENDING as BackupJobStatusType});
+        await BackupRepository.saveBackupJob({
+            jobId,
+            databaseUrl,
+            projectId,
+            jobStatus: BACKUP_JOB_STATUS.PENDING as BackupJobStatusType,
+            triggerType: "manual",
+        });
 
 
         // create job payload

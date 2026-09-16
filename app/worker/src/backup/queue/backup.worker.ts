@@ -97,7 +97,7 @@ export const backupWorker = new Worker<any>(
                 }
 
 
-                const jobId = `backlify-backupJob-${uuidv4().substring(0, 12)}`;
+                const jobId = `backlify-scheduled-backupJob-${uuidv4().substring(0, 12)}`;
 
 
                 // 1. Create a pending job record in DB
@@ -111,6 +111,8 @@ export const backupWorker = new Worker<any>(
                     projectId: project.id,
 
                     jobStatus: BACKUP_JOB_STATUS.PENDING as BackupJobStatusType,
+
+                    triggerType: "scheduled",
 
                 });
 

@@ -50,6 +50,8 @@ export interface CreateBackupJobParams {
 
     jobStatus: BackupJobStatusType;
 
+    triggerType?: "manual" | "scheduled";
+
 }
 
 
@@ -71,6 +73,8 @@ export class BackupRepository {
 
             logger.info({jobId: params.jobId}, "Saving backup job to database");
 
+            const triggerType = params.triggerType || (params.jobId.includes("scheduled") ? "scheduled" : "manual");
+
             const result = await db.insert(backupJobs).values({
 
                 id: params.jobId,
@@ -80,6 +84,8 @@ export class BackupRepository {
                 databaseUrl: params.databaseUrl,
 
                 status: params.jobStatus,
+
+                triggerType,
 
                 createdAt: new Date(),
 
@@ -92,6 +98,8 @@ export class BackupRepository {
                 databaseUrl: backupJobs.databaseUrl,
                 
                 status: backupJobs.status,
+
+                triggerType: backupJobs.triggerType,
 
             });
 
@@ -400,6 +408,8 @@ export class BackupRepository {
                 projectName: projects.name,
 
                 status: backupJobs.status,
+
+                triggerType: backupJobs.triggerType,
 
                 startedAt: backupJobs.startedAt,
 
