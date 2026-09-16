@@ -51,6 +51,7 @@ export default async function BackupsPage({
 
     return {
       id: b.id,
+      createdAt: b.createdAt ? new Date(b.createdAt).toISOString() : new Date().toISOString(),
       timestamp: b.createdAt
         ? new Date(b.createdAt).toLocaleDateString("en-US", {
             month: "short",

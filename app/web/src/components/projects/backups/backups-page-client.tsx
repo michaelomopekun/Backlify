@@ -42,6 +42,7 @@ type BackupStatus = "complete" | "in_progress" | "failed";
 interface Backup {
   id: string;
   timestamp: string;
+  createdAt?: string;
   type: BackupType;
   status: BackupStatus;
   fileSize: number;
@@ -101,49 +102,91 @@ function StatusBadge({ status }: { status: BackupStatus }) {
    Activity Chart
 ───────────────────────────────────────────────────────────────────*/
 
-const MAX_EVENTS_IN_DAY = 3; // used to scale bar height
+interface ActivityDayData {
+  label: string;
+  date: string;
+  fullDate: string;
+  events: { type: string; status: string }[];
+}
 
 function ActivityBar({
-  events,
+  day,
   isToday,
+  maxEvents,
 }: {
-  events: { type: string; status: string }[];
+  day: ActivityDayData;
   isToday?: boolean;
+  maxEvents: number;
 }) {
-  const CHART_H = 80; // px — total column height
-  const barH = Math.floor(CHART_H / MAX_EVENTS_IN_DAY) - 4; // height per segment
+  const { events, label, date, fullDate } = day;
+  const total = events.length;
+
+  const failedCount = events.filter((e) => e.status === "failed").length;
+  const manualCount = events.filter((e) => e.status !== "failed" && e.type === "manual").length;
+  const scheduledCount = events.filter((e) => e.status !== "failed" && e.type === "scheduled").length;
+
+  // Scale total bar height proportionally to max activity (min 15% if any backups, max 100%)
+  const fillPct = total > 0 ? Math.max(16, Math.min(100, Math.round((total / maxEvents) * 100))) : 0;
+
+  // Segment percentages inside the filled height
+  const failedPct = total > 0 ? (failedCount / total) * 100 : 0;
+  const manualPct = total > 0 ? (manualCount / total) * 100 : 0;
+  const scheduledPct = total > 0 ? (scheduledCount / total) * 100 : 0;
 
   return (
-    <div
-      className="relative flex flex-col-reverse gap-1.5 w-full"
-      style={{ height: `${CHART_H}px` }}
-    >
-      {events.length === 0 ? (
-        <div
-          className="w-full rounded bg-[#1e1e1e] self-start"
-          style={{ height: "10px" }}
-        />
-      ) : (
-        events.map((e, i) => {
-          const color =
-            e.status === "failed"
-              ? "bg-red-500/80 hover:bg-red-500"
-              : e.type === "manual"
-              ? "bg-blue-400/80 hover:bg-blue-400"
-              : "bg-emerald-400/80 hover:bg-emerald-400";
-          return (
-            <div
-              key={i}
-              title={`${e.type} · ${e.status}`}
-              className={`w-full rounded ${color} transition-all cursor-default`}
-              style={{ height: `${barH}px` }}
-            />
-          );
-        })
-      )}
-      {/* Today indicator */}
+    <div className="group relative flex flex-col items-center w-full">
+      {/* Floating Rich Tooltip */}
+      <div className="absolute -top-16 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-150 transform group-hover:-translate-y-1 z-30 bg-[#141414] border border-[#262626] rounded-md px-3 py-1.5 shadow-2xl text-[11px] whitespace-nowrap min-w-[130px] text-center">
+        <p className="font-medium text-foreground text-[11px]">{fullDate}</p>
+        <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">
+          {total === 0 ? "No backups recorded" : `${total} snapshot${total === 1 ? "" : "s"}`}
+        </p>
+        {total > 0 && (
+          <div className="flex items-center justify-center gap-2 mt-1 text-[9.5px] font-mono text-muted-foreground border-t border-border/40 pt-1">
+            {scheduledCount > 0 && <span className="text-emerald-400">{scheduledCount} sch</span>}
+            {manualCount > 0 && <span className="text-blue-400">{manualCount} man</span>}
+            {failedCount > 0 && <span className="text-red-400">{failedCount} fail</span>}
+          </div>
+        )}
+      </div>
+
+      {/* Bar Track (Fixed Height, overflow contained) */}
+      <div className="relative w-full max-w-[42px] h-24 bg-white/[0.03] hover:bg-white/[0.05] border border-white/[0.06] hover:border-white/20 rounded-md flex flex-col justify-end p-1 transition-colors cursor-pointer">
+        {total === 0 ? (
+          <div className="w-full h-1.5 rounded-sm bg-white/10 self-center opacity-40" />
+        ) : (
+          <div
+            className="w-full rounded-sm overflow-hidden flex flex-col-reverse transition-all duration-300"
+            style={{ height: `${fillPct}%` }}
+          >
+            {scheduledPct > 0 && (
+              <div
+                style={{ height: `${scheduledPct}%` }}
+                className="w-full bg-emerald-400 hover:brightness-110 transition-colors"
+                title={`${scheduledCount} scheduled`}
+              />
+            )}
+            {manualPct > 0 && (
+              <div
+                style={{ height: `${manualPct}%` }}
+                className="w-full bg-blue-400 hover:brightness-110 transition-colors"
+                title={`${manualCount} manual`}
+              />
+            )}
+            {failedPct > 0 && (
+              <div
+                style={{ height: `${failedPct}%` }}
+                className="w-full bg-red-500 hover:brightness-110 transition-colors"
+                title={`${failedCount} failed`}
+              />
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Today indicator dot */}
       {isToday && (
-        <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 size-1 rounded-full bg-emerald-400" />
+        <div className="size-1.5 rounded-full bg-emerald-400 mt-1.5 shadow-sm shadow-emerald-400/50" />
       )}
     </div>
   );
@@ -355,11 +398,29 @@ export function BackupsPageClient({
     d.setDate(d.getDate() - (6 - i));
     const dayLabel = d.toLocaleDateString("en-US", { weekday: "short" });
     const dateLabel = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    const fullDate = d.toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" });
+    const year = d.getFullYear();
+    const month = d.getMonth();
+    const dateNum = d.getDate();
+
     const dayEvents = backupsList
-      .filter((b) => b.timestamp.toLowerCase().includes(dateLabel.toLowerCase()))
+      .filter((b) => {
+        if (b.createdAt) {
+          const bd = new Date(b.createdAt);
+          return (
+            bd.getFullYear() === year &&
+            bd.getMonth() === month &&
+            bd.getDate() === dateNum
+          );
+        }
+        return b.timestamp.toLowerCase().includes(dateLabel.toLowerCase());
+      })
       .map((b) => ({ type: b.type, status: b.status }));
-    return { label: dayLabel, date: dateLabel, events: dayEvents };
+
+    return { label: dayLabel, date: dateLabel, fullDate, events: dayEvents };
   });
+
+  const maxEventsInWeek = Math.max(1, ...past7Days.map((d) => d.events.length));
 
   return (
     <div className="space-y-16 sm:space-y-20 pb-28 sm:pb-24">
@@ -430,10 +491,10 @@ export function BackupsPageClient({
         </div>
 
         {/* Chart columns */}
-        <div className="grid grid-cols-7 gap-2 sm:gap-4 pt-2">
+        <div className="grid grid-cols-7 gap-2 sm:gap-4 pt-4">
           {past7Days.map((day, i) => (
             <div key={i} className="flex flex-col items-center gap-2.5">
-              <ActivityBar events={day.events} isToday={i === 6} />
+              <ActivityBar day={day} isToday={i === 6} maxEvents={maxEventsInWeek} />
               <div className="text-center">
                 <p className={`text-xs ${i === 6 ? "text-foreground font-semibold" : "text-muted-foreground"}`}>
                   {day.label}
