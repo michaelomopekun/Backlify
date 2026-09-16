@@ -117,7 +117,7 @@ function PitrScrubber({
   const percent = points.length > 1 ? (clampedIndex / maxIdx) * 100 : 0;
 
   return (
-    <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
+    <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-visible shadow-xs">
       <CardHeader className="p-5 sm:p-6 border-b border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="space-y-1">
           <div className="flex items-center gap-2.5">
@@ -137,9 +137,9 @@ function PitrScrubber({
         </span>
       </CardHeader>
 
-      <CardContent className="p-5 sm:p-6 space-y-6">
+      <CardContent className="p-5 sm:p-6 space-y-6 overflow-visible">
         {/* Rail & Draggable Handle Container */}
-        <div className="relative h-6 flex items-center">
+        <div className="relative h-6 flex items-center px-1">
           {/* Horizontal Background Rail */}
           <div className="h-1.5 w-full bg-[#1c1c1c] rounded-full overflow-hidden border border-border/60">
             <div
@@ -153,8 +153,11 @@ function PitrScrubber({
             className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 pointer-events-none transition-all duration-75 z-20 flex flex-col items-center"
             style={{ left: `${percent}%` }}
           >
-            {/* Floating Live Scrubber Bubble */}
-            <div className="absolute -top-8 flex items-center px-2.5 py-1 rounded-md bg-card border border-border text-foreground text-xs font-medium shadow-md whitespace-nowrap">
+            {/* Floating Live Scrubber Bubble (dynamically clamped from 0% to 100% so it never clips) */}
+            <div
+              className="absolute -top-8.5 flex items-center px-2.5 py-1 rounded-md bg-[#161616] border border-[#2a2a2a] text-foreground text-xs font-medium shadow-xl whitespace-nowrap transition-transform duration-75"
+              style={{ transform: `translateX(${50 - percent}%)` }}
+            >
               <span>{current.day} {current.time.split(" ")[0]}</span>
             </div>
 
@@ -175,42 +178,53 @@ function PitrScrubber({
           />
         </div>
 
-        {/* Checkpoint Ticks & Labels with no mobile text overlap */}
-        <div className="relative w-full h-8">
-          {points.map((pt, idx) => {
-            const ptPercent = points.length > 1 ? (idx / (points.length - 1)) * 100 : 50;
-            const isSelected = idx === clampedIndex;
-            const isFirst = idx === 0;
-            const isLast = idx === points.length - 1;
-            const showOnMobile = isSelected || isFirst || isLast;
+        {/* Checkpoint Ticks & Milestone Labels */}
+        <div className="space-y-2.5">
+          {/* Interactive Checkpoint Ticks on Rail */}
+          <div className="relative w-full h-4 px-1">
+            {points.map((pt, idx) => {
+              const ptPercent = points.length > 1 ? (idx / (points.length - 1)) * 100 : 50;
+              const isSelected = idx === clampedIndex;
 
-            return (
-              <button
-                key={pt.id}
-                type="button"
-                onClick={() => setSelectedIndex(idx)}
-                className="absolute top-0 -translate-x-1/2 flex flex-col items-center group cursor-pointer focus:outline-none z-10"
-                style={{ left: `${ptPercent}%` }}
-              >
-                <div
-                  className={`w-0.5 h-1.5 mb-1 transition-colors ${
-                    isSelected ? "bg-primary" : "bg-muted-foreground/30 group-hover:bg-muted-foreground/60"
-                  }`}
-                />
-                <span
-                  className={`text-[11px] whitespace-nowrap transition-colors ${
-                    showOnMobile ? "block" : "hidden sm:block"
-                  } ${
-                    isSelected
-                      ? "text-foreground font-semibold"
-                      : "text-muted-foreground group-hover:text-foreground/60"
-                  }`}
+              return (
+                <button
+                  key={pt.id}
+                  type="button"
+                  onClick={() => setSelectedIndex(idx)}
+                  title={`${pt.date} · ${pt.time} (${pt.size})`}
+                  className="absolute top-0 -translate-x-1/2 flex flex-col items-center group cursor-pointer focus:outline-none z-10 py-0.5"
+                  style={{ left: `${ptPercent}%` }}
                 >
-                  {pt.day} {pt.time.split(" ")[0]}
-                </span>
-              </button>
-            );
-          })}
+                  <div
+                    className={`rounded-full transition-all ${
+                      isSelected
+                        ? "w-1 h-3.5 bg-primary shadow-xs shadow-primary/50"
+                        : "w-0.5 h-1.5 bg-muted-foreground/30 group-hover:bg-muted-foreground/80 group-hover:h-2.5"
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Timeline Range Milestones (Clean, non-colliding layout) */}
+          <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground select-none px-0.5">
+            <div className="flex items-center gap-1.5">
+              <span className="size-1.5 rounded-full bg-muted-foreground/40" />
+              <span>Oldest: {points[0]?.day} {points[0]?.time.split(" ")[0]}</span>
+            </div>
+
+            {points.length > 2 && (
+              <span className="hidden sm:inline text-[10.5px] text-muted-foreground/50">
+                {points.length} recovery points across timeline
+              </span>
+            )}
+
+            <div className="flex items-center gap-1.5">
+              <span>Latest: {points[points.length - 1]?.day} {points[points.length - 1]?.time.split(" ")[0]}</span>
+              <span className="size-1.5 rounded-full bg-emerald-400" />
+            </div>
+          </div>
         </div>
       </CardContent>
 

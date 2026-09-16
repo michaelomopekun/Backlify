@@ -1,6 +1,7 @@
 import { RestoresPageClient } from "@/components/projects/restores/restores-page-client";
 import { ProjectRepository, BackupRepository, RestoreRepository } from "db";
 import { redirect } from "next/navigation";
+import { formatBytes } from "@/lib/format";
 
 export const metadata = {
   title: "Restores | Backlify",
@@ -30,19 +31,20 @@ export default async function RestoresPage({
   const orgId = project.orgId ?? "default-org";
 
   const recoveryPoints = rawBackups
-    .filter((b) => b.status === "completed")
+    .filter((b) => b.status === "completed" && !b.purgedAt)
     .map((b) => {
       const d = b.completedAt ? new Date(b.completedAt) : new Date(b.createdAt);
-      const sizeMb = b.fileSize ? Math.round(b.fileSize / (1024 * 1024)) : 0;
       return {
         id: b.fileId || b.id,
         day: d.toLocaleDateString("en-US", { weekday: "short" }),
         date: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
         time: d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" }) + " UTC",
-        size: `${sizeMb} MB`,
+        size: formatBytes(b.fileSize),
         snapshotId: b.fileName || b.id.slice(0, 10),
+        timestampMs: d.getTime(),
       };
-    });
+    })
+    .sort((a, b) => a.timestampMs - b.timestampMs);
 
   const initialDrills = rawRestores.map((job) => {
     let parsedInfo: any = null;
