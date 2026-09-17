@@ -3,6 +3,7 @@ import { spawn } from "child_process";
 import { promises as fs } from "fs";
 
 import path from "path";
+import postgres from "postgres";
 
 import { logger } from "shared/config/logger";
 
@@ -58,7 +59,54 @@ export class PgDumpService {
     private generateBackupPath(jobId: string): string {
 
         return path.join(this.tempDir, `backup_${jobId}.dump`);
+    }
 
+    /**
+     * Inspects the source PostgreSQL database size in bytes via a fast non-blocking query.
+     * Gracefully falls back to null if user lacks permissions, connection times out, or error occurs.
+     */
+    async inspectDatabaseSize(databaseUrl: string): Promise<number | null> {
+        let sql: ReturnType<typeof postgres> | null = null;
+        try {
+            const urlLower = databaseUrl.toLowerCase();
+            const sslMode =
+                urlLower.includes("sslmode=require") ||
+                urlLower.includes("sslmode=verify-full") ||
+                urlLower.includes("ssl=true") ||
+                urlLower.includes("ssl=1")
+                    ? "require"
+                    : "prefer";
+
+            sql = postgres(databaseUrl, {
+                connect_timeout: 4,
+                idle_timeout: 1,
+                max: 1,
+                ssl: sslMode as any,
+            });
+
+            const rows = await sql`
+                SELECT pg_database_size(current_database())::text as size_bytes;
+            `;
+
+            if (rows && rows.length > 0 && rows[0].size_bytes) {
+                const parsed = Number(rows[0].size_bytes);
+                if (!isNaN(parsed) && parsed > 0) {
+                    logger.info({ sizeBytes: parsed }, "Queried source database size for dynamic timeout");
+                    return parsed;
+                }
+            }
+
+            return null;
+        } catch (err) {
+            logger.warn({ err }, "Could not determine source database size via pg_database_size; using fallback timeout");
+            return null;
+        } finally {
+            if (sql) {
+                try {
+                    await sql.end({ timeout: 1 });
+                } catch {}
+            }
+        }
     }
 
     async executePgDump(options: PgDumpOptions): Promise<PgDumpResult> {
@@ -282,17 +330,12 @@ export class PgDumpService {
             backupProcess.on('close', (code: number | null) => {
 
                 if (timedOut) {
-
+                    const timeoutMinutes = Math.round(timeout / 60000);
                     settle({
-                
                         success: false,
-                
-                        error: `pg_dump timed out after ${timeout}ms`,
-                
+                        error: `pg_dump process exceeded allocated dynamic timeout of ${timeoutMinutes} minutes (${timeout}ms). Process terminated to preserve system resources. Check database throughput, server load, or network latency.`,
                     });
-                
                     return;
-                
                 }
 
                 

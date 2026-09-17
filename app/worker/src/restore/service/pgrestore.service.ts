@@ -155,9 +155,10 @@ export class PgRestoreService {
             restoreProcess.on('close', (code: number | null) => {
                 clearTimeout(timeoutHandle);
                 if (timedOut) {
+                    const timeoutMinutes = Math.round(timeout / 60000);
                     resolve({
                         success: false,
-                        error: `pg_restore timed out after ${timeout}ms`,
+                        error: `pg_restore process exceeded allocated dynamic timeout of ${timeoutMinutes} minutes (${timeout}ms). Process terminated to preserve system resources. Check target database throughput, disk I/O, or connection latency.`,
                     });
                     return;
                 }

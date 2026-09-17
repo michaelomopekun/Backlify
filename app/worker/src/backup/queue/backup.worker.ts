@@ -19,6 +19,8 @@ import { v4 as uuidv4 } from "uuid";
 import { CleanupService } from "../service/cleanup.service";
 import { emitJobTelemetry } from "shared/config/job-telemetry";
 import { dispatchIncidentAlert } from "shared/config/alert-dispatcher";
+import { calculateDynamicBackupTimeout } from "shared/config/timeout";
+import { decryptDatabaseUrl } from "shared/config/encryption";
 
 
 async function transitionBackupStatus(job: any, fromStatus: BackupJobStatusType, toStatus: BackupJobStatusType, opts?: { forceOnMismatch?: boolean; errorMessage?: string }) {
@@ -185,20 +187,54 @@ export const backupWorker = new Worker<any>(
         // 2 call pgdump service to perform backup
         const pg_dump_service = new PgDumpService();
 
+        // Decrypt database URL if stored in encrypted format
+        const targetDatabaseUrl = decryptDatabaseUrl(job.data.databaseUrl);
+
+        // Dynamically inspect source database size to calculate an adaptive execution timeout
+        const inspectedSizeBytes = await pg_dump_service.inspectDatabaseSize(targetDatabaseUrl);
+        const dynamicTimeout = calculateDynamicBackupTimeout(inspectedSizeBytes);
+
+        logger.info(
+            {
+                jobId: job.data.jobId,
+                inspectedSizeBytes,
+                timeoutMs: dynamicTimeout.timeoutMs,
+                timeoutMinutes: dynamicTimeout.timeoutMinutes,
+                isDynamic: dynamicTimeout.isDynamic,
+            },
+            "Allocated dynamic backup timeout"
+        );
+
+        if (dynamicTimeout.isDynamic) {
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "info",
+                phase: "INIT",
+                message: `Source database size: ${dynamicTimeout.estimatedSizeFormatted}. Dynamic pg_dump timeout allocated: ${dynamicTimeout.timeoutMinutes} minutes.`,
+                progress: 18,
+            });
+        } else {
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "info",
+                phase: "INIT",
+                message: `Database size uninspected. Using extended baseline timeout: ${dynamicTimeout.timeoutMinutes} minutes.`,
+                progress: 18,
+            });
+        }
+
         await emitJobTelemetry({
             jobId: job.data.jobId,
             level: "info",
             phase: "DUMP",
-            message: "Spawning pg_dump with custom archive format (-Fc)...",
+            message: `Spawning pg_dump (-Fc) with ${dynamicTimeout.timeoutMinutes}-min execution window...`,
             progress: 25,
         });
 
         const backup_result = await pg_dump_service.executePgDump({
-            
-            databaseUrl: job.data.databaseUrl,
-            
+            databaseUrl: targetDatabaseUrl,
             jobId: job.data.jobId,
-
+            timeout: dynamicTimeout.timeoutMs,
             onLog: (line) => {
                 emitJobTelemetry({
                     jobId: job.data.jobId,
@@ -208,7 +244,6 @@ export const backupWorker = new Worker<any>(
                     progress: 45,
                 });
             },
-            
         });
 
         // 3 wait for result and update status accordingly

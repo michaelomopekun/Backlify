@@ -18,6 +18,8 @@ import { createHash } from "crypto";
 
 import { emitJobTelemetry } from "shared/config/job-telemetry";
 import { dispatchIncidentAlert } from "shared/config/alert-dispatcher";
+import { calculateDynamicRestoreTimeout } from "shared/config/timeout";
+import { decryptDatabaseUrl } from "shared/config/encryption";
 
 
 
@@ -290,19 +292,44 @@ export const restoreWorker = new Worker<RestoreJobData>(
             }
         }
 
+        const dynamicRestoreTimeout = calculateDynamicRestoreTimeout(backupFile.fileSize);
+        const targetDatabaseUrl = decryptDatabaseUrl(job.data.targetDatabaseUrl);
+
+        logger.info(
+            {
+                jobId: job.data.jobId,
+                archiveSizeBytes: backupFile.fileSize,
+                timeoutMs: dynamicRestoreTimeout.timeoutMs,
+                timeoutMinutes: dynamicRestoreTimeout.timeoutMinutes,
+                isDynamic: dynamicRestoreTimeout.isDynamic,
+            },
+            "Allocated dynamic restore timeout"
+        );
+
+        if (dynamicRestoreTimeout.isDynamic) {
+            await emitJobTelemetry({
+                jobId: job.data.jobId,
+                level: "info",
+                phase: "RESTORE",
+                message: `Snapshot archive size: ${dynamicRestoreTimeout.estimatedSizeFormatted}. Dynamic pg_restore timeout allocated: ${dynamicRestoreTimeout.timeoutMinutes} minutes.`,
+                progress: 58,
+            });
+        }
+
         await emitJobTelemetry({
             jobId: job.data.jobId,
             level: "info",
             phase: "RESTORE",
-            message: "Spawning pg_restore --clean --if-exists --no-owner on target database...",
+            message: `Spawning pg_restore with ${dynamicRestoreTimeout.timeoutMinutes}-min execution window...`,
             progress: 60,
         });
 
         // 3 execute pg_restore
         const restoreResult = await pgRestoreService.executePgRestore({
             backupFilePath: finalRestorePath,
-            targetDatabaseUrl: job.data.targetDatabaseUrl,
+            targetDatabaseUrl,
             jobId: job.data.jobId,
+            timeout: dynamicRestoreTimeout.timeoutMs,
             onLog: (line: string) => {
                 emitJobTelemetry({
                     jobId: job.data.jobId,
