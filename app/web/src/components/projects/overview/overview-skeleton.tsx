@@ -1,202 +1,273 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
-  IconCircleCheck,
+  IconShieldLock,
   IconCloudUpload,
   IconCalendarEvent,
-  IconShieldLock,
   IconHistory,
   IconRotateClockwise,
-  IconDatabase,
   IconNetwork,
   IconWorld,
-  IconCpu,
 } from "@tabler/icons-react";
 
 export function ProjectOverviewSkeleton() {
   return (
-    <div className="w-full space-y-12 animate-in fade-in duration-200">
-      {/* Top Section: Status Cards (Left) + Topology Canvas (Right) */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-        
-        {/* Left Column: Supabase-Style Status Grid */}
-        <div className="xl:col-span-6 space-y-8">
-          <div className="space-y-1.5">
-            <Skeleton className="h-7 w-44 bg-white/[0.08]" />
-            <Skeleton className="h-4 w-72 bg-white/[0.04]" />
+    <div className="w-full space-y-20">
+      {/* ── Top Panel: 6 Status Cards + Canvas ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-10 lg:gap-14 items-start">
+        {/* Left Column: Title + 6 Static Metric Cards */}
+        <div className="xl:col-span-6 flex flex-col space-y-6 sm:space-y-8 pt-5 sm:pt-4 xl:pt-16">
+          {/* Title & Connection Header */}
+          <div>
+            <Skeleton className="h-8 sm:h-9 w-44 bg-white/[0.08]" />
+            <div className="mt-2.5 flex items-center gap-2">
+              <Skeleton className="h-4 w-72 max-w-full bg-white/[0.05]" />
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Status */}
-            <div className="flex items-center gap-3.5 p-3 rounded-lg bg-[#111111] border border-[#222222]">
-              <div className="size-[54px] rounded-md bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
-                <div className="size-4 rounded-full border-2 border-amber-500/40 border-t-amber-400 animate-spin" />
-              </div>
-              <div className="space-y-1.5 min-w-0 flex-1">
-                <p className="text-[10px] uppercase font-mono tracking-wider text-[#888888]">STATUS</p>
-                <div className="flex items-center gap-2">
-                  <span className="text-[13px] text-zinc-400 font-medium">Checking...</span>
-                  <Skeleton className="h-3.5 w-12 rounded-full bg-white/[0.06]" />
+          {/* 6 Metric Items — exact static labels, exact static icons, only values are loading */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 sm:gap-y-6 gap-x-3 pt-1">
+            {/* 1. STATUS */}
+            <div className="flex items-center gap-3.5 sm:gap-4 p-2 sm:p-0">
+              <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+                <div className="grid grid-cols-3 gap-1">
+                  {[...Array(6)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="size-[5px] sm:size-[6px] rounded-full bg-amber-400/70 animate-pulse"
+                    />
+                  ))}
                 </div>
               </div>
-            </div>
-
-            {/* Engine / Compute */}
-            <div className="flex items-center gap-3.5 p-3 rounded-lg bg-[#111111] border border-[#222222]">
-              <div className="size-[54px] rounded-md bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
-                <IconCpu className="size-5 text-zinc-500" stroke={1.5} />
-              </div>
-              <div className="space-y-1.5 min-w-0 flex-1">
-                <p className="text-[10px] uppercase font-mono tracking-wider text-[#888888]">COMPUTE / ENGINE</p>
-                <Skeleton className="h-4 w-28 bg-white/[0.07]" />
+              <div>
+                <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">
+                  STATUS
+                </p>
+                <p className="text-base sm:text-[17px] font-normal text-zinc-400">
+                  Checking...
+                </p>
               </div>
             </div>
 
-            {/* Retention */}
-            <div className="flex items-center gap-3.5 p-3 rounded-lg bg-[#111111] border border-[#222222]">
-              <div className="size-[54px] rounded-md bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
-                <IconShieldLock className="size-5 text-zinc-500" stroke={1.5} />
+            {/* 2. RETENTION */}
+            <div className="flex items-center gap-3.5 sm:gap-4 p-2 sm:p-0">
+              <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+                <IconShieldLock className="size-5 text-white/90" stroke={1.25} />
               </div>
-              <div className="space-y-1.5 min-w-0 flex-1">
-                <p className="text-[10px] uppercase font-mono tracking-wider text-[#888888]">RETENTION</p>
-                <Skeleton className="h-4 w-24 bg-white/[0.07]" />
-              </div>
-            </div>
-
-            {/* Storage Vault */}
-            <div className="flex items-center gap-3.5 p-3 rounded-lg bg-[#111111] border border-[#222222]">
-              <div className="size-[54px] rounded-md bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
-                <IconCloudUpload className="size-5 text-zinc-500" stroke={1.5} />
-              </div>
-              <div className="space-y-1.5 min-w-0 flex-1">
-                <p className="text-[10px] uppercase font-mono tracking-wider text-[#888888]">STORAGE VAULT</p>
-                <Skeleton className="h-4 w-20 bg-white/[0.07]" />
+              <div>
+                <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">
+                  RETENTION
+                </p>
+                <Skeleton className="h-5 w-24 bg-white/[0.08] mt-0.5" />
               </div>
             </div>
 
-            {/* Active Schedule */}
-            <div className="flex items-center gap-3.5 p-3 rounded-lg bg-[#111111] border border-[#222222]">
-              <div className="size-[54px] rounded-md bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
-                <IconCalendarEvent className="size-5 text-zinc-500" stroke={1.5} />
+            {/* 3. STORAGE VAULT */}
+            <div className="flex items-center gap-3.5 sm:gap-4 p-2 sm:p-0">
+              <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+                <IconCloudUpload className="size-5 text-white/90" stroke={1.25} />
               </div>
-              <div className="space-y-1.5 min-w-0 flex-1">
-                <p className="text-[10px] uppercase font-mono tracking-wider text-[#888888]">ACTIVE SCHEDULE</p>
-                <Skeleton className="h-4 w-32 bg-white/[0.07]" />
-              </div>
-            </div>
-
-            {/* Last Backup */}
-            <div className="flex items-center gap-3.5 p-3 rounded-lg bg-[#111111] border border-[#222222]">
-              <div className="size-[54px] rounded-md bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
-                <IconHistory className="size-5 text-zinc-500" stroke={1.5} />
-              </div>
-              <div className="space-y-1.5 min-w-0 flex-1">
-                <p className="text-[10px] uppercase font-mono tracking-wider text-[#888888]">LAST BACKUP</p>
-                <Skeleton className="h-4 w-28 bg-white/[0.07]" />
+              <div>
+                <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">
+                  STORAGE VAULT
+                </p>
+                <Skeleton className="h-5 w-20 bg-white/[0.08] mt-0.5" />
               </div>
             </div>
 
-            {/* Restore Readiness */}
-            <div className="flex items-center gap-3.5 p-3 rounded-lg bg-[#111111] border border-[#222222]">
-              <div className="size-[54px] rounded-md bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
-                <IconRotateClockwise className="size-5 text-zinc-500" stroke={1.5} />
+            {/* 4. ACTIVE SCHEDULE */}
+            <div className="flex items-center gap-3.5 sm:gap-4 p-2 sm:p-0">
+              <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+                <IconCalendarEvent className="size-5 text-white/90" stroke={1.25} />
               </div>
-              <div className="space-y-1.5 min-w-0 flex-1">
-                <p className="text-[10px] uppercase font-mono tracking-wider text-[#888888]">RESTORE READINESS</p>
-                <Skeleton className="h-4 w-24 bg-white/[0.07]" />
+              <div>
+                <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">
+                  ACTIVE SCHEDULE
+                </p>
+                <Skeleton className="h-5 w-20 bg-white/[0.08] mt-0.5" />
               </div>
             </div>
 
-            {/* Connection Status */}
-            <div className="flex items-center gap-3.5 p-3 rounded-lg bg-[#111111] border border-[#222222]">
-              <div className="size-[54px] rounded-md bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
-                <IconCircleCheck className="size-5 text-zinc-500" stroke={1.5} />
+            {/* 5. LAST BACKUP */}
+            <div className="flex items-center gap-3.5 sm:gap-4 p-2 sm:p-0">
+              <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+                <IconHistory className="size-5 text-white/90" stroke={1.25} />
               </div>
-              <div className="space-y-1.5 min-w-0 flex-1">
-                <p className="text-[10px] uppercase font-mono tracking-wider text-[#888888]">HEALTH CHECK</p>
-                <Skeleton className="h-4 w-20 bg-white/[0.07]" />
+              <div>
+                <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">
+                  LAST BACKUP
+                </p>
+                <Skeleton className="h-5 w-36 bg-white/[0.08] mt-0.5" />
+              </div>
+            </div>
+
+            {/* 6. RESTORE READINESS */}
+            <div className="flex items-center gap-3.5 sm:gap-4 p-2 sm:p-0">
+              <div className="size-[66px] sm:size-[68px] rounded-[7px] bg-[#161616] border border-[#242424] flex items-center justify-center shrink-0">
+                <IconRotateClockwise className="size-5 text-white/90" stroke={1.25} />
+              </div>
+              <div>
+                <p className="text-[10px] sm:text-[11px] uppercase font-mono tracking-wider text-[#888888] mb-0.5">
+                  RESTORE READINESS
+                </p>
+                <Skeleton className="h-5 w-16 bg-white/[0.08] mt-0.5" />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Column: Supabase Topology Canvas Skeleton with Center Spinner */}
-        <div className="xl:col-span-6">
-          <Card className="relative min-h-[460px] p-6 flex flex-col justify-between overflow-hidden shadow-sm bg-[#111111] border-[#222222]">
-            {/* Subtle dot matrix background */}
-            <div
-              className="absolute inset-0 opacity-20 pointer-events-none"
-              style={{
-                backgroundImage: "radial-gradient(#505050 1px, transparent 1px)",
-                backgroundSize: "20px 20px",
-              }}
-            />
-
-            {/* Canvas Header Switcher skeleton */}
-            <div className="relative z-10 flex justify-end">
-              <div className="flex items-center border border-[#2a2a2a] rounded bg-[#161616] overflow-hidden text-zinc-500">
-                <div className="p-1.5 bg-[#202020] text-zinc-300">
-                  <IconNetwork className="size-3.5" />
-                </div>
-                <div className="p-1.5">
-                  <IconWorld className="size-3.5" />
-                </div>
-              </div>
+        {/* Right Column: Exact Topology Canvas Card with clean Supabase central spinner */}
+        <Card className="xl:col-span-6 relative min-h-[500px] p-6 flex flex-col justify-between overflow-hidden shadow-sm">
+          <div
+            className="absolute inset-0 opacity-20 pointer-events-none"
+            style={{
+              backgroundImage: "radial-gradient(#505050 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
+          />
+          <div className="relative z-10 flex justify-end">
+            <div className="flex items-center border border-border rounded bg-card overflow-hidden text-muted-foreground">
+              <button className="p-1.5 bg-muted text-foreground">
+                <IconNetwork className="size-3.5" />
+              </button>
+              <button className="p-1.5 hover:text-foreground transition-colors">
+                <IconWorld className="size-3.5" />
+              </button>
             </div>
+          </div>
 
-            {/* Central Node Loader — exact Supabase dashboard experience */}
-            <div className="relative z-10 my-auto mx-auto flex flex-col items-center gap-4">
-              <div className="relative flex items-center justify-center">
-                <div className="size-14 rounded-full border-2 border-white/10 border-t-emerald-500 animate-spin" />
-                <IconDatabase className="size-6 text-zinc-400 absolute" />
-              </div>
-              <div className="text-center space-y-1">
-                <Skeleton className="h-4 w-36 mx-auto bg-white/[0.08]" />
-                <p className="text-xs text-zinc-500 font-mono">Syncing topology state...</p>
-              </div>
-            </div>
-
-            {/* Footer status skeleton */}
-            <div className="relative z-10 flex items-center justify-between text-xs text-zinc-500">
-              <Skeleton className="h-3 w-28 bg-white/[0.05]" />
-              <Skeleton className="h-3 w-20 bg-white/[0.05]" />
-            </div>
-          </Card>
-        </div>
+          {/* Clean central circular spinner matching Supabase */}
+          <div className="relative z-10 my-auto mx-auto flex items-center justify-center">
+            <div className="size-6 border-2 border-white/20 border-t-white/80 rounded-full animate-spin" />
+          </div>
+        </Card>
       </div>
 
-      {/* Bottom Section: Telemetry & Metrics Skeleton */}
-      <div className="space-y-6 pt-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Skeleton className="h-6 w-36 bg-white/[0.08]" />
-            <Skeleton className="h-5 w-20 rounded-full bg-white/[0.05]" />
-          </div>
-          <Skeleton className="h-8 w-28 rounded-md bg-white/[0.06]" />
+      {/* ── Bottom Section: Exact 4 Static Telemetry Cards ── */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between text-xs font-mono text-muted-foreground">
+          <p className="text-sm font-medium text-foreground tracking-tight">
+            Total Backup Operations
+          </p>
         </div>
 
-        {/* 3 Metric Cards with Sparklines */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="p-5 bg-[#111111] border-[#222222] space-y-4">
-              <div className="flex items-center justify-between">
-                <Skeleton className="h-3.5 w-24 bg-white/[0.06]" />
-                <Skeleton className="h-4 w-12 rounded bg-white/[0.05]" />
+        {/* 4 Cards: exact headers and static error badges, only numbers & sparklines are loading */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* 1. Scheduled Backups */}
+          <Card className="flex flex-col justify-between h-52 overflow-visible">
+            <CardHeader className="pb-0">
+              <div className="flex items-start justify-between">
+                <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+                  SCHEDULED BACKUPS
+                </p>
+                <Badge variant="outline" className="text-[10px] font-mono gap-1 text-muted-foreground">
+                  <span className="size-1.5 rounded-full bg-zinc-600" />
+                  ERRORS 0
+                </Badge>
               </div>
-              <Skeleton className="h-8 w-20 bg-white/[0.09]" />
-              
-              {/* Sparkline placeholder bars */}
+            </CardHeader>
+            <CardContent className="-mt-2">
+              <Skeleton className="h-8 w-12 bg-white/[0.08]" />
+            </CardContent>
+            <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
               <div className="h-10 flex items-end gap-1.5 pt-2">
-                {[40, 65, 30, 80, 50, 90, 70, 45, 60, 85, 35, 75].map((h, idx) => (
-                  <div
-                    key={idx}
-                    className="flex-1 bg-white/[0.05] rounded-t-[2px] animate-pulse"
-                    style={{ height: `${h}%` }}
-                  />
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="flex-1 h-2 rounded-t-[2px] bg-white/[0.04]" />
                 ))}
               </div>
-            </Card>
-          ))}
+              <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
+                <span>Status</span>
+                <span>Operational</span>
+              </div>
+            </CardFooter>
+          </Card>
+
+          {/* 2. Manual Triggers */}
+          <Card className="flex flex-col justify-between h-52 overflow-visible">
+            <CardHeader className="pb-0">
+              <div className="flex items-start justify-between">
+                <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+                  MANUAL TRIGGERS
+                </p>
+                <Badge variant="outline" className="text-[10px] font-mono gap-1 text-muted-foreground">
+                  <span className="size-1.5 rounded-full bg-zinc-600" />
+                  ERRORS 0
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="-mt-2">
+              <Skeleton className="h-8 w-12 bg-white/[0.08]" />
+            </CardContent>
+            <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
+              <div className="h-10 flex items-end gap-1.5 pt-2">
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="flex-1 h-2 rounded-t-[2px] bg-white/[0.04]" />
+                ))}
+              </div>
+              <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
+                <span>Activity</span>
+                <span>Standby</span>
+              </div>
+            </CardFooter>
+          </Card>
+
+          {/* 3. Restore Drills */}
+          <Card className="flex flex-col justify-between h-52 overflow-visible">
+            <CardHeader className="pb-0">
+              <div className="flex items-start justify-between">
+                <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+                  RESTORE DRILLS
+                </p>
+                <Badge variant="outline" className="text-[10px] font-mono gap-1 text-muted-foreground">
+                  <span className="size-1.5 rounded-full bg-zinc-600" />
+                  ERRORS 0
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="-mt-2">
+              <Skeleton className="h-8 w-12 bg-white/[0.08]" />
+            </CardContent>
+            <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
+              <div className="h-10 flex items-end gap-1.5 pt-2">
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="flex-1 h-2 rounded-t-[2px] bg-white/[0.04]" />
+                ))}
+              </div>
+              <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
+                <span>State</span>
+                <span>Standby</span>
+              </div>
+            </CardFooter>
+          </Card>
+
+          {/* 4. Total Storage */}
+          <Card className="flex flex-col justify-between h-52 overflow-visible">
+            <CardHeader className="pb-0">
+              <div className="flex items-start justify-between">
+                <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
+                  TOTAL STORAGE
+                </p>
+                <Badge variant="outline" className="text-[10px] font-mono text-muted-foreground">
+                  Active Files
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="-mt-2">
+              <Skeleton className="h-8 w-20 bg-white/[0.08]" />
+            </CardContent>
+            <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
+              <div className="h-10 flex items-end gap-1.5 pt-2">
+                {[...Array(12)].map((_, i) => (
+                  <div key={i} className="flex-1 h-2 rounded-t-[2px] bg-white/[0.04]" />
+                ))}
+              </div>
+              <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
+                <span>Vault</span>
+                <span>Encrypted</span>
+              </div>
+            </CardFooter>
+          </Card>
         </div>
       </div>
     </div>
