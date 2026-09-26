@@ -2,17 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import postgres from "postgres";
 import { ProjectRepository } from "db";
 import { decryptDatabaseUrl } from "shared/config/encryption";
+import { getBacklifyEgressIp } from "shared/config/network";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   let sql: ReturnType<typeof postgres> | null = null;
+  let targetUrl: string | null = null;
 
   try {
     const body = await req.json().catch(() => ({}));
     const { projectId, databaseUrl } = body;
 
-    let targetUrl: string | null = null;
 
     if (projectId) {
       const project = await ProjectRepository.getProjectById(projectId);
@@ -113,11 +114,20 @@ export async function POST(req: NextRequest) {
       userFriendlyError = message;
     }
 
+    const isFirewallLikely =
+      code === "ETIMEDOUT" ||
+      message.includes("timeout") ||
+      message.includes("ETIMEDOUT") ||
+      message.includes("no pg_hba.conf entry") ||
+      (code === "ECONNREFUSED" && !targetUrl?.includes("localhost") && !targetUrl?.includes("127.0.0.1"));
+
     return NextResponse.json(
       {
         success: false,
         error: userFriendlyError,
         errorCode: code,
+        isFirewallLikely,
+        egressIp: getBacklifyEgressIp(),
       },
       { status: 200 } // Return 200 with success: false so client can render structured diagnostics
     );

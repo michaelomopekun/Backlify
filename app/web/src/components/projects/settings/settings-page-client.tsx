@@ -76,13 +76,22 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
   const [copiedDb, setCopiedDb] = useState(false);
   const [savedDb, setSavedDb] = useState(false);
   const [testingPing, setTestingPing] = useState(false);
+  const [copiedEgressIp, setCopiedEgressIp] = useState(false);
   const [pingResult, setPingResult] = useState<{
     status: "idle" | "success" | "error";
     latency?: number;
     version?: string;
     ssl?: boolean;
     error?: string;
+    isFirewallLikely?: boolean;
+    egressIp?: string;
   }>({ status: "idle" });
+
+  const handleCopyEgressIp = (ip: string) => {
+    navigator.clipboard.writeText(ip);
+    setCopiedEgressIp(true);
+    setTimeout(() => setCopiedEgressIp(false), 2000);
+  };
 
   // Storage & KMS
   const [vaultProvider, setVaultProvider] = useState(project?.vaultProvider ?? "s3");
@@ -288,6 +297,8 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
         setPingResult({
           status: "error",
           error: data.error || "Connection check failed. Verify credentials and network access.",
+          isFirewallLikely: Boolean(data.isFirewallLikely),
+          egressIp: data.egressIp || "52.204.14.88",
         });
       }
     } catch (err: any) {
@@ -559,28 +570,74 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
             </div>
           )}
           {pingResult.status === "error" && (
-            <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 space-y-1 text-xs">
-              <div className="flex items-center gap-2 text-destructive font-semibold">
-                <IconAlertTriangle className="size-4" />
-                <span>Connection Check Failed</span>
+            <div
+              className={`rounded-md border p-3 space-y-2 text-xs ${
+                pingResult.isFirewallLikely
+                  ? "border-amber-500/40 bg-amber-500/5 text-amber-200"
+                  : "border-destructive/30 bg-destructive/10 text-destructive"
+              }`}
+            >
+              <div className="flex items-center gap-2 font-semibold">
+                <IconAlertTriangle className={`size-4 ${pingResult.isFirewallLikely ? "text-amber-400" : "text-destructive"}`} />
+                <span>{pingResult.isFirewallLikely ? "Firewall / Security Group Detected" : "Connection Check Failed"}</span>
               </div>
-              <p className="text-destructive/80 text-xs">{pingResult.error}</p>
+              <p className="text-xs leading-relaxed opacity-90">{pingResult.error}</p>
+
+              {pingResult.isFirewallLikely && (
+                <div className="pt-2 border-t border-amber-500/20 flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-muted-foreground text-[11px]">Backlify Outbound IP:</span>
+                    <code className="px-1.5 py-0.5 rounded bg-black/50 border border-amber-500/30 text-amber-300 font-mono text-xs">
+                      {pingResult.egressIp || "52.204.14.88"}
+                    </code>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopyEgressIp(pingResult.egressIp || "52.204.14.88")}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-sans font-medium bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/30 transition-colors cursor-pointer"
+                  >
+                    {copiedEgressIp ? (
+                      <>
+                        <IconCheck className="size-3 text-emerald-400" />
+                        <span>Copied IP</span>
+                      </>
+                    ) : (
+                      <>
+                        <IconCopy className="size-3" />
+                        <span>Copy IP</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
 
         <CardFooter className="px-5 sm:px-6 py-3.5 bg-muted/30 border-t border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-muted-foreground font-normal">
-          <Button
-            type="button"
-            onClick={handleTestPing}
-            disabled={testingPing}
-            variant="outline"
-            size="sm"
-            className="h-8.5 px-3 text-xs border-border bg-card hover:bg-muted font-medium w-full sm:w-auto"
-          >
-            <IconRefresh className={`size-3.5 mr-1.5 ${testingPing ? "animate-spin text-muted-foreground" : ""}`} />
-            {testingPing ? "Probing Database…" : "Test Connection & Ping"}
-          </Button>
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+            <Button
+              type="button"
+              onClick={handleTestPing}
+              disabled={testingPing}
+              variant="outline"
+              size="sm"
+              className="h-8.5 px-3 text-xs border-border bg-card hover:bg-muted font-medium w-full sm:w-auto"
+            >
+              <IconRefresh className={`size-3.5 mr-1.5 ${testingPing ? "animate-spin text-muted-foreground" : ""}`} />
+              {testingPing ? "Probing Database…" : "Test Connection & Ping"}
+            </Button>
+
+            <button
+              type="button"
+              onClick={() => handleCopyEgressIp(pingResult.egressIp || "52.204.14.88")}
+              className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border border-border/60 bg-muted/20 hover:bg-muted/40 text-[11px] font-mono text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              title="Click to copy Backlify outbound IP for database firewalls"
+            >
+              <span>Outbound IP: <strong className="text-foreground">{pingResult.egressIp || "52.204.14.88"}</strong></span>
+              {copiedEgressIp ? <IconCheck className="size-3 text-emerald-400" /> : <IconCopy className="size-3" />}
+            </button>
+          </div>
 
           <Button
             size="sm"

@@ -9,7 +9,12 @@ COPY package/db/package.json ./package/db/
 COPY app/web/package.json ./app/web/
 
 # 2. Install dependencies
-RUN npm ci --workspace=shared --workspace=db --workspace=web --no-audit
+RUN npm config set fetch-retries 5 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && (npm ci --workspace=shared --workspace=db --workspace=web --no-audit || npm install --workspace=shared --workspace=db --workspace=web --no-audit)
+
+ENV PATH="/app/node_modules/.bin:/app/app/web/node_modules/.bin:${PATH}"
 
 # 3. Copy source code
 COPY package/shared ./package/shared

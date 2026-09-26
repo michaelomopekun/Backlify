@@ -10,6 +10,8 @@ import {
   IconLoader2,
   IconEye,
   IconEyeOff,
+  IconCopy,
+  IconExternalLink,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,12 +49,21 @@ export function NewProjectForm({ orgId, orgName }: Props) {
 
   // Ping test
   const [isTesting, setIsTesting] = useState(false);
+  const [copiedIp, setCopiedIp] = useState(false);
   const [pingResult, setPingResult] = useState<{
     status: "success" | "error";
     latency?: number;
     version?: string;
     error?: string;
+    isFirewallLikely?: boolean;
+    egressIp?: string;
   } | null>(null);
+
+  const copyEgressIp = (ip: string) => {
+    navigator.clipboard.writeText(ip);
+    setCopiedIp(true);
+    setTimeout(() => setCopiedIp(false), 2000);
+  };
 
   const handleTestConnection = async () => {
     if (!databaseUrl || !/^postgres(ql)?:\/\//i.test(databaseUrl)) {
@@ -66,14 +77,36 @@ export function NewProjectForm({ orgId, orgName }: Props) {
     setIsTesting(true);
     setPingResult(null);
 
-    await new Promise((r) => setTimeout(r, 600));
+    try {
+      const res = await fetch("/api/projects/test-connection", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ databaseUrl: databaseUrl.trim() }),
+      });
+      const data = await res.json();
+      setIsTesting(false);
 
-    setIsTesting(false);
-    setPingResult({
-      status: "success",
-      latency: 38,
-      version: "PostgreSQL 16.2 on x86_64",
-    });
+      if (res.ok && data.success) {
+        setPingResult({
+          status: "success",
+          latency: data.latencyMs,
+          version: `${data.version}${data.database ? ` • DB: ${data.database}` : ""}${data.ssl ? " • SSL" : ""}`,
+        });
+      } else {
+        setPingResult({
+          status: "error",
+          error: data.error || "Connection check failed. Verify credentials and network access.",
+          isFirewallLikely: Boolean(data.isFirewallLikely),
+          egressIp: data.egressIp || "52.204.14.88",
+        });
+      }
+    } catch (err: any) {
+      setIsTesting(false);
+      setPingResult({
+        status: "error",
+        error: err?.message || "Failed to reach the database diagnostic service.",
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -236,24 +269,57 @@ export function NewProjectForm({ orgId, orgName }: Props) {
 
               {pingResult && (
                 <div
-                  className={`p-2.5 rounded-md border text-[11px] font-mono flex items-start gap-2 mt-2 ${
+                  className={`p-3 rounded-md border text-[11px] font-mono flex items-start gap-2 mt-2 ${
                     pingResult.status === "success"
                       ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-300"
+                      : pingResult.isFirewallLikely
+                      ? "border-amber-500/40 bg-amber-500/5 text-amber-200"
                       : "border-red-500/30 bg-red-500/5 text-red-300"
                   }`}
                 >
                   {pingResult.status === "success" ? (
                     <IconCheck className="size-3.5 text-emerald-400 shrink-0 mt-0.5" />
                   ) : (
-                    <IconAlertTriangle className="size-3.5 text-red-400 shrink-0 mt-0.5" />
+                    <IconAlertTriangle className={`size-3.5 shrink-0 mt-0.5 ${pingResult.isFirewallLikely ? "text-amber-400" : "text-red-400"}`} />
                   )}
-                  <div>
+                  <div className="flex-1 space-y-2">
                     {pingResult.status === "success" ? (
                       <span>
                         Connection Verified — Latency: <strong>{pingResult.latency}ms</strong> ({pingResult.version})
                       </span>
                     ) : (
-                      <span>{pingResult.error}</span>
+                      <>
+                        <p className="leading-relaxed">{pingResult.error}</p>
+
+                        {pingResult.isFirewallLikely && (
+                          <div className="pt-2 border-t border-amber-500/20 flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-muted-foreground text-[10.5px]">Backlify Outbound IP:</span>
+                              <code className="px-1.5 py-0.5 rounded bg-black/50 border border-amber-500/30 text-amber-300 font-mono text-[11px]">
+                                {pingResult.egressIp || "52.204.14.88"}
+                              </code>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => copyEgressIp(pingResult.egressIp || "52.204.14.88")}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10.5px] font-sans font-medium bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 border border-amber-500/30 transition-colors cursor-pointer"
+                            >
+                              {copiedIp ? (
+                                <>
+                                  <IconCheck className="size-3 text-emerald-400" />
+                                  <span>Copied IP</span>
+                                </>
+                              ) : (
+                                <>
+                                  <IconCopy className="size-3" />
+                                  <span>Copy IP</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
