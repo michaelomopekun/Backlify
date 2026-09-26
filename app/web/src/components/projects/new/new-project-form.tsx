@@ -344,9 +344,9 @@ export function NewProjectForm({ orgId, orgName }: Props) {
                   <SelectValue placeholder="Select backup frequency" />
                 </SelectTrigger>
                 <SelectContent className="border-border bg-popover">
-                  <SelectItem value="0 2 * * *">Daily - Every day at 02:00 UTC (Recommended)</SelectItem>
-                  <SelectItem value="0 * * * *">Hourly - Continuous WAL Archive (:00)</SelectItem>
-                  <SelectItem value="0 2 * * 0">Weekly - Every Sunday at 02:00 UTC</SelectItem>
+                  <SelectItem value="0 2 * * *">Daily (At 02:00 UTC)</SelectItem>
+                  <SelectItem value="0 * * * *">Hourly (top of every hour)</SelectItem>
+                  <SelectItem value="0 2 * * 0">Weekly (Sundays at 02:00 UTC)</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
