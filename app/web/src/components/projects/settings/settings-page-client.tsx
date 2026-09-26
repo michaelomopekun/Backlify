@@ -471,8 +471,8 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
                   <SelectValue placeholder="Select environment" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="production">Production (Continuous WAL + Automated Drills)</SelectItem>
-                  <SelectItem value="staging">Staging (Snapshot Only)</SelectItem>
+                  <SelectItem value="production">Production</SelectItem>
+                  <SelectItem value="staging">Staging</SelectItem>
                   <SelectItem value="development">Development</SelectItem>
                 </SelectContent>
               </Select>

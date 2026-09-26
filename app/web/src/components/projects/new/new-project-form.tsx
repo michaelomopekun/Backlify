@@ -372,9 +372,9 @@ export function NewProjectForm({ orgId, orgName }: Props) {
                   <SelectValue placeholder="Select environment" />
                 </SelectTrigger>
                 <SelectContent className="border-border bg-popover">
-                  <SelectItem value="production">Production (Continuous WAL + Automated DR)</SelectItem>
-                  <SelectItem value="staging">Staging (Daily snapshots + On-demand restore)</SelectItem>
-                  <SelectItem value="development">Development (Manual snapshots + Sandboxes)</SelectItem>
+                  <SelectItem value="production">Production</SelectItem>
+                  <SelectItem value="staging">Staging</SelectItem>
+                  <SelectItem value="development">Development</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
