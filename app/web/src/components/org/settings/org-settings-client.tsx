@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   IconBuilding,
@@ -17,6 +17,9 @@ import {
   IconSparkles,
   IconLoader2,
   IconArrowUpRight,
+  IconCreditCard,
+  IconWorld,
+  IconShieldCheck,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +61,9 @@ export interface OrgSettingsProps {
     name: string;
     slug: string;
     userId: string;
+    plan?: string;
+    billingProvider?: string | null;
+    subscriptionEndsAt?: string | Date | null;
     createdAt: string | Date;
     projectsCount: number;
     totalStorageBytes: number;
@@ -70,12 +76,20 @@ export function OrgSettingsClient({
   initialMembers,
 }: OrgSettingsProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isPro = organization.plan === "pro";
 
   // General settings state
   const [orgName, setOrgName] = useState(organization.name);
   const [slug, setSlug] = useState(organization.slug);
   const [isSavingGeneral, setIsSavingGeneral] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  // Billing state
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState<"USD" | "NGN">("USD");
+  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+  const [isPortalLoading, setIsPortalLoading] = useState(false);
 
   // Members state
   const [members, setMembers] = useState<OrgMember[]>(initialMembers);
@@ -90,6 +104,94 @@ export function OrgSettingsClient({
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [confirmName, setConfirmName] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Auto-detect country/currency on mount
+  useEffect(() => {
+    fetch("/api/billing/detect-currency")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.currency === "NGN") {
+          setSelectedCurrency("NGN");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  // Check URL query parameters for billing completion
+  useEffect(() => {
+    const billingParam = searchParams.get("billing");
+    if (billingParam === "success") {
+      toast.success("🎉 Upgrade successful! Your organization is now on the Pro Plan.");
+      router.replace(window.location.pathname);
+    } else if (billingParam === "canceled") {
+      toast.info("Checkout was canceled.");
+      router.replace(window.location.pathname);
+    } else if (billingParam === "failed" || billingParam === "error") {
+      toast.error("Payment could not be verified. Please try again.");
+      router.replace(window.location.pathname);
+    }
+  }, [searchParams, router]);
+
+  // Handle Checkout (Stripe or Paystack)
+  const handleCheckout = async () => {
+    setIsCheckoutLoading(true);
+    try {
+      if (selectedCurrency === "NGN") {
+        // Paystack (₦2,000 / month)
+        const res = await fetch("/api/billing/paystack/initialize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orgId: organization.id }),
+        });
+        const data = await res.json();
+        if (data.success && data.authorization_url) {
+          window.location.href = data.authorization_url;
+        } else {
+          toast.error(data.error || "Failed to initialize Paystack checkout.");
+          setIsCheckoutLoading(false);
+        }
+      } else {
+        // Stripe ($3 / month)
+        const res = await fetch("/api/billing/stripe/checkout", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orgId: organization.id }),
+        });
+        const data = await res.json();
+        if (data.success && data.url) {
+          window.location.href = data.url;
+        } else {
+          toast.error(data.error || "Failed to initialize Stripe checkout.");
+          setIsCheckoutLoading(false);
+        }
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to initiate payment gateway.");
+      setIsCheckoutLoading(false);
+    }
+  };
+
+  // Handle Stripe Customer Portal
+  const handleOpenPortal = async () => {
+    setIsPortalLoading(true);
+    try {
+      const res = await fetch("/api/billing/stripe/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orgId: organization.id }),
+      });
+      const data = await res.json();
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else {
+        toast.info("Active subscription management is available via your payment provider.");
+        setIsPortalLoading(false);
+      }
+    } catch {
+      toast.error("Failed to connect to billing portal.");
+      setIsPortalLoading(false);
+    }
+  };
 
   // Copy helper
   const copyToClipboard = (text: string, fieldName: string) => {
@@ -223,10 +325,11 @@ export function OrgSettingsClient({
   };
 
   // Storage calculation
-  const FREE_TIER_STORAGE_BYTES = 50 * 1024 * 1024; // 50 MB
+  const STORAGE_LIMIT_BYTES = isPro ? 50 * 1024 * 1024 * 1024 : 50 * 1024 * 1024;
+  const storageLimitLabel = isPro ? "50 GB" : "50 MB";
   const storagePercentage = Math.min(
     100,
-    Math.round((organization.totalStorageBytes / FREE_TIER_STORAGE_BYTES) * 100)
+    Math.round((organization.totalStorageBytes / STORAGE_LIMIT_BYTES) * 100)
   );
 
   const storageUsedStr =
@@ -377,12 +480,18 @@ export function OrgSettingsClient({
               </p>
             </div>
           </div>
-          <Badge
-            variant="outline"
-            className="border-border/80 bg-muted/30 text-muted-foreground font-mono text-[11px] uppercase tracking-wider"
-          >
-            Free Tier
-          </Badge>
+          {isPro ? (
+            <Badge className="border-amber-500/30 bg-amber-500/10 text-amber-400 font-mono text-[11px] uppercase tracking-wider font-semibold">
+              PRO TIER
+            </Badge>
+          ) : (
+            <Badge
+              variant="outline"
+              className="border-border/80 bg-muted/30 text-muted-foreground font-mono text-[11px] uppercase tracking-wider"
+            >
+              Free Tier
+            </Badge>
+          )}
         </div>
 
         <div className="p-6 space-y-6">
@@ -393,12 +502,14 @@ export function OrgSettingsClient({
                 <IconServer className="size-3.5" /> Storage Consumption
               </span>
               <span className="font-mono text-white">
-                {storageUsedStr} / 50 MB ({storagePercentage}%)
+                {storageUsedStr} / {storageLimitLabel} ({storagePercentage}%)
               </span>
             </div>
             <Progress value={storagePercentage} className="h-2 bg-[#1a1a1a]" />
             <p className="text-[11px] text-muted-foreground">
-              Calculated across all live project backups and table archives.
+              {isPro
+                ? "Pro tier active: 50 GB cloud archive capacity allocated across all databases."
+                : "Calculated across all live project backups and table archives. Upgrade to Pro for 50 GB."}
             </p>
           </div>
 
@@ -407,14 +518,20 @@ export function OrgSettingsClient({
             <div className="p-3.5 rounded-md bg-[#161616] border border-[#262626]">
               <div className="text-[11px] text-[#777777]">Active Projects</div>
               <div className="text-lg font-semibold text-white mt-1">
-                {organization.projectsCount} <span className="text-xs text-[#555555] font-normal">/ 5 max</span>
+                {organization.projectsCount}{" "}
+                <span className="text-xs text-[#555555] font-normal">
+                  / {isPro ? "50 max" : "2 max"}
+                </span>
               </div>
             </div>
 
             <div className="p-3.5 rounded-md bg-[#161616] border border-[#262626]">
               <div className="text-[11px] text-[#777777]">Retention Window</div>
               <div className="text-lg font-semibold text-white mt-1">
-                7 Days <span className="text-xs text-[#555555] font-normal">FIFO</span>
+                {isPro ? "30+ Days" : "7 Days"}{" "}
+                <span className="text-xs text-[#555555] font-normal">
+                  {isPro ? "Custom" : "FIFO"}
+                </span>
               </div>
             </div>
 
@@ -426,32 +543,170 @@ export function OrgSettingsClient({
             </div>
           </div>
 
-          {/* Upgrade Banner */}
-          <div className="p-4 rounded-md bg-[#141414] border border-[#242424] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded bg-[#1c1c1c] text-neutral-300">
-                <IconSparkles className="size-4" />
-              </div>
-              <div>
-                <div className="text-xs font-medium text-white">Need higher storage limits or BYOK encryption?</div>
-                <div className="text-[11px] text-[#888888] mt-0.5">
-                  Pro plans include 250 GB storage, continuous WAL archiving, and custom S3 vaults.
+          {/* Plan Status / Upgrade Banner */}
+          {isPro ? (
+            <div className="p-4 rounded-md bg-[#121c15] border border-[#1b3b24] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded bg-emerald-950/60 border border-emerald-500/30 text-emerald-400">
+                  <IconShieldCheck className="size-4" />
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-white flex items-center gap-2">
+                    <span>Active Pro Subscription</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded border border-emerald-500/30 bg-emerald-500/10 text-emerald-400">
+                      {organization.billingProvider === "paystack" ? "Paystack (₦2,000/mo)" : "Stripe ($3/mo)"}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[#888888] mt-0.5">
+                    50 GB storage, hourly backups, automated DR drill audits, and custom webhooks are active.
+                  </div>
                 </div>
               </div>
+              {organization.billingProvider === "stripe" && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleOpenPortal}
+                  disabled={isPortalLoading}
+                  className="h-8 px-3 text-xs border-[#333333] hover:bg-[#202020] text-white shrink-0"
+                >
+                  {isPortalLoading ? (
+                    <IconLoader2 className="size-3.5 animate-spin mr-1" />
+                  ) : (
+                    <IconCreditCard className="size-3.5 mr-1" />
+                  )}
+                  Manage Subscription
+                </Button>
+              )}
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => toast.info("Stripe Billing integration is on the roadmap!")}
-              className="h-8 px-3 text-xs border-[#333333] hover:bg-[#202020] text-white shrink-0"
-            >
-              Upgrade Plan
-              <IconArrowUpRight className="size-3.5 ml-1" />
-            </Button>
-          </div>
+          ) : (
+            <div className="p-4 rounded-md bg-[#141414] border border-[#242424] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded bg-[#1c1c1c] text-neutral-300">
+                  <IconSparkles className="size-4 text-amber-400" />
+                </div>
+                <div>
+                  <div className="text-xs font-medium text-white flex items-center gap-2">
+                    <span>Upgrade to Backlify Pro</span>
+                    <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+                      $3 / mo or ₦2,000 / mo
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-[#888888] mt-0.5">
+                    Unlock 50 GB storage (1,000x free limit), hourly backups, automated DR drills, and custom vaults.
+                  </div>
+                </div>
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setIsUpgradeOpen(true)}
+                className="h-8 px-3.5 text-xs bg-white text-black hover:bg-neutral-200 transition-colors shrink-0 font-medium"
+              >
+                Upgrade to Pro
+                <IconArrowUpRight className="size-3.5 ml-1" />
+              </Button>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Upgrade Dialog with Stripe & Paystack */}
+      <Dialog open={isUpgradeOpen} onOpenChange={setIsUpgradeOpen}>
+        <DialogContent className="max-w-md bg-[#111111] border-[#222222] text-white p-6">
+          <DialogHeader>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="p-1.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                <IconSparkles className="size-4" />
+              </div>
+              <DialogTitle className="text-base font-semibold">Upgrade to Backlify Pro</DialogTitle>
+            </div>
+            <DialogDescription className="text-xs text-[#888888]">
+              Automate your database resilience with high-frequency backups, automated disaster recovery drills, and expanded cloud storage.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Pricing & Gateway Selection Pill */}
+          <div className="my-4 p-1.5 rounded-lg bg-[#181818] border border-[#2a2a2a] grid grid-cols-2 gap-1 text-xs">
+            <button
+              type="button"
+              onClick={() => setSelectedCurrency("USD")}
+              className={`py-2 px-3 rounded-md font-medium flex items-center justify-center gap-1.5 transition-all ${
+                selectedCurrency === "USD"
+                  ? "bg-[#282828] text-white shadow-sm border border-[#3a3a3a]"
+                  : "text-[#888888] hover:text-white"
+              }`}
+            >
+              <IconWorld className="size-3.5" />
+              <span>USD ($3 / mo)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedCurrency("NGN")}
+              className={`py-2 px-3 rounded-md font-medium flex items-center justify-center gap-1.5 transition-all ${
+                selectedCurrency === "NGN"
+                  ? "bg-[#282828] text-white shadow-sm border border-[#3a3a3a]"
+                  : "text-[#888888] hover:text-white"
+              }`}
+            >
+              <span>🇳🇬 NGN (₦2,000 / mo)</span>
+            </button>
+          </div>
+
+          {/* Pro Benefits list */}
+          <div className="space-y-2 py-1 text-xs">
+            <div className="flex items-center gap-2 text-neutral-300">
+              <IconCheck className="size-3.5 text-emerald-400 shrink-0" />
+              <span><strong>50 GB Cloud Storage</strong> (1,000x Free Tier limit)</span>
+            </div>
+            <div className="flex items-center gap-2 text-neutral-300">
+              <IconCheck className="size-3.5 text-emerald-400 shrink-0" />
+              <span><strong>Hourly Backups</strong> & continuous snapshot scheduling</span>
+            </div>
+            <div className="flex items-center gap-2 text-neutral-300">
+              <IconCheck className="size-3.5 text-emerald-400 shrink-0" />
+              <span><strong>Automated Disaster Recovery Drills</strong> (Headless TOC audits)</span>
+            </div>
+            <div className="flex items-center gap-2 text-neutral-300">
+              <IconCheck className="size-3.5 text-emerald-400 shrink-0" />
+              <span><strong>Custom Webhooks</strong> (Discord & Slack real-time incident alerts)</span>
+            </div>
+            <div className="flex items-center gap-2 text-neutral-300">
+              <IconCheck className="size-3.5 text-emerald-400 shrink-0" />
+              <span><strong>Custom S3 / Cloudflare R2 Vaults</strong> (Bring Your Own Storage)</span>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4 flex flex-col sm:flex-col gap-2">
+            <Button
+              type="button"
+              onClick={handleCheckout}
+              disabled={isCheckoutLoading}
+              className="w-full h-10 bg-white text-black hover:bg-neutral-200 font-medium text-xs flex items-center justify-center gap-2"
+            >
+              {isCheckoutLoading ? (
+                <>
+                  <IconLoader2 className="size-4 animate-spin" />
+                  <span>Connecting to {selectedCurrency === "NGN" ? "Paystack" : "Stripe"}...</span>
+                </>
+              ) : (
+                <>
+                  <IconCreditCard className="size-4" />
+                  <span>
+                    Pay {selectedCurrency === "NGN" ? "₦2,000 / month with Paystack" : "$3 / month with Stripe"}
+                  </span>
+                </>
+              )}
+            </Button>
+            <p className="text-[11px] text-center text-[#666666]">
+              {selectedCurrency === "NGN"
+                ? "Secured by Paystack. Supports Nigerian Debit Cards, Bank Transfer & USSD."
+                : "Secured by Stripe. Cancel anytime from your organization dashboard."}
+            </p>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* ─── 3. Team & Member Management ─── */}
       <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-hidden">

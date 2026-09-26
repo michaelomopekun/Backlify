@@ -27,8 +27,19 @@ export async function triggerBackup(projectId: string) {
     const project = await ProjectRepository.getProjectById(projectId);
     if (!project) return { error: "That project no longer exists." };
 
-    // Enforce 50 MB Free Tier Storage Quota
-    const FREE_TIER_STORAGE_LIMIT_BYTES = 50 * 1024 * 1024; // 50 MB
+    // Enforce Tier Storage Quota (50 MB on Free, 50 GB on Pro)
+    let isPro = false;
+    let storageLimitBytes = 50 * 1024 * 1024; // 50 MB Free tier
+    try {
+      if (project.orgId) {
+        const org = await OrganizationRepository.getOrganizationById(project.orgId);
+        if (org && (org as any).plan === "pro") {
+          isPro = true;
+          storageLimitBytes = 50 * 1024 * 1024 * 1024; // 50 GB Pro tier
+        }
+      }
+    } catch {}
+
     let currentStorageBytes = 0;
     try {
       if (project.orgId) {
@@ -46,9 +57,11 @@ export async function triggerBackup(projectId: string) {
       console.warn("Storage quota check failed, continuing backup:", err);
     }
 
-    if (currentStorageBytes >= FREE_TIER_STORAGE_LIMIT_BYTES) {
+    if (currentStorageBytes >= storageLimitBytes) {
       return {
-        error: "Free tier storage limit reached (50 MB). Upgrade to Pro to continue backing up.",
+        error: isPro
+          ? "Pro tier storage limit reached (50 GB). Please clean up older backups or attach a custom S3 vault."
+          : "Free tier storage limit reached (50 MB). Upgrade to Pro ($3/mo or ₦2,000/mo) to unlock 50 GB storage.",
       };
     }
 

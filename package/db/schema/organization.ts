@@ -6,6 +6,12 @@ export const organizations = pgTable('organizations', {
   name: varchar('name', { length: 255 }).notNull(),
   slug: varchar('slug', { length: 100 }).notNull().unique(),
   userId: text('user_id').notNull(),
+  plan: varchar('plan', { length: 50 }).notNull().default('free'), // 'free' | 'pro'
+  billingProvider: varchar('billing_provider', { length: 50 }), // 'stripe' | 'paystack'
+  subscriptionId: text('subscription_id'),
+  customerId: text('customer_id'),
+  subscriptionStatus: varchar('subscription_status', { length: 50 }).default('active'), // 'active' | 'past_due' | 'canceled'
+  subscriptionEndsAt: timestamp('subscription_ends_at'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });

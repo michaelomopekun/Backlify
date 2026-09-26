@@ -292,4 +292,42 @@ export class OrganizationRepository {
       throw error;
     }
   }
+
+  static async updateSubscription(
+    orgId: string,
+    params: {
+      plan: "free" | "pro";
+      billingProvider?: "stripe" | "paystack" | null;
+      subscriptionId?: string | null;
+      customerId?: string | null;
+      subscriptionStatus?: "active" | "past_due" | "canceled" | null;
+      subscriptionEndsAt?: Date | null;
+    }
+  ) {
+    try {
+      logger.info({ orgId, plan: params.plan, provider: params.billingProvider }, "Updating organization subscription");
+
+      const updateData: any = {
+        plan: params.plan,
+        updatedAt: new Date(),
+      };
+
+      if (params.billingProvider !== undefined) updateData.billingProvider = params.billingProvider;
+      if (params.subscriptionId !== undefined) updateData.subscriptionId = params.subscriptionId;
+      if (params.customerId !== undefined) updateData.customerId = params.customerId;
+      if (params.subscriptionStatus !== undefined) updateData.subscriptionStatus = params.subscriptionStatus;
+      if (params.subscriptionEndsAt !== undefined) updateData.subscriptionEndsAt = params.subscriptionEndsAt;
+
+      const result = await db
+        .update(organizations)
+        .set(updateData)
+        .where(eq(organizations.id, orgId))
+        .returning();
+
+      return result[0];
+    } catch (error) {
+      logger.error({ orgId, error }, "Failed to update organization subscription");
+      throw error;
+    }
+  }
 }

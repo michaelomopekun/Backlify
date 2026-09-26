@@ -102,8 +102,12 @@ export default async function OrgSettingsPage({ params }: Props) {
         >
           <Boxes className="size-3.5 text-muted-foreground shrink-0" />
           <span>{orgName}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded border border-border/80 bg-muted/40 text-muted-foreground font-mono uppercase tracking-wider">
-            FREE
+          <span className={`text-[10px] px-1.5 py-0.5 rounded border font-mono uppercase tracking-wider ${
+            (org as any).plan === "pro"
+              ? "border-amber-500/30 bg-amber-500/10 text-amber-400 font-semibold"
+              : "border-border/80 bg-muted/40 text-muted-foreground"
+          }`}>
+            {(org as any).plan === "pro" ? "PRO" : "FREE"}
           </span>
           <IconSelector className="size-3 text-muted-foreground shrink-0" />
         </Link>
@@ -131,6 +135,9 @@ export default async function OrgSettingsPage({ params }: Props) {
                 name: org.name,
                 slug: org.slug,
                 userId: org.userId,
+                plan: (org as any).plan || "free",
+                billingProvider: (org as any).billingProvider || null,
+                subscriptionEndsAt: (org as any).subscriptionEndsAt || null,
                 createdAt: org.createdAt,
                 projectsCount,
                 totalStorageBytes,
