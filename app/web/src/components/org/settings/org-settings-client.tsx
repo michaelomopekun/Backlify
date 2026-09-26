@@ -105,16 +105,26 @@ export function OrgSettingsClient({
   const [confirmName, setConfirmName] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Auto-detect country/currency on mount
+  // Auto-detect country/currency on mount anonymously (no toggle shown to user)
   useEffect(() => {
-    fetch("/api/billing/detect-currency")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.currency === "NGN") {
-          setSelectedCurrency("NGN");
-        }
-      })
-      .catch(() => {});
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      if (tz.toLowerCase().includes("lagos")) {
+        setSelectedCurrency("NGN");
+      }
+      fetch(`/api/billing/detect-currency?tz=${encodeURIComponent(tz)}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.currency === "NGN") {
+            setSelectedCurrency("NGN");
+          } else {
+            setSelectedCurrency("USD");
+          }
+        })
+        .catch(() => {});
+    } catch {
+      // fallback to default
+    }
   }, []);
 
   // Check URL query parameters for billing completion
@@ -590,7 +600,7 @@ export function OrgSettingsClient({
                   <div className="text-xs font-medium text-white flex items-center gap-2">
                     <span>Upgrade to Backlify Pro</span>
                     <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
-                      $3 / mo or ₦2,000 / mo
+                      {selectedCurrency === "NGN" ? "₦2,000 / mo" : "$3 / mo"}
                     </span>
                   </div>
                   <div className="text-[11px] text-[#888888] mt-0.5">
@@ -612,7 +622,7 @@ export function OrgSettingsClient({
         </div>
       </div>
 
-      {/* Upgrade Dialog with Stripe & Paystack */}
+      {/* Upgrade Dialog with Localized Pricing */}
       <Dialog open={isUpgradeOpen} onOpenChange={setIsUpgradeOpen}>
         <DialogContent className="max-w-md bg-[#111111] border-[#222222] text-white p-6">
           <DialogHeader>
@@ -627,31 +637,18 @@ export function OrgSettingsClient({
             </DialogDescription>
           </DialogHeader>
 
-          {/* Pricing & Gateway Selection Pill */}
-          <div className="my-4 p-1.5 rounded-lg bg-[#181818] border border-[#2a2a2a] grid grid-cols-2 gap-1 text-xs">
-            <button
-              type="button"
-              onClick={() => setSelectedCurrency("USD")}
-              className={`py-2 px-3 rounded-md font-medium flex items-center justify-center gap-1.5 transition-all ${
-                selectedCurrency === "USD"
-                  ? "bg-[#282828] text-white shadow-sm border border-[#3a3a3a]"
-                  : "text-[#888888] hover:text-white"
-              }`}
-            >
-              <IconWorld className="size-3.5" />
-              <span>USD ($3 / mo)</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSelectedCurrency("NGN")}
-              className={`py-2 px-3 rounded-md font-medium flex items-center justify-center gap-1.5 transition-all ${
-                selectedCurrency === "NGN"
-                  ? "bg-[#282828] text-white shadow-sm border border-[#3a3a3a]"
-                  : "text-[#888888] hover:text-white"
-              }`}
-            >
-              <span>🇳🇬 NGN (₦2,000 / mo)</span>
-            </button>
+          {/* Single Localized Plan Display (Anonymous PPP - No Currency Toggles) */}
+          <div className="my-4 p-4 rounded-lg bg-[#141414] border border-[#242424] flex items-baseline justify-between">
+            <div>
+              <div className="text-xs text-[#888888] font-medium">Pro Subscription</div>
+              <div className="text-2xl font-bold text-white mt-0.5">
+                {selectedCurrency === "NGN" ? "₦2,000" : "$3"}
+                <span className="text-xs text-[#888888] font-normal"> / month</span>
+              </div>
+            </div>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
+              Billed monthly
+            </span>
           </div>
 
           {/* Pro Benefits list */}
@@ -701,7 +698,7 @@ export function OrgSettingsClient({
             </Button>
             <p className="text-[11px] text-center text-[#666666]">
               {selectedCurrency === "NGN"
-                ? "Secured by Paystack. Supports Nigerian Debit Cards, Bank Transfer & USSD."
+                ? "Secured by Paystack. Supports Nigerian Cards, Bank Transfer & USSD."
                 : "Secured by Stripe. Cancel anytime from your organization dashboard."}
             </p>
           </DialogFooter>

@@ -85,7 +85,7 @@ export async function POST(req: NextRequest) {
                 success: false,
                 error: isPro
                     ? "Pro tier storage limit reached (50 GB). Please clean up older backups or attach a custom S3 vault."
-                    : "Free tier storage limit reached (50 MB). Upgrade to Pro ($3/mo or ₦2,000/mo) to unlock 50 GB storage.",
+                    : "Free tier storage limit reached (50 MB). Upgrade to Pro to unlock 50 GB storage.",
             }, { status: 403 });
         }
 
