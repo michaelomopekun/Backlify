@@ -2,6 +2,8 @@ import { requireCurrentUser } from "@/lib/current-user";
 import { AccountHeader } from "@/components/account/account-header";
 import { AccountSidebar } from "@/components/account/account-sidebar";
 
+export const dynamic = "force-dynamic";
+
 export const metadata = {
   title: "Account Preferences | Backlify",
   description: "Manage your Backlify user account, profile details, and dashboard preferences.",
