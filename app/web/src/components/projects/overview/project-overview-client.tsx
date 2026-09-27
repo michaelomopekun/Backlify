@@ -170,13 +170,23 @@ function SparklineChart({
   formatValue?: (raw: number) => string;
 }) {
   const [hoveredIdx, setHoveredIdx] = React.useState<number | null>(null);
+  const [isLoaded, setIsLoaded] = React.useState(false);
   const displayValue = formatValue || ((v: number) => `${v}`);
+
+  React.useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setIsLoaded(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   return (
     <div className="relative flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
       {data.map((bucket, i) => {
         const isEmpty = bucket.pct === 0;
         const isHovered = hoveredIdx === i;
+        const targetHeight = isEmpty ? 8 : bucket.pct;
+        const currentHeight = isLoaded ? targetHeight : 0;
 
         // Horizontally clamp tooltip so it never extends past chart / card edges
         const isLeftEdge = i <= 2;
@@ -218,9 +228,9 @@ function SparklineChart({
               </div>
             )}
 
-            {/* Bar */}
+            {/* Bar with smooth slide-up / fill-up animation */}
             <div
-              className={`w-full rounded-t-[1.5px] transition-all duration-150 mt-auto cursor-pointer ${color} ${
+              className={`w-full rounded-t-[1.5px] mt-auto cursor-pointer ${color} ${
                 isHovered
                   ? "brightness-125 scale-x-110 scale-y-105 shadow-[0_0_10px_rgba(255,255,255,0.25)]"
                   : hoveredIdx !== null
@@ -230,7 +240,8 @@ function SparklineChart({
                   : "opacity-85 hover:opacity-100"
               }`}
               style={{
-                height: `${isEmpty ? 8 : bucket.pct}%`,
+                height: `${currentHeight}%`,
+                transition: `height 650ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 30}ms, opacity 250ms ease-out, transform 150ms ease-out`,
               }}
             />
           </div>

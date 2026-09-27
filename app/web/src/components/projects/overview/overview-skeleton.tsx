@@ -171,9 +171,9 @@ export function ProjectOverviewSkeleton() {
               <Skeleton className="h-8 w-12 bg-white/[0.08]" />
             </CardContent>
             <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
-              <div className="h-10 flex items-end gap-1.5 pt-2">
+              <div className="relative flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
                 {[...Array(12)].map((_, i) => (
-                  <div key={i} className="flex-1 h-2 rounded-t-[2px] bg-white/[0.04]" />
+                  <div key={i} className="flex-1 h-[5px] rounded-t-[1.5px] bg-white/[0.04]" />
                 ))}
               </div>
               <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
@@ -200,9 +200,9 @@ export function ProjectOverviewSkeleton() {
               <Skeleton className="h-8 w-12 bg-white/[0.08]" />
             </CardContent>
             <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
-              <div className="h-10 flex items-end gap-1.5 pt-2">
+              <div className="relative flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
                 {[...Array(12)].map((_, i) => (
-                  <div key={i} className="flex-1 h-2 rounded-t-[2px] bg-white/[0.04]" />
+                  <div key={i} className="flex-1 h-[5px] rounded-t-[1.5px] bg-white/[0.04]" />
                 ))}
               </div>
               <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
@@ -229,9 +229,9 @@ export function ProjectOverviewSkeleton() {
               <Skeleton className="h-8 w-12 bg-white/[0.08]" />
             </CardContent>
             <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
-              <div className="h-10 flex items-end gap-1.5 pt-2">
+              <div className="relative flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
                 {[...Array(12)].map((_, i) => (
-                  <div key={i} className="flex-1 h-2 rounded-t-[2px] bg-white/[0.04]" />
+                  <div key={i} className="flex-1 h-[5px] rounded-t-[1.5px] bg-white/[0.04]" />
                 ))}
               </div>
               <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
@@ -257,9 +257,9 @@ export function ProjectOverviewSkeleton() {
               <Skeleton className="h-8 w-20 bg-white/[0.08]" />
             </CardContent>
             <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
-              <div className="h-10 flex items-end gap-1.5 pt-2">
+              <div className="relative flex items-end gap-1.5 h-16 border-b border-border pb-0.5">
                 {[...Array(12)].map((_, i) => (
-                  <div key={i} className="flex-1 h-2 rounded-t-[2px] bg-white/[0.04]" />
+                  <div key={i} className="flex-1 h-[5px] rounded-t-[1.5px] bg-white/[0.04]" />
                 ))}
               </div>
               <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
