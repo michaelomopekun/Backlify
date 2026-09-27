@@ -1,0 +1,39 @@
+import Link from "next/link";
+import { OrgPickerClientActions } from "@/components/layout/org-picker-client-actions";
+
+interface AccountHeaderProps {
+  userInitials: string;
+  userEmail: string;
+  userName: string;
+}
+
+export function AccountHeader({
+  userInitials,
+  userEmail,
+  userName,
+}: AccountHeaderProps) {
+  return (
+    <header className="h-12 flex items-center justify-between px-4 border-b border-border/80 shrink-0 bg-[#0e0e0e] text-xs w-full">
+      {/* Left: Brand Logo / Account Breadcrumb */}
+      <div className="flex items-center gap-2">
+        <Link href="/dashboard/org" className="flex items-center hover:opacity-85 transition-opacity">
+          <img
+            src="/backlify-logo.svg"
+            alt="Backlify"
+            className="size-7 object-contain"
+          />
+        </Link>
+
+        <span className="text-[#444444] text-[13px] font-light select-none">/</span>
+        <span className="text-xs text-foreground font-medium">Account</span>
+      </div>
+
+      {/* Right: Actions + User Profile Menu */}
+      <OrgPickerClientActions
+        userInitials={userInitials}
+        userEmail={userEmail}
+        userName={userName}
+      />
+    </header>
+  );
+}

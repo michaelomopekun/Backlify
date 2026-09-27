@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { IconHelp, IconSearch, IconBulb, IconLogout, IconUser } from "@tabler/icons-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,13 @@ export function OrgPickerClientActions({ userInitials, userEmail, userName }: Pr
               <p className="text-[11px] leading-none text-neutral-400 truncate">{userEmail || "user@backlify.dev"}</p>
             </div>
           </DropdownMenuLabel>
+          <DropdownMenuSeparator className="bg-[#262626]" />
+          <DropdownMenuItem asChild className="text-xs text-neutral-300 hover:text-white hover:bg-white/[0.06] cursor-pointer gap-2">
+            <Link href="/account">
+              <IconUser className="size-3.5" />
+              <span>Account Preferences</span>
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuSeparator className="bg-[#262626]" />
           <DropdownMenuItem
             onClick={() => signOut({ redirectTo: "/login" })}

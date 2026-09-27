@@ -122,4 +122,23 @@ export class UserRepository {
       role: m.role,
     }));
   }
+
+  static async updateUser(id: string, params: { name?: string; image?: string }) {
+    try {
+      const result = await db
+        .update(users)
+        .set({
+          ...(params.name !== undefined ? { name: params.name } : {}),
+          ...(params.image !== undefined ? { image: params.image } : {}),
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, id))
+        .returning();
+
+      return result[0] || null;
+    } catch (error) {
+      logger.error({ userId: id, error }, "Failed to update user profile");
+      throw error;
+    }
+  }
 }
