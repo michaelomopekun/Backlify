@@ -5,7 +5,6 @@ import {
   IconLayoutGrid,
   IconList,
   IconDotsVertical,
-  IconSelector,
   IconArrowsSort,
   IconChevronDown,
   IconPlus,
@@ -13,10 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { ProjectRepository, OrganizationRepository, BackupRepository, ScheduleRepository } from "db";
 import { requireCurrentUser } from "@/lib/current-user";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { OrgSidebar } from "@/components/layout/app-sidebar";
-import { OrgPickerClientActions } from "@/components/layout/org-picker-client-actions";
-import { Boxes, Box } from "lucide-react";
+import { Box } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 
 export const dynamic = "force-dynamic";
@@ -78,50 +74,7 @@ export default async function OrgProjectsPage({ params }: Props) {
   const displayProjects = dbProjects;
 
   return (
-    <SidebarProvider className="flex flex-col min-h-screen">
-      {/* Topbar — full width across top (Supabase style) */}
-      <header className="flex h-12 items-center gap-2.5 px-3.5 sm:px-4 border-b border-border/80 shrink-0 bg-[#0e0e0e] text-xs z-30 sticky top-0 w-full">
-        {/* Brand Logo */}
-        <Link href="/dashboard/org" className="flex items-center shrink-0 pr-1 hover:opacity-85 transition-opacity">
-          <img
-            src="/backlify-logo.svg"
-            alt="Backlify"
-            width={28}
-            height={28}
-            className="size-7 object-contain shrink-0"
-          />
-        </Link>
-
-        <span className="text-muted-foreground/40 font-light text-sm">/</span>
-
-        {/* Org Selector */}
-        <Link
-          href={`/dashboard/org/${orgId}`}
-          className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium text-sm"
-        >
-          <Boxes className="size-3.5 text-muted-foreground shrink-0" />
-          <span>{orgName}</span>
-          <span className="text-[10px] px-1.5 py-0.5 rounded border border-border/80 bg-muted/40 text-muted-foreground font-mono uppercase tracking-wider">
-            FREE
-          </span>
-          <IconSelector className="size-3 text-muted-foreground shrink-0" />
-        </Link>
-
-        {/* Sidebar Trigger */}
-        <SidebarTrigger className="size-7 text-muted-foreground hover:text-foreground ml-1" />
-
-        {/* Right Topbar actions */}
-        <div className="ml-auto">
-          <OrgPickerClientActions userInitials={user.initials} />
-        </div>
-      </header>
-
-      <div className="flex-1 flex w-full min-h-0">
-        <OrgSidebar user={user} orgId={orgId} orgName={orgName} />
-
-        <SidebarInset className="bg-[#0c0c0c] flex-1 min-w-0">
-          {/* Page Content */}
-          <main className="flex-1 px-8 lg:px-12 py-8 max-w-[1600px] w-full">
+    <main className="flex-1 px-8 lg:px-12 py-8 max-w-[1600px] w-full">
             <h1 className="text-[26px] font-normal tracking-tight text-white mb-8">Projects</h1>
 
             <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -340,9 +293,6 @@ export default async function OrgProjectsPage({ params }: Props) {
                 </div>
               </aside>
             </div>
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    </main>
   );
 }

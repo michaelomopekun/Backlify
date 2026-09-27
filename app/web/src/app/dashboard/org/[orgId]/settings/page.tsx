@@ -1,12 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Boxes } from "lucide-react";
-import { IconSelector } from "@tabler/icons-react";
 import { OrganizationRepository, ProjectRepository, BackupRepository } from "db";
 import { requireCurrentUser } from "@/lib/current-user";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { OrgSidebar } from "@/components/layout/app-sidebar";
-import { OrgPickerClientActions } from "@/components/layout/org-picker-client-actions";
 import { OrgSettingsClient } from "@/components/org/settings/org-settings-client";
 
 export const dynamic = "force-dynamic";
@@ -76,59 +70,7 @@ export default async function OrgSettingsPage({ params }: Props) {
   } catch {}
 
   return (
-    <SidebarProvider className="flex flex-col min-h-screen">
-      {/* Topbar — full width across top (Supabase style) */}
-      <header className="flex h-12 items-center gap-2.5 px-3.5 sm:px-4 border-b border-border/80 shrink-0 bg-[#0e0e0e] text-xs z-30 sticky top-0 w-full">
-        {/* Brand Logo */}
-        <Link
-          href="/dashboard/org"
-          className="flex items-center shrink-0 pr-1 hover:opacity-85 transition-opacity"
-        >
-          <img
-            src="/backlify-logo.svg"
-            alt="Backlify"
-            width={28}
-            height={28}
-            className="size-7 object-contain shrink-0"
-          />
-        </Link>
-
-        <span className="text-muted-foreground/40 font-light text-sm">/</span>
-
-        {/* Org Selector */}
-        <Link
-          href={`/dashboard/org/${orgId}`}
-          className="flex items-center gap-1.5 text-foreground hover:text-foreground/80 transition-colors font-medium text-sm"
-        >
-          <Boxes className="size-3.5 text-muted-foreground shrink-0" />
-          <span>{orgName}</span>
-          <span className={`text-[10px] px-1.5 py-0.5 rounded border font-mono uppercase tracking-wider ${
-            (org as any).plan === "pro"
-              ? "border-amber-500/30 bg-amber-500/10 text-amber-400 font-semibold"
-              : "border-border/80 bg-muted/40 text-muted-foreground"
-          }`}>
-            {(org as any).plan === "pro" ? "PRO" : "FREE"}
-          </span>
-          <IconSelector className="size-3 text-muted-foreground shrink-0" />
-        </Link>
-
-        <span className="text-muted-foreground/40 font-light text-sm">/</span>
-        <span className="text-muted-foreground text-sm font-medium">Settings</span>
-
-        {/* Sidebar Trigger */}
-        <SidebarTrigger className="size-7 text-muted-foreground hover:text-foreground ml-1" />
-
-        {/* Right Topbar actions */}
-        <div className="ml-auto">
-          <OrgPickerClientActions userInitials={user.initials} />
-        </div>
-      </header>
-
-      <div className="flex-1 flex w-full min-h-0">
-        <OrgSidebar user={user} orgId={orgId} orgName={orgName} />
-
-        <SidebarInset className="bg-[#0c0c0c] flex-1 min-w-0">
-          <main className="flex-1 px-8 lg:px-12 py-8 max-w-[1400px] w-full">
+    <main className="flex-1 px-8 lg:px-12 py-8 max-w-[1400px] w-full">
             <OrgSettingsClient
               organization={{
                 id: org.id,
@@ -144,9 +86,6 @@ export default async function OrgSettingsPage({ params }: Props) {
               }}
               initialMembers={members}
             />
-          </main>
-        </SidebarInset>
-      </div>
-    </SidebarProvider>
+    </main>
   );
 }
