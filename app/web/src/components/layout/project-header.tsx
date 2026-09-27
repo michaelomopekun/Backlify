@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   IconSelector,
   IconPlugConnected,
@@ -10,6 +11,7 @@ import {
   IconSearch,
   IconCheck,
   IconPlus,
+  IconSettings,
 } from "@tabler/icons-react";
 import {
   DropdownMenu,
@@ -18,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { OrgPickerClientActions } from "./org-picker-client-actions";
+import { ConnectDialog } from "@/components/projects/connect-dialog";
 import { Boxes } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +49,8 @@ interface Props {
   projectId: string;
   projectName: string;
   userInitials: string;
+  environment?: string | null;
+  databaseUrl?: string | null;
   projects?: ProjectItem[];
   organizations?: OrgItem[];
 }
@@ -56,12 +61,49 @@ export function ProjectHeader({
   projectId,
   projectName,
   userInitials,
+  environment,
+  databaseUrl,
   projects = [],
   organizations = [],
 }: Props) {
+  const router = useRouter();
   const [orgSearch, setOrgSearch] = useState("");
   const [projectSearch, setProjectSearch] = useState("");
   const [isSlideComplete, setIsSlideComplete] = useState(false);
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [currentEnv, setCurrentEnv] = useState(environment ?? "production");
+
+  useEffect(() => {
+    if (environment) {
+      setCurrentEnv(environment);
+    }
+  }, [environment]);
+
+  const handleSelectEnv = async (env: string) => {
+    if (env.toLowerCase() === currentEnv.toLowerCase()) return;
+    setCurrentEnv(env);
+    try {
+      await fetch(`/api/projects/${projectId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ environment: env }),
+      });
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to switch environment:", err);
+    }
+  };
+
+  const getEnvBadgeStyles = (env: string) => {
+    const lower = env.toLowerCase();
+    if (lower === "production") {
+      return "border-[#f59e0b]/30 bg-[#f59e0b]/10 text-[#f59e0b]";
+    }
+    if (lower === "staging") {
+      return "border-sky-500/30 bg-sky-500/10 text-sky-400";
+    }
+    return "border-emerald-500/30 bg-emerald-500/10 text-emerald-400";
+  };
 
   const triggerMobileMenu = () => {
     if (typeof window !== "undefined") {
@@ -242,7 +284,8 @@ export function ProjectHeader({
           <button
             type="button"
             aria-label="Connect database"
-            className="size-8 rounded-full border border-border bg-[#181818] hover:bg-[#222222] flex items-center justify-center text-muted-foreground hover:text-white transition-colors"
+            onClick={() => setConnectOpen(true)}
+            className="size-8 rounded-full border border-border bg-[#181818] hover:bg-[#222222] flex items-center justify-center text-muted-foreground hover:text-white transition-colors cursor-pointer"
           >
             <IconPlugConnected className="size-4" />
           </button>
@@ -421,15 +464,18 @@ export function ProjectHeader({
               {/* ── Branch / Env Selector + Dropdown ── */}
               <div className="flex items-center gap-1.5">
                 <span className="text-[#dddddd] text-[13px] font-normal font-sans">main</span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-[#f59e0b]/30 bg-[#f59e0b]/10 text-[#f59e0b] font-mono tracking-wider select-none">
-                  PRODUCTION
+                <span className={cn(
+                  "text-[10px] font-semibold px-2 py-0.5 rounded-full border font-mono tracking-wider uppercase select-none transition-colors",
+                  getEnvBadgeStyles(currentEnv)
+                )}>
+                  {currentEnv}
                 </span>
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <button
                       type="button"
-                      aria-label="Switch branch"
+                      aria-label="Switch branch or environment"
                       className="size-6 rounded flex items-center justify-center text-[#888888] hover:text-white hover:bg-[#1f1f1f] border border-transparent hover:border-[#2e2e2e] data-[state=open]:bg-[#1c1c1c] data-[state=open]:border-[#2e2e2e] data-[state=open]:text-white transition-all cursor-pointer outline-none"
                     >
                       <IconSelector className="size-3.5" />
@@ -440,18 +486,48 @@ export function ProjectHeader({
                     sideOffset={6}
                     className="w-56 bg-[#171717] border border-[#2c2c2c] rounded-lg shadow-2xl p-1 text-xs text-white z-50"
                   >
-                    <div className="px-2.5 py-1.5 text-[11px] font-medium text-[#777777] uppercase tracking-wider">
-                      Branches
+                    <div className="px-2.5 py-1.5 text-[10.5px] font-medium text-[#777777] uppercase tracking-wider">
+                      Environment Tier
                     </div>
-                    <div className="flex items-center justify-between px-2.5 py-1.5 text-xs text-white bg-[#222222] rounded cursor-pointer font-medium">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono">main</span>
-                        <span className="text-[9px] font-bold px-1.5 py-0.2 rounded-full bg-[#f59e0b]/10 border border-[#f59e0b]/25 text-[#f59e0b] uppercase font-mono">
-                          PRODUCTION
-                        </span>
-                      </div>
-                      <IconCheck className="size-3.5 text-white shrink-0" />
-                    </div>
+
+                    {[
+                      { key: "production", label: "Production", badgeClass: "text-[#f59e0b] bg-[#f59e0b]/10 border-[#f59e0b]/25" },
+                      { key: "staging", label: "Staging", badgeClass: "text-sky-400 bg-sky-500/10 border-sky-500/25" },
+                      { key: "development", label: "Development", badgeClass: "text-emerald-400 bg-emerald-500/10 border-emerald-500/25" },
+                    ].map((tier) => {
+                      const isSelected = currentEnv.toLowerCase() === tier.key;
+                      return (
+                        <button
+                          key={tier.key}
+                          type="button"
+                          onClick={() => handleSelectEnv(tier.key)}
+                          className={cn(
+                            "w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded cursor-pointer font-medium transition-colors",
+                            isSelected
+                              ? "text-white bg-[#222222]"
+                              : "text-[#bbbbbb] hover:text-white hover:bg-[#1c1c1c]"
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="capitalize">{tier.label}</span>
+                            <span className={cn("text-[9px] font-bold px-1.5 py-0.2 rounded-full border uppercase font-mono", tier.badgeClass)}>
+                              {tier.key}
+                            </span>
+                          </div>
+                          {isSelected && <IconCheck className="size-3.5 text-white shrink-0 ml-2" />}
+                        </button>
+                      );
+                    })}
+
+                    <div className="h-px bg-[#262626] my-1" />
+
+                    <Link
+                      href={`/dashboard/project/${projectId}/settings`}
+                      className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-[#999999] hover:text-white hover:bg-[#202020] rounded cursor-pointer transition-colors"
+                    >
+                      <IconSettings className="size-3.5 text-[#777777]" />
+                      <span>Project Settings</span>
+                    </Link>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
@@ -465,6 +541,7 @@ export function ProjectHeader({
         {/* Connect CTA Pill */}
         <button
           type="button"
+          onClick={() => setConnectOpen(true)}
           className="hidden md:flex items-center gap-1.5 h-7 px-3 rounded-full border border-border bg-[#181818] hover:border-border/80 hover:bg-[#202020] text-foreground transition-colors ml-2 font-medium cursor-pointer shrink-0 animate-project-connect"
         >
           <IconPlugConnected className="size-3.5 text-muted-foreground" />
@@ -476,6 +553,15 @@ export function ProjectHeader({
           <OrgPickerClientActions userInitials={userInitials} />
         </div>
       </div>
+
+      {/* Connect Database Dialog (Supabase / Neon Style) */}
+      <ConnectDialog
+        open={connectOpen}
+        onOpenChange={setConnectOpen}
+        projectId={projectId}
+        projectName={projectName}
+        databaseUrl={databaseUrl || ""}
+      />
     </header>
   );
 }

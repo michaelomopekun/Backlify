@@ -24,7 +24,7 @@ export default async function ProjectLayout({ children, params }: Props) {
   const { projectId } = await params;
   const user = await requireCurrentUser();
 
-  let project: { id: string; name: string; databaseUrl: string; orgId?: string | null } | null = null;
+  let project: { id: string; name: string; databaseUrl: string; orgId?: string | null; environment?: string | null } | null = null;
   let org: { id: string; name: string; slug: string } | null = null;
 
   try {
@@ -105,6 +105,8 @@ export default async function ProjectLayout({ children, params }: Props) {
         projectId={projectId}
         projectName={projectName}
         userInitials={user.initials}
+        environment={project.environment}
+        databaseUrl={project.databaseUrl}
         projects={allProjectsList}
         organizations={userOrgs}
       />
