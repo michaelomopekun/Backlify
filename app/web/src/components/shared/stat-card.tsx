@@ -4,8 +4,8 @@ import { cn } from "@/lib/utils";
 export interface StatCardProps {
   icon: React.ElementType;
   label: string;
-  value: string;
-  sub?: string;
+  value: React.ReactNode;
+  sub?: React.ReactNode;
   accent?: string;
   className?: string;
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   IconCloudUpload,
   IconDatabaseImport,
@@ -128,6 +128,15 @@ function ActivityBar({
   // Scale total bar height proportionally to max activity (min 15% if any backups, max 100%)
   const fillPct = total > 0 ? Math.max(16, Math.min(100, Math.round((total / maxEvents) * 100))) : 0;
 
+  const [animatedHeight, setAnimatedHeight] = useState(0);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setAnimatedHeight(fillPct);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [fillPct]);
+
   // Segment percentages inside the filled height
   const failedPct = total > 0 ? (failedCount / total) * 100 : 0;
   const manualPct = total > 0 ? (manualCount / total) * 100 : 0;
@@ -156,8 +165,8 @@ function ActivityBar({
           <div className="w-full h-1.5 rounded-sm bg-white/10 self-center opacity-40" />
         ) : (
           <div
-            className="w-full rounded-sm overflow-hidden flex flex-col-reverse transition-all duration-300"
-            style={{ height: `${fillPct}%` }}
+            className="w-full rounded-sm overflow-hidden flex flex-col-reverse transition-all duration-700 ease-out"
+            style={{ height: `${animatedHeight}%` }}
           >
             {scheduledPct > 0 && (
               <div
