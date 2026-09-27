@@ -643,7 +643,10 @@ export function BackupsPageClient({
                     />
                     <span className="text-[13px] text-white font-mono truncate">{backup.timestamp}</span>
                     {backup.label && (
-                      <span className="text-[10.5px] font-mono px-1.5 py-0.5 rounded bg-[#1a1a1a] text-[#777777] border border-[#262626] shrink-0">
+                      <span
+                        className="hidden sm:inline-flex text-[10.5px] font-mono px-1.5 py-0.5 rounded bg-[#1a1a1a] text-[#777777] border border-[#262626] shrink-0 max-w-[240px] truncate"
+                        title={backup.label}
+                      >
                         {backup.label}
                       </span>
                     )}
