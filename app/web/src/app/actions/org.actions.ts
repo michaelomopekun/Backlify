@@ -13,6 +13,17 @@ export async function createOrganizationAction(formData: FormData) {
   }
 
   const user = await requireCurrentUser();
+
+  // Enforce rule: 1 Free organization per user account
+  const userOrgs = await OrganizationRepository.getOrganizationsByUser(user.id);
+  const hasFreeOrg = userOrgs.some((o) => (o as any).plan === "free" || !(o as any).plan);
+  if (hasFreeOrg) {
+    return {
+      error: "You have reached the 1 Free organization limit. Additional organizations require a Pro Plan ($3 or ₦2,000/mo).",
+      requiresUpgrade: true,
+    };
+  }
+
   const id = `org_${uuidv4().replace(/-/g, "").substring(0, 16)}`;
   const baseSlug = name
     .toLowerCase()

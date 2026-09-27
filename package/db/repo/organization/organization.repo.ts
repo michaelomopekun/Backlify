@@ -18,11 +18,9 @@ export interface CreateOrganizationParams {
 
 
 export interface UpdateOrganizationParams {
-
   name?: string;
-
   slug?: string;
-
+  billingEmail?: string | null;
 }
 
 

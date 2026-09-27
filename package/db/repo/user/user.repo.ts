@@ -1,4 +1,4 @@
-import { db, eq } from "../../index";
+import { db, eq, or } from "../../index";
 import { users } from "../../schema/user";
 import { organizations, organizationMembers } from "../../schema/organization";
 import { logger } from "shared/config/logger";
@@ -108,19 +108,48 @@ export class UserRepository {
   }
 
   static async getUserOrganizations(userId: string) {
+    const user = await this.getUserById(userId);
+    const userEmail = user?.email?.toLowerCase().trim();
+
+    const condition = userEmail
+      ? or(eq(organizationMembers.userId, userId), eq(organizationMembers.email, userEmail))
+      : eq(organizationMembers.userId, userId);
+
     const userMemberships = await db
       .select({
         org: organizations,
         role: organizationMembers.role,
+        memberId: organizationMembers.id,
+        memberUserId: organizationMembers.userId,
       })
       .from(organizationMembers)
       .innerJoin(organizations, eq(organizations.id, organizationMembers.orgId))
-      .where(eq(organizationMembers.userId, userId));
+      .where(condition);
 
-    return userMemberships.map((m) => ({
-      ...m.org,
-      role: m.role,
-    }));
+    // Auto-link userId if member row had null userId
+    for (const m of userMemberships) {
+      if (!m.memberUserId && userId) {
+        db.update(organizationMembers)
+          .set({ userId })
+          .where(eq(organizationMembers.id, m.memberId))
+          .catch(() => {});
+      }
+    }
+
+    // Deduplicate by organization ID
+    const seen = new Set<string>();
+    const orgs: Array<typeof organizations.$inferSelect & { role: string }> = [];
+    for (const m of userMemberships) {
+      if (!seen.has(m.org.id)) {
+        seen.add(m.org.id);
+        orgs.push({
+          ...m.org,
+          role: m.role,
+        });
+      }
+    }
+
+    return orgs;
   }
 
   static async updateUser(id: string, params: { name?: string; image?: string }) {

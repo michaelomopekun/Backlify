@@ -12,6 +12,7 @@ export const organizations = pgTable('organizations', {
   customerId: text('customer_id'),
   subscriptionStatus: varchar('subscription_status', { length: 50 }).default('active'), // 'active' | 'past_due' | 'canceled'
   subscriptionEndsAt: timestamp('subscription_ends_at'),
+  billingEmail: varchar('billing_email', { length: 255 }),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 });
