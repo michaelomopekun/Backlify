@@ -17,6 +17,9 @@ const jetBrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Backlify — Enterprise PostgreSQL Backups",
   description: "Automated schedules, point-in-time recovery, and live monitoring. Five minutes to setup. A lifetime of peace.",
+  icons: {
+    icon: "/icon.svg",
+  },
 };
 
 export default function RootLayout({
