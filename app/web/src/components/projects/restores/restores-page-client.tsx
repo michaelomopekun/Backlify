@@ -280,126 +280,180 @@ function DrillCard({
   const isRunning = drill.status === "running";
   const passedChecksCount = drill.integrityChecks.filter((c) => c.passed).length;
 
+  // Clean short drill id for compact display (e.g., #42f40040 instead of huge raw string)
+  const shortDrillId = drill.id
+    .replace(/^backlify-drill-/, "")
+    .replace(/^drill-/, "")
+    .slice(0, 10);
+
+  // Format sourceTimestamp safely if it's an ISO string
+  const formattedSourceTime = (() => {
+    if (!drill.sourceTimestamp) return "—";
+    try {
+      if (drill.sourceTimestamp.includes("T")) {
+        const d = new Date(drill.sourceTimestamp);
+        if (!isNaN(d.getTime())) {
+          return d.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+          });
+        }
+      }
+    } catch {}
+    return drill.sourceTimestamp;
+  })();
+
+  const cleanTargetDb = drill.targetDb
+    .replace(" (verified in memory)", "")
+    .replace(" (in-memory)", "")
+    .replace(" (In-Memory)", "");
+
   return (
     <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs hover:border-border hover:bg-card transition-colors">
-      <CardHeader className="p-5 sm:p-6 border-b border-border/50 flex flex-row items-start justify-between gap-4">
-        <div className="flex-1 min-w-0 space-y-1.5">
-          <div className="flex items-center gap-2.5">
+      <CardHeader className="p-4 sm:p-5 border-b border-border/50 space-y-2.5">
+        {/* Top row: Status, Title, Desktop ID Badge, and Action buttons */}
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 min-w-0">
             <span
               className={`size-2 rounded-full shrink-0 ${
                 isPassed
                   ? "bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.8)]"
                   : isFailed
-                  ? "bg-destructive shadow-[0_0_6px_rgba(239,68,68,0.8)]"
+                  ? "bg-rose-500 shadow-[0_0_6px_rgba(239,68,68,0.8)]"
                   : "bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.8)]"
               }`}
             />
             <CardTitle className="text-sm sm:text-base font-semibold text-foreground truncate">
               {typeLabel}
             </CardTitle>
-            <Badge variant="outline" className="text-xs font-medium">
-              #{drill.id}
-            </Badge>
+            {/* Desktop only: short drill ID badge */}
+            <span className="hidden sm:inline-flex font-mono text-[10px] text-muted-foreground bg-muted/40 border border-border/50 px-1.5 py-0.5 rounded shrink-0">
+              #{shortDrillId}
+            </span>
           </div>
-          <CardDescription className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-            <span className="text-foreground/90 font-medium">{drill.sourceSnapshot}</span>
-            <span className="text-muted-foreground/40">·</span>
-            <span className="text-muted-foreground font-normal">{drill.sourceTimestamp}</span>
-          </CardDescription>
+
+          {/* Action buttons: Always visible, never clipped or pushed out */}
+          <div className="flex items-center gap-1.5 shrink-0">
+            <Button
+              onClick={() => onViewLogs(drill)}
+              variant="outline"
+              size="sm"
+              className="h-7 sm:h-8 px-2.5 text-xs font-medium gap-1.5 border-border/70 hover:bg-muted/50"
+            >
+              <IconTerminal2 className="size-3.5 text-muted-foreground" />
+              <span>Logs</span>
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="size-7 sm:size-8 p-0 text-muted-foreground hover:text-foreground"
+                >
+                  <IconDotsVertical className="size-3.5 sm:size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44 bg-[#111111] border-[#222222] text-xs">
+                <DropdownMenuItem
+                  onClick={() => onViewLogs(drill)}
+                  className="gap-2 cursor-pointer text-white"
+                >
+                  <IconTerminal2 className="size-3.5 text-muted-foreground" />
+                  View full logs
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => onRerun(drill)}
+                  className="gap-2 cursor-pointer text-white"
+                >
+                  <IconRotateClockwise className="size-3.5 text-muted-foreground" />
+                  Re-run drill
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-2.5 shrink-0">
-          <Button
-            onClick={() => onViewLogs(drill)}
-            variant="outline"
-            size="sm"
-            className="h-8.5 px-3 text-xs font-medium gap-1.5"
-          >
-            <IconTerminal2 className="size-3.5" />
-            Logs
-          </Button>
+        {/* Second row: Mobile ID badge + Snapshot pill + formatted timestamp */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0 flex-wrap">
+          {/* Mobile only: short drill ID badge */}
+          <span className="sm:hidden font-mono text-[10px] text-muted-foreground bg-muted/40 border border-border/50 px-1.5 py-0.5 rounded shrink-0">
+            #{shortDrillId}
+          </span>
+          <span className="sm:hidden text-muted-foreground/30">·</span>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="size-8 p-0 text-muted-foreground hover:text-foreground"
-              >
-                <IconDotsVertical className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44 bg-[#111111] border-[#222222] text-xs">
-              <DropdownMenuItem
-                onClick={() => onViewLogs(drill)}
-                className="gap-2 cursor-pointer text-white"
-              >
-                <IconTerminal2 className="size-3.5 text-muted-foreground" />
-                View full logs
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => onRerun(drill)}
-                className="gap-2 cursor-pointer text-white"
-              >
-                <IconRotateClockwise className="size-3.5 text-muted-foreground" />
-                Re-run drill
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span
+              className="font-mono text-[11px] bg-muted/50 border border-border/40 px-2 py-0.5 rounded text-foreground/85 max-w-[170px] xs:max-w-[240px] sm:max-w-md truncate"
+              title={drill.sourceSnapshot}
+            >
+              {drill.sourceSnapshot}
+            </span>
+          </div>
+          <span className="text-muted-foreground/30">·</span>
+          <span className="text-[11px] text-muted-foreground/90 whitespace-nowrap">
+            {formattedSourceTime}
+          </span>
         </div>
       </CardHeader>
 
-      <CardContent className="p-5 sm:p-6 space-y-5">
+      <CardContent className="p-4 sm:p-5 space-y-4">
         {/* 4-column Meta row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-xs">
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground">Target Database</p>
-            <p className="text-xs sm:text-[13px] font-medium text-foreground truncate">
-              {drill.targetDb}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 sm:gap-6 text-xs">
+          <div className="space-y-1 min-w-0">
+            <p className="text-[11px] font-medium text-muted-foreground">Target Database</p>
+            <p className="text-xs sm:text-[13px] font-medium text-foreground truncate" title={drill.targetDb}>
+              {cleanTargetDb}
             </p>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground">Executed At</p>
-            <p className="text-xs sm:text-[13px] text-muted-foreground">
+          <div className="space-y-1 min-w-0">
+            <p className="text-[11px] font-medium text-muted-foreground">Executed At</p>
+            <p className="text-xs sm:text-[13px] text-foreground/90 font-medium truncate">
               {drill.executedAt}
             </p>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground">Duration & Size</p>
-            <p className="text-xs sm:text-[13px] text-muted-foreground">
+          <div className="space-y-1 min-w-0">
+            <p className="text-[11px] font-medium text-muted-foreground">Duration & Size</p>
+            <p className="text-xs sm:text-[13px] text-foreground/90 font-mono truncate">
               {drill.durationSec}s · {drill.sizeMb} MB
             </p>
           </div>
 
-          <div className="space-y-1">
-            <p className="text-xs font-medium text-muted-foreground">Integrity Checks</p>
+          <div className="space-y-1 min-w-0">
+            <p className="text-[11px] font-medium text-muted-foreground">Integrity Checks</p>
             <div className="flex items-center gap-1.5 text-emerald-400">
               <IconCheck className="size-3.5 shrink-0" />
-              <p className="text-xs sm:text-[13px] font-medium">
-                {passedChecksCount}/{drill.integrityChecks.length} checks verified
+              <p className="text-xs sm:text-[13px] font-medium whitespace-nowrap">
+                {passedChecksCount}/{drill.integrityChecks.length} verified
               </p>
             </div>
           </div>
         </div>
 
-        {/* Status footer strip with shadcn Badge */}
-        <div className="flex items-center justify-between gap-2.5 pt-4 border-t border-border/50">
-          <div className="flex items-center gap-2.5">
-            <Badge
-              variant={isPassed ? "default" : isFailed ? "destructive" : "secondary"}
-              className="text-xs font-medium px-2.5 py-0.5"
+        {/* Status footer strip */}
+        <div className="flex items-center justify-between gap-2 pt-3 border-t border-border/50 text-xs">
+          <div className="flex items-center gap-2 flex-wrap min-w-0">
+            <span
+              className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium border ${
+                isPassed
+                  ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/25"
+                  : isFailed
+                  ? "bg-rose-500/10 text-rose-400 border-rose-500/25"
+                  : "bg-blue-500/10 text-blue-400 border-blue-500/25"
+              }`}
             >
               {isPassed ? "Passed" : isFailed ? "Failed" : isRunning ? "Running" : "Complete"}
-            </Badge>
-            <span className="text-muted-foreground/40 text-xs">·</span>
-            <span className="text-xs text-muted-foreground font-normal">
+            </span>
+            <span className="text-muted-foreground/30 text-xs">·</span>
+            <span className="text-[11px] sm:text-xs text-muted-foreground truncate">
               Initiated by {drill.initiatedBy}
             </span>
           </div>
-          <span className="text-xs text-muted-foreground font-normal hidden sm:inline">
+          <span className="text-[11px] text-muted-foreground/70 font-normal hidden sm:inline shrink-0">
             Recovery benchmark satisfied
           </span>
         </div>

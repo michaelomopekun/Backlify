@@ -163,34 +163,25 @@ export function RestoresSkeleton() {
         <div className="space-y-4 sm:space-y-5">
           {[1, 2].map((i) => (
             <Card key={i} className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
-              <CardHeader className="p-5 sm:p-6 border-b border-border/50 flex flex-row items-start justify-between gap-4">
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <div className="flex items-center gap-2.5">
+              <CardHeader className="p-4 sm:p-5 border-b border-border/50 space-y-2.5">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="size-2 rounded-full bg-emerald-400/40 shrink-0" />
-                    <Skeleton className="h-4.5 w-36 bg-white/[0.08]" />
-                    <Skeleton className="h-4 w-16 rounded bg-white/[0.05]" />
+                    <Skeleton className="h-4 w-32 bg-white/[0.08]" />
+                    <Skeleton className="h-4 w-14 rounded bg-white/[0.05]" />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Skeleton className="h-3.5 w-40 bg-white/[0.06]" />
-                    <span className="text-muted-foreground/40">·</span>
-                    <Skeleton className="h-3.5 w-28 bg-white/[0.04]" />
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <Skeleton className="h-7 sm:h-8 w-14 rounded bg-white/[0.06]" />
                   </div>
                 </div>
-
-                <div className="flex items-center gap-2.5 shrink-0">
-                  <Button
-                    disabled
-                    variant="outline"
-                    size="sm"
-                    className="h-8.5 px-3 text-xs font-medium gap-1.5 opacity-60 cursor-not-allowed"
-                  >
-                    <IconTerminal2 className="size-3.5" />
-                    Logs
-                  </Button>
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-3.5 w-36 bg-white/[0.06]" />
+                  <span className="text-muted-foreground/40">·</span>
+                  <Skeleton className="h-3.5 w-24 bg-white/[0.04]" />
                 </div>
               </CardHeader>
 
-              <CardContent className="p-5 sm:p-6 space-y-5">
+              <CardContent className="p-4 sm:p-5 space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-xs">
                   <div className="space-y-1">
                     <p className="text-xs font-medium text-muted-foreground">Target</p>
