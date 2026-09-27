@@ -622,19 +622,23 @@ function RestoreWizardDrawer({
 
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <SheetContent side="right" showCloseButton={false} className="w-full max-w-xl sm:max-w-xl p-0 flex flex-col gap-0">
+      <SheetContent
+        side="right"
+        showCloseButton={false}
+        className="w-full data-[side=right]:w-full sm:data-[side=right]:w-auto sm:data-[side=right]:max-w-[460px] sm:max-w-[460px] p-0 flex flex-col gap-0"
+      >
         {/* Header */}
-        <SheetHeader className="px-6 py-5 border-b border-border space-y-0">
-          <SheetTitle>
+        <SheetHeader className="px-5 sm:px-6 py-4 sm:py-5 border-b border-border space-y-1">
+          <SheetTitle className="text-base sm:text-lg font-semibold tracking-tight text-foreground">
             {isExecuting ? "Executing Recovery Process" : mode === "drill" ? "Run Disaster Recovery Drill" : "New Database Restore"}
           </SheetTitle>
-          <SheetDescription className="font-mono text-[11px]">
+          <SheetDescription className="text-xs text-muted-foreground">
             {isExecuting ? "Real-time streaming console logs" : "Configure source snapshot, target environment, and safety verification"}
           </SheetDescription>
         </SheetHeader>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+        <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 sm:py-5 space-y-5 sm:space-y-6">
           {isExecuting ? (
             /* ── REALTIME TERMINAL & STEPPER ── */
             <div className="space-y-4">
@@ -713,43 +717,61 @@ function RestoreWizardDrawer({
             <>
               {/* Mode Selector */}
               <div className="space-y-2">
-                <Label className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+                <Label className="text-xs font-medium text-foreground">
                   Select Operation Mode
                 </Label>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 gap-2.5">
                   <Card
-                    className={`cursor-pointer transition-all ${
+                    className={`cursor-pointer transition-all border ${
                       mode === "drill"
-                        ? "border border-[#383838] bg-[#161616]"
-                        : "hover:border-border"
+                        ? "border-primary/60 bg-primary/[0.04] ring-1 ring-primary/20 shadow-xs"
+                        : "border-border/60 bg-card/40 hover:border-border hover:bg-card/70"
                     }`}
                     onClick={() => setMode("drill")}
                   >
-                    <CardContent className="py-3.5">
-                      <div className="flex items-center gap-2 mb-1">
-                        <IconShieldCheck className={`size-4 ${mode === "drill" ? "text-foreground" : "text-muted-foreground"}`} />
-                        <span className="text-[13px] font-medium text-foreground">DR Drill (Dry Run)</span>
+                    <CardContent className="p-3.5 sm:p-4">
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1.5 rounded-md ${mode === "drill" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                            <IconShieldCheck className="size-4" />
+                          </div>
+                          <span className="text-xs sm:text-[13px] font-semibold text-foreground">DR Drill (Dry Run)</span>
+                        </div>
+                        <div className={`size-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          mode === "drill" ? "border-primary bg-primary text-primary-foreground" : "border-border/60"
+                        }`}>
+                          {mode === "drill" && <div className="size-1.5 rounded-full bg-primary-foreground" />}
+                        </div>
                       </div>
-                      <p className="text-[11px] text-muted-foreground leading-tight">
+                      <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed pl-8">
                         Zero risk. Restores to isolated temp sandbox, checks integrity & destroys.
                       </p>
                     </CardContent>
                   </Card>
 
                   <Card
-                    className={`cursor-pointer transition-all ${
+                    className={`cursor-pointer transition-all border ${
                       mode === "restore"
-                        ? "border border-[#383838] bg-[#161616]"
-                        : "hover:border-border"
+                        ? "border-primary/60 bg-primary/[0.04] ring-1 ring-primary/20 shadow-xs"
+                        : "border-border/60 bg-card/40 hover:border-border hover:bg-card/70"
                     }`}
                     onClick={() => setMode("restore")}
                   >
-                    <CardContent className="py-3.5">
-                      <div className="flex items-center gap-2 mb-1">
-                        <IconDatabase className={`size-4 ${mode === "restore" ? "text-foreground" : "text-muted-foreground"}`} />
-                        <span className="text-[13px] font-medium text-foreground">Target DB Restore</span>
+                    <CardContent className="p-3.5 sm:p-4">
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1.5 rounded-md ${mode === "restore" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
+                            <IconDatabase className="size-4" />
+                          </div>
+                          <span className="text-xs sm:text-[13px] font-semibold text-foreground">Target DB Restore</span>
+                        </div>
+                        <div className={`size-4 rounded-full border flex items-center justify-center shrink-0 ${
+                          mode === "restore" ? "border-primary bg-primary text-primary-foreground" : "border-border/60"
+                        }`}>
+                          {mode === "restore" && <div className="size-1.5 rounded-full bg-primary-foreground" />}
+                        </div>
                       </div>
-                      <p className="text-[11px] text-muted-foreground leading-tight">
+                      <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed pl-8">
                         Restores snapshot into a live staging or production database instance.
                       </p>
                     </CardContent>
@@ -759,20 +781,25 @@ function RestoreWizardDrawer({
 
               {/* Source Snapshot */}
               <div className="space-y-2">
-                <Label className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+                <Label className="text-xs font-medium text-foreground">
                   Source Snapshot
                 </Label>
-                <Card>
-                  <CardContent className="py-3.5 flex items-center justify-between">
-                    <div className="space-y-0.5 font-mono text-[12px]">
-                      <p className="text-foreground">
-                        {defaultPoint ? `${defaultPoint.date} · ${defaultPoint.time}` : "Latest Snapshot (bk-001)"}
-                      </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        Size: {defaultPoint ? defaultPoint.size : "142 MB"} · AES-256 Encrypted
-                      </p>
+                <Card className="border-border/60 bg-card/40">
+                  <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="p-2 rounded-md bg-muted/60 text-muted-foreground shrink-0">
+                        <IconDatabase className="size-4" />
+                      </div>
+                      <div className="space-y-0.5 min-w-0">
+                        <p className="text-xs sm:text-[13px] font-medium text-foreground truncate">
+                          {defaultPoint ? `${defaultPoint.date} · ${defaultPoint.time}` : "Latest Snapshot (bk-001)"}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground font-mono">
+                          Size: {defaultPoint ? defaultPoint.size : "142 MB"} · AES-256 Encrypted
+                        </p>
+                      </div>
                     </div>
-                    <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px] font-mono uppercase">
+                    <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px] font-mono uppercase shrink-0">
                       Verified
                     </Badge>
                   </CardContent>
@@ -792,7 +819,7 @@ function RestoreWizardDrawer({
                   </Card>
 
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+                    <Label className="text-xs font-medium text-foreground">
                       Target Database URL
                     </Label>
                     <Input
@@ -804,7 +831,7 @@ function RestoreWizardDrawer({
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
+                    <Label className="text-xs font-medium text-foreground">
                       Type RESTORE to Confirm
                     </Label>
                     <Input
@@ -820,21 +847,32 @@ function RestoreWizardDrawer({
 
               {/* Verification Suite checklist */}
               <div className="space-y-2">
-                <Label className="text-[11px] font-mono uppercase tracking-widest text-muted-foreground">
-                  Integrity Verification Suite
-                </Label>
-                <Card>
-                  <CardContent className="py-3.5 space-y-2 text-[12px] font-mono text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <IconCheck className="size-3.5 text-emerald-400" />
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium text-foreground">
+                    Integrity Verification Suite
+                  </Label>
+                  <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded">
+                    3/3 Automated
+                  </span>
+                </div>
+                <Card className="border-border/60 bg-card/40">
+                  <CardContent className="p-3.5 sm:p-4 space-y-2.5">
+                    <div className="flex items-center gap-2.5 text-xs text-foreground/90">
+                      <div className="p-0.5 rounded-full bg-emerald-500/10 text-emerald-400 shrink-0">
+                        <IconCheck className="size-3.5" />
+                      </div>
                       <span>Compare Schema Parity & Table Definitions</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <IconCheck className="size-3.5 text-emerald-400" />
+                    <div className="flex items-center gap-2.5 text-xs text-foreground/90">
+                      <div className="p-0.5 rounded-full bg-emerald-500/10 text-emerald-400 shrink-0">
+                        <IconCheck className="size-3.5" />
+                      </div>
                       <span>Validate Row Counts & Sequence Offsets</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <IconCheck className="size-3.5 text-emerald-400" />
+                    <div className="flex items-center gap-2.5 text-xs text-foreground/90">
+                      <div className="p-0.5 rounded-full bg-emerald-500/10 text-emerald-400 shrink-0">
+                        <IconCheck className="size-3.5" />
+                      </div>
                       <span>Run SHA-256 Table Block Checksum Integrity</span>
                     </div>
                   </CardContent>
@@ -845,12 +883,12 @@ function RestoreWizardDrawer({
         </div>
 
         {/* Footer */}
-        <SheetFooter className="px-6 py-5 border-t border-border flex-row gap-3">
+        <SheetFooter className="px-5 sm:px-6 py-4 border-t border-border flex flex-row items-center gap-2.5">
           {isExecuting ? (
             <Button
               onClick={onClose}
               variant="outline"
-              className="flex-1 h-9 text-[13px]"
+              className="flex-1 h-9.5 text-xs sm:text-[13px] font-medium"
             >
               Close & Keep Running in Background
             </Button>
@@ -859,24 +897,24 @@ function RestoreWizardDrawer({
               <Button
                 onClick={startExecution}
                 disabled={!canSubmit}
-                className="flex-1 text-[13px] font-semibold h-9 shadow-xs disabled:opacity-40"
+                className="flex-1 h-9.5 text-xs sm:text-[13px] font-semibold gap-1.5 shadow-xs disabled:opacity-40"
               >
                 {mode === "drill" ? (
                   <>
-                    <IconShieldCheck className="size-3.5 mr-1.5" />
-                    Start DR Drill
+                    <IconShieldCheck className="size-4" />
+                    <span>Start DR Drill</span>
                   </>
                 ) : (
                   <>
-                    <IconBolt className="size-3.5 mr-1.5" />
-                    Start Restore
+                    <IconBolt className="size-4" />
+                    <span>Start Restore</span>
                   </>
                 )}
               </Button>
               <Button
                 onClick={onClose}
                 variant="outline"
-                className="h-9 px-4 text-[13px]"
+                className="h-9.5 px-4 text-xs sm:text-[13px] font-medium border-border/80 hover:bg-muted/50"
               >
                 Cancel
               </Button>
@@ -1098,7 +1136,11 @@ export function RestoresPageClient({
 
       {/* ── Historical Logs Drawer ── */}
       <Sheet open={!!viewingLogsDrill} onOpenChange={(o) => { if (!o) setViewingLogsDrill(null); }}>
-        <SheetContent side="right" showCloseButton={true} className="w-full max-w-xl sm:max-w-xl p-0 flex flex-col gap-0">
+        <SheetContent
+          side="right"
+          showCloseButton={true}
+          className="w-full data-[side=right]:w-full sm:data-[side=right]:w-auto sm:data-[side=right]:max-w-[460px] sm:max-w-[460px] p-0 flex flex-col gap-0"
+        >
           <SheetHeader className="px-6 py-5 border-b border-border space-y-0">
             <SheetTitle>
               Logs for Drill #{viewingLogsDrill?.id.replace("drill-", "")}
