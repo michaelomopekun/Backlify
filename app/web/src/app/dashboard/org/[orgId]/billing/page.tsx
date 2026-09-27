@@ -48,5 +48,9 @@ export default async function OrgBillingPage({ params }: Props) {
     email: user.email,
   };
 
-  return <BillingPageClient organization={organizationData} user={userData} />;
+  return (
+    <main className="flex-1 px-8 lg:px-12 py-8 max-w-[1400px] w-full">
+      <BillingPageClient organization={organizationData} user={userData} />
+    </main>
+  );
 }

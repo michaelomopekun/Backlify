@@ -3,7 +3,8 @@ import { Card, CardHeader, CardContent } from "@/components/ui/card";
 
 export default function OrgBillingLoading() {
   return (
-    <div className="w-full max-w-5xl space-y-10 sm:space-y-12 pb-24 font-sans animate-in fade-in duration-200">
+    <main className="flex-1 px-8 lg:px-12 py-8 max-w-[1400px] w-full">
+      <div className="w-full max-w-5xl space-y-10 sm:space-y-12 pb-24 font-sans animate-in fade-in duration-200">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl sm:text-[28px] font-semibold tracking-tight text-foreground font-sans">
@@ -65,6 +66,7 @@ export default function OrgBillingLoading() {
           </Card>
         </div>
       </div>
-    </div>
+      </div>
+    </main>
   );
 }
