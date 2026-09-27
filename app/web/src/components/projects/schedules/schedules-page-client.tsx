@@ -85,7 +85,69 @@ function fmtDuration(sec: number) {
    24h Timeline Rail (Sleek shadcn Stem-and-Dot Design)
 ───────────────────────────────────────────────────────────────────*/
 
+function SchedulePin({
+  schedule,
+  index,
+}: {
+  schedule: Schedule;
+  index: number;
+}) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
+  const pct = utcHourToPercent(schedule.nextRunUtc);
+  const isFailing = schedule.status === "failing";
+  const colorClass = isFailing ? "bg-red-500" : "bg-[#FFB31F]";
+  const stemClass = isFailing ? "bg-red-500/80" : "bg-[#FFB31F]/80";
+
+  return (
+    <div
+      className="absolute top-7 -translate-x-1/2 flex flex-col items-center group cursor-pointer z-30"
+      style={{ left: `${pct}%` }}
+    >
+      {/* Vertical Stem - animates downward from baseline with smooth ease-out */}
+      <div
+        className={`w-0.5 ${stemClass} transition-all duration-700 ease-out origin-top`}
+        style={{
+          height: mounted ? "14px" : "0px",
+          transitionDelay: `${index * 80}ms`,
+        }}
+      />
+
+      {/* Pin Dot - pops and fades in */}
+      <div
+        className={`size-2.5 rounded-full ${colorClass} shadow-sm transition-all duration-500 ease-out group-hover:scale-130`}
+        style={{
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? "scale(1)" : "scale(0)",
+          transitionDelay: `${index * 80 + 120}ms`,
+        }}
+      />
+
+      {/* Hover Tooltip */}
+      <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 whitespace-nowrap bg-[#161616] border border-[#2e2e2e] text-white text-[11px] px-2.5 py-1 rounded-md shadow-lg pointer-events-none">
+        {schedule.name}: {schedule.nextRunUtc} UTC
+      </div>
+    </div>
+  );
+}
+
 function TimelineRail({ schedules }: { schedules: Schedule[] }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   const active = schedules.filter((s) => s.status !== "paused");
   const now = new Date();
   const utcHours = now.getUTCHours();
@@ -114,15 +176,15 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
           <div className="relative h-px w-full bg-[#262626]">
             {/* Subtle progress highlight up to Now */}
             <div
-              className="absolute left-0 top-0 h-px bg-primary/40"
-              style={{ width: `${nowPercent}%` }}
+              className="absolute left-0 top-0 h-px bg-primary/40 transition-all duration-1000 ease-out"
+              style={{ width: mounted ? `${nowPercent}%` : "0%" }}
             />
           </div>
 
           {/* "Now" Marker Pin */}
           <div
-            className="absolute top-7 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20"
-            style={{ left: `${nowPercent}%` }}
+            className="absolute top-7 -translate-x-1/2 flex flex-col items-center pointer-events-none z-20 transition-opacity duration-700 ease-out"
+            style={{ left: `${nowPercent}%`, opacity: mounted ? 1 : 0 }}
           >
             {/* Vertical stem */}
             <div className="w-px h-3.5 bg-primary/70" />
@@ -130,34 +192,10 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
             <div className="size-2 rounded-full bg-primary ring-2 ring-primary/20 shadow-xs" />
           </div>
 
-          {/* Schedule Pins (Stems & Dots) */}
-          {active.map((s) => {
-            const pct = utcHourToPercent(s.nextRunUtc);
-            const isFailing = s.status === "failing";
-            const colorClass = isFailing ? "bg-red-500" : "bg-[#FFB31F]";
-            const stemClass = isFailing ? "bg-red-500/80" : "bg-[#FFB31F]/80";
-
-            return (
-              <div
-                key={s.id}
-                className="absolute top-7 -translate-x-1/2 flex flex-col items-center group cursor-pointer z-30"
-                style={{ left: `${pct}%` }}
-              >
-                {/* Vertical Stem */}
-                <div className={`w-0.5 h-3.5 ${stemClass}`} />
-
-                {/* Pin Dot */}
-                <div
-                  className={`size-2.5 rounded-full ${colorClass} shadow-sm transition-transform group-hover:scale-130`}
-                />
-
-                {/* Hover Tooltip */}
-                <div className="opacity-0 group-hover:opacity-100 transition-opacity absolute -top-8 whitespace-nowrap bg-[#161616] border border-[#2e2e2e] text-white text-[11px] px-2.5 py-1 rounded-md shadow-lg pointer-events-none">
-                  {s.name}: {s.nextRunUtc} UTC
-                </div>
-              </div>
-            );
-          })}
+          {/* Schedule Pins (Stems & Dots with smooth slide-up / fill-up animation) */}
+          {active.map((s, idx) => (
+            <SchedulePin key={s.id} schedule={s} index={idx} />
+          ))}
 
           {/* Hour Tick Marks & Labels safely below */}
           <div className="relative w-full h-4 mt-5 pointer-events-none">
@@ -186,14 +224,23 @@ function TimelineRail({ schedules }: { schedules: Schedule[] }) {
 
         {/* Legend */}
         <div className="flex flex-wrap items-center gap-5 sm:gap-7 pt-4 border-t border-border/50">
-          {active.map((s) => (
-            <div key={s.id} className="flex items-center gap-2 text-xs text-muted-foreground font-normal">
+          {active.map((s, idx) => (
+            <div
+              key={s.id}
+              className="flex items-center gap-2 text-xs text-muted-foreground font-normal transition-opacity duration-500 ease-out"
+              style={{
+                opacity: mounted ? 1 : 0,
+                transitionDelay: `${idx * 100}ms`,
+              }}
+            >
               <span
                 className={`size-2 rounded-full shrink-0 ${
                   s.status === "failing" ? "bg-red-500" : "bg-[#FFB31F]"
                 }`}
               />
-              <span className="text-foreground/90 font-medium">{s.name.replace(" Production Snapshot", "").replace(" Backup", "").replace(" Long-term Archive", "")}</span>
+              <span className="text-foreground/90 font-medium">
+                {s.name.replace(" Production Snapshot", "").replace(" Backup", "").replace(" Long-term Archive", "")}
+              </span>
               <span className="text-muted-foreground/40">·</span>
               <span className="text-muted-foreground">{s.nextRunUtc} UTC</span>
             </div>
