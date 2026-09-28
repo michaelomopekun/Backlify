@@ -3,11 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
-import { BackupFileRepository, BackupRepository, RestoreRepository } from "db";
+import { BackupFileRepository, BackupRepository, RestoreRepository, ProjectRepository, OrganizationRepository } from "db";
 import { RESTORE_JOB_STATUS } from "shared/constants/restoreJobStatus";
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 import type { RestoreJobStatusType } from "shared/constants/restoreJobStatus";
 import { emitJobTelemetry } from "shared/config/job-telemetry";
+import { isOrganizationPro } from "shared/config/billing";
 
 import { restoreQueue } from "@/lib/queues";
 
@@ -85,6 +86,27 @@ export async function triggerDrill(projectId: string, backupFileId?: string) {
   if (!projectId) return { error: "Project ID is required" };
 
   try {
+    // Enforce Disaster Recovery Drill Quotas (1/mo on Free, Unlimited on Pro)
+    const project = await ProjectRepository.getProjectById(projectId);
+    if (!project) return { error: "Project not found" };
+
+    const org = project.orgId ? await OrganizationRepository.getOrganizationById(project.orgId) : null;
+    if (!isOrganizationPro(org)) {
+      const startOfMonth = new Date();
+      startOfMonth.setUTCDate(1);
+      startOfMonth.setUTCHours(0, 0, 0, 0);
+
+      const drillsThisMonth = org
+        ? await RestoreRepository.countMonthlyDrillsForOrg(org.id, startOfMonth)
+        : await RestoreRepository.countMonthlyDrillsForProject(projectId, startOfMonth);
+
+      if (drillsThisMonth >= 1) {
+        return {
+          error: "Free plan limit reached (1 Disaster Recovery drill per calendar month). Upgrade to Pro for unlimited automated drills.",
+        };
+      }
+    }
+
     let targetFile: any = null;
 
     if (backupFileId) {

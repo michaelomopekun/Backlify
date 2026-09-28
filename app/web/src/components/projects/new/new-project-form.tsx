@@ -12,6 +12,7 @@ import {
   IconEyeOff,
   IconCopy,
   IconExternalLink,
+  IconSparkles,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,10 +36,20 @@ import { createProject } from "@/app/actions/backup.actions";
 interface Props {
   orgId: string;
   orgName: string;
+  isPro?: boolean;
+  projectCount?: number;
+  maxProjects?: number;
 }
 
-export function NewProjectForm({ orgId, orgName }: Props) {
+export function NewProjectForm({
+  orgId,
+  orgName,
+  isPro = false,
+  projectCount = 0,
+  maxProjects = 2,
+}: Props) {
   const router = useRouter();
+  const quotaReached = !isPro && projectCount >= maxProjects;
   const [name, setName] = useState("");
   const [databaseUrl, setDatabaseUrl] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -156,6 +167,24 @@ export function NewProjectForm({ orgId, orgName }: Props) {
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
+        {quotaReached && (
+          <div className="p-4 bg-amber-500/10 border-b border-amber-500/20 text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <IconAlertTriangle className="size-4 shrink-0 text-amber-400" />
+              <span>
+                <strong>Database Limit Reached ({projectCount}/{maxProjects}):</strong> Free organizations can connect up to 2 databases.
+              </span>
+            </div>
+            <Link
+              href={`/dashboard/org/${orgId}/billing`}
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-black font-semibold text-xs hover:bg-amber-400 transition-colors shrink-0"
+            >
+              <IconSparkles className="size-3.5" />
+              Upgrade to Pro ($3 / ₦2,000)
+            </Link>
+          </div>
+        )}
+
         <CardContent className="p-0 divide-y divide-border/80">
           {errorMsg && (
             <div className="p-4 bg-red-500/10 text-red-400 text-xs font-mono flex items-start gap-2">
@@ -345,12 +374,14 @@ export function NewProjectForm({ orgId, orgName }: Props) {
                 </SelectTrigger>
                 <SelectContent className="border-border bg-popover">
                   <SelectItem value="0 2 * * *">Daily (At 02:00 UTC)</SelectItem>
-                  <SelectItem value="0 * * * *">Hourly (top of every hour)</SelectItem>
+                  <SelectItem value="0 * * * *" disabled={!isPro}>
+                    Hourly (top of every hour) {!isPro && "• Pro only"}
+                  </SelectItem>
                   <SelectItem value="0 2 * * 0">Weekly (Sundays at 02:00 UTC)</SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground">
-                You can add multiple custom cron schedules after creation.
+                {!isPro ? "Daily automated backups on Free tier. Pro supports hourly & custom cron schedules." : "You can add multiple custom cron schedules after creation."}
               </p>
             </div>
           </div>
@@ -396,10 +427,12 @@ export function NewProjectForm({ orgId, orgName }: Props) {
           <Button
             type="submit"
             size="sm"
-            disabled={isSubmitting}
+            disabled={isSubmitting || quotaReached}
             className="bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
           >
-            {isSubmitting ? (
+            {quotaReached ? (
+              "Limit Reached (Upgrade to Pro)"
+            ) : isSubmitting ? (
               <>
                 <IconLoader2 className="size-3.5 mr-1.5 animate-spin" />
                 Creating project…

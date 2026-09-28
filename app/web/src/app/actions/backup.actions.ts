@@ -6,6 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { BackupRepository, OrganizationRepository, ProjectRepository, ScheduleRepository } from "db";
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 import type { BackupJobStatusType } from "shared/constants/backupJobStatus";
+import { getOrganizationMaxProjects, isOrganizationPro, getOrganizationStorageLimitBytes, isCronAllowedForPlan } from "shared";
 
 import { backupQueue } from "@/lib/queues";
 
@@ -121,6 +122,17 @@ export async function createProject(formData: FormData) {
       return { error: "Organization not found. Please create an organization first." };
     }
 
+    // Enforce Plan Database Quota (2 on Free, 50 on Pro)
+    const orgProjects = (await ProjectRepository.getAllProjects()).filter((p) => p.orgId === orgId);
+    const maxProjects = getOrganizationMaxProjects(existingOrg);
+    if (orgProjects.length >= maxProjects) {
+      return {
+        error: isOrganizationPro(existingOrg)
+          ? `Pro tier project limit reached (${maxProjects} max). Contact support for enterprise scale.`
+          : `Free plan limit reached (${maxProjects} databases max). Upgrade to Pro to connect up to 50 databases.`,
+      };
+    }
+
     const projectId = `proj-${uuidv4().substring(0, 8)}`;
     const project = await ProjectRepository.createProject({
       id: projectId,
@@ -130,6 +142,12 @@ export async function createProject(formData: FormData) {
     });
 
     if (cronExpression) {
+      if (!isCronAllowedForPlan(cronExpression, existingOrg)) {
+        return {
+          error: "Sub-daily / hourly backup frequencies require a Pro plan subscription ($3 or ₦2,000/mo). Free plans support daily backups.",
+        };
+      }
+
       const scheduleId = `sch-${uuidv4().substring(0, 8)}`;
       await ScheduleRepository.createSchedule({
         id: scheduleId,
@@ -170,6 +188,16 @@ export async function updateRetention(projectId: string, retentionCount: number)
   }
 
   try {
+    const project = await ProjectRepository.getProjectById(projectId);
+    if (!project) return { error: "Project not found." };
+
+    const org = project.orgId ? await OrganizationRepository.getOrganizationById(project.orgId) : null;
+    if (!isOrganizationPro(org) && retentionCount > 7) {
+      return {
+        error: "Free plan retention is limited to 7 backups. Upgrade to Pro for up to 90 days retention.",
+      };
+    }
+
     await ProjectRepository.updateProject(projectId, { retentionCount });
     revalidatePath(`/dashboard/project/${projectId}`);
     return { success: true };

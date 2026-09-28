@@ -3,6 +3,7 @@ import { z } from "zod";
 import { v4 as uuidv4 } from "uuid";
 import { OrganizationRepository } from "db";
 import { logger } from "shared/config/logger";
+import { canOrganizationInviteMembers } from "shared/config/billing";
 
 const AddMemberSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -48,6 +49,16 @@ export async function POST(
     const org = await OrganizationRepository.getOrganizationById(id);
     if (!org) {
       return NextResponse.json({ success: false, error: "Organization not found" }, { status: 404 });
+    }
+
+    if (!canOrganizationInviteMembers(org)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Free tier organizations are limited to 1 member (Solo Owner). Upgrade to Pro to invite team members.",
+        },
+        { status: 403 }
+      );
     }
 
     const body = await req.json();

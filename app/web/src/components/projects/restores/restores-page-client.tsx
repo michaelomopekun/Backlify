@@ -15,7 +15,9 @@ import {
   IconDotsVertical,
   IconRotateClockwise,
   IconRefresh,
+  IconSparkles,
 } from "@tabler/icons-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/shared/stat-card";
 import {
@@ -474,6 +476,9 @@ function RestoreWizardDrawer({
   defaultPoint,
   onClose,
   projectId,
+  orgId,
+  isPro = false,
+  drillQuotaReached = false,
   onDrillCompleted,
 }: {
   open: boolean;
@@ -481,6 +486,9 @@ function RestoreWizardDrawer({
   defaultPoint: RecoveryPoint | null;
   onClose: () => void;
   projectId?: string;
+  orgId?: string;
+  isPro?: boolean;
+  drillQuotaReached?: boolean;
   onDrillCompleted?: (drill: any) => void;
 }) {
   const [mode, setMode] = useState<"drill" | "restore">(defaultMode);
@@ -715,6 +723,27 @@ function RestoreWizardDrawer({
           ) : (
             /* ── CONFIGURATION FORM ── */
             <>
+              {mode === "drill" && drillQuotaReached && (
+                <div className="p-3.5 rounded-lg border border-amber-500/20 bg-amber-500/10 text-amber-200 text-xs flex flex-col gap-2">
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <IconAlertTriangle className="size-4 text-amber-400 shrink-0" />
+                    <span>Monthly Drill Quota Reached (1/1)</span>
+                  </div>
+                  <p className="text-muted-foreground text-[11.5px] leading-relaxed">
+                    Free tier organizations include 1 simulated Disaster Recovery drill per calendar month. Upgrade to Pro for unlimited scheduled & automated drills.
+                  </p>
+                  {orgId && (
+                    <Link
+                      href={`/dashboard/org/${orgId}/billing`}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-black font-semibold text-xs hover:bg-amber-400 transition-colors w-fit mt-1"
+                    >
+                      <IconSparkles className="size-3.5" />
+                      Upgrade to Pro ($3 / ₦2,000)
+                    </Link>
+                  )}
+                </div>
+              )}
+
               {/* Mode Selector */}
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-foreground">
@@ -896,14 +925,18 @@ function RestoreWizardDrawer({
             <>
               <Button
                 onClick={startExecution}
-                disabled={!canSubmit}
+                disabled={!canSubmit || (mode === "drill" && drillQuotaReached)}
                 className="flex-1 h-9.5 text-xs sm:text-[13px] font-semibold gap-1.5 shadow-xs disabled:opacity-40"
               >
                 {mode === "drill" ? (
-                  <>
-                    <IconShieldCheck className="size-4" />
-                    <span>Start DR Drill</span>
-                  </>
+                  drillQuotaReached ? (
+                    "Monthly Drill Limit Reached"
+                  ) : (
+                    <>
+                      <IconShieldCheck className="size-4" />
+                      <span>Start DR Drill</span>
+                    </>
+                  )
                 ) : (
                   <>
                     <IconBolt className="size-4" />
@@ -935,11 +968,15 @@ export function RestoresPageClient({
   projectId,
   recoveryPoints = [],
   initialDrills = [],
+  isPro = false,
+  monthlyDrillsUsed = 0,
 }: {
   orgId: string;
   projectId: string;
   recoveryPoints?: RecoveryPoint[];
   initialDrills?: RestoreDrill[];
+  isPro?: boolean;
+  monthlyDrillsUsed?: number;
 }) {
   const [drills, setDrills] = useState<RestoreDrill[]>(initialDrills);
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -947,6 +984,8 @@ export function RestoresPageClient({
   const [selectedPoint, setSelectedPoint] = useState<RecoveryPoint | null>(null);
   const [search, setSearch] = useState("");
   const [viewingLogsDrill, setViewingLogsDrill] = useState<RestoreDrill | null>(null);
+
+  const drillQuotaReached = !isPro && monthlyDrillsUsed >= 1;
 
   function handleOpenDrill() {
     setDrawerMode("drill");
@@ -984,6 +1023,24 @@ export function RestoresPageClient({
 
   return (
     <div className="space-y-16 sm:space-y-20 pb-28 sm:pb-24">
+      {drillQuotaReached && (
+        <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <IconAlertTriangle className="size-4 shrink-0 text-amber-400" />
+            <span>
+              <strong>Disaster Recovery Drill Limit Reached (1/1 this month):</strong> Free tier organizations include 1 simulated drill per calendar month. Upgrade to Pro for unlimited scheduled & automated drills.
+            </span>
+          </div>
+          <Link
+            href={`/dashboard/org/${orgId}/billing`}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-black font-semibold text-xs hover:bg-amber-400 transition-colors shrink-0"
+          >
+            <IconSparkles className="size-3.5" />
+            Upgrade to Pro ($3 / ₦2,000)
+          </Link>
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div className="space-y-1.5">
@@ -1002,7 +1059,7 @@ export function RestoresPageClient({
             className="flex-1 sm:flex-none h-9.5 px-4 text-xs sm:text-sm font-medium"
           >
             <IconShieldCheck className="size-4 mr-1.5 text-emerald-400" />
-            Run DR Drill
+            {drillQuotaReached ? "DR Drill (1/1 Used)" : "Run DR Drill"}
           </Button>
           <Button
             onClick={handleOpenRestore}
@@ -1107,6 +1164,9 @@ export function RestoresPageClient({
         defaultMode={drawerMode}
         defaultPoint={selectedPoint}
         projectId={projectId}
+        orgId={orgId}
+        isPro={isPro}
+        drillQuotaReached={drillQuotaReached}
         onDrillCompleted={(drill) => {
           setDrills((prev) => [
             {

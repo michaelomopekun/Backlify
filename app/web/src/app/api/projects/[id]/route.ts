@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { z } from "zod";
 
-import { ProjectRepository, ScheduleRepository, BackupFileRepository } from "db";
+import { ProjectRepository, ScheduleRepository, BackupFileRepository, OrganizationRepository } from "db";
 
 import { backupQueue } from "@/lib/queues";
 
 import { StorageService } from "shared/config/storage";
 
 import { logger } from "shared/config/logger";
+import { isOrganizationPro, canOrganizationUseCustomVault } from "shared";
 
 
 const UpdateProjectInputSchema = z.object({
@@ -128,13 +129,48 @@ export async function PATCH(
     // Check project existence
     const project = await ProjectRepository.getProjectById(id);
 
-
     if (!project) {
-
       return NextResponse.json({ success: false, error: "Project not found" }, { status: 404 });
-
     }
 
+    // Verify Organization Plan Restrictions
+    const org = project.orgId ? await OrganizationRepository.getOrganizationById(project.orgId) : null;
+    const isPro = isOrganizationPro(org);
+
+    if (!isPro) {
+      if (
+        (validated.data.vaultProvider && validated.data.vaultProvider !== "backlify_default") ||
+        validated.data.vaultBucket
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Custom cloud storage vaults (AWS S3, Cloudflare R2, GCS) require a Pro plan subscription ($3 or ₦2,000/mo). Upgrade to Pro to connect custom vaults.",
+          },
+          { status: 403 }
+        );
+      }
+
+      if (validated.data.webhookUrl && validated.data.webhookUrl.trim() !== "") {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Webhook, Slack, Discord, and Telegram notifications require a Pro plan subscription ($3 or ₦2,000/mo). Free plan supports email alerts on failure.",
+          },
+          { status: 403 }
+        );
+      }
+
+      if (validated.data.retentionCount && validated.data.retentionCount > 7) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Free plan retention is limited to 7 backups. Upgrade to Pro for up to 90 days retention.",
+          },
+          { status: 403 }
+        );
+      }
+    }
 
     const updatedProject = await ProjectRepository.updateProject(id, validated.data);
 

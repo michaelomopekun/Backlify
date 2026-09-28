@@ -1,7 +1,8 @@
 import { requireCurrentUser } from "@/lib/current-user";
-import { OrganizationRepository, UserRepository } from "db";
+import { OrganizationRepository, UserRepository, ProjectRepository } from "db";
 import { OrgPickerHeader } from "@/components/layout/org-picker-header";
 import { NewProjectForm } from "@/components/projects/new/new-project-form";
+import { isOrganizationPro, getOrganizationMaxProjects } from "shared";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -40,12 +41,24 @@ export default async function NewProjectPage({ searchParams }: Props) {
     selectedOrg = userOrgs[0];
   }
 
+  const fullOrg = await OrganizationRepository.getOrganizationById(selectedOrg.id);
+  const orgProjects = (await ProjectRepository.getAllProjects()).filter((p) => p.orgId === selectedOrg.id);
+  const isPro = isOrganizationPro(fullOrg);
+  const maxProjects = getOrganizationMaxProjects(fullOrg);
+  const projectCount = orgProjects.length;
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <OrgPickerHeader title="New project" />
 
       <main className="flex-1 flex items-center justify-center p-6">
-        <NewProjectForm orgId={selectedOrg.id} orgName={selectedOrg.name} />
+        <NewProjectForm
+          orgId={selectedOrg.id}
+          orgName={selectedOrg.name}
+          isPro={isPro}
+          projectCount={projectCount}
+          maxProjects={maxProjects}
+        />
       </main>
     </div>
   );

@@ -1,10 +1,11 @@
 import { RestoreJobStatusType, RESTORE_JOB_STATUS } from "shared/constants/restoreJobStatus";
 
-import { db, and, eq, desc } from "../../index";
+import { db, and, eq, desc, gte, sql } from "../../index";
 
 import { restoreJobs } from "../../schema/restore-job";
 import { backupFiles } from "../../schema/backup-file";
 import { backupJobs } from "../../schema/backup-job";
+import { projects } from "../../schema/project";
 
 import { logger } from "shared/config/logger";
 
@@ -181,6 +182,53 @@ export class RestoreRepository {
         } catch (error) {
             logger.error({ projectId, error }, "Failed to list restore jobs by project ID");
             return [];
+        }
+    }
+
+    static async countMonthlyDrillsForOrg(orgId: string, sinceDate: Date): Promise<number> {
+        try {
+            logger.info({ orgId, sinceDate }, "Counting monthly drills for organization");
+            const result = await db
+                .select({ count: sql<number>`count(*)::int` })
+                .from(restoreJobs)
+                .innerJoin(backupFiles, eq(restoreJobs.backupFileId, backupFiles.id))
+                .innerJoin(backupJobs, eq(backupFiles.backupJobId, backupJobs.id))
+                .innerJoin(projects, eq(backupJobs.projectId, projects.id))
+                .where(
+                    and(
+                        eq(projects.orgId, orgId),
+                        eq(restoreJobs.targetDatabaseUrl, "headless:drill"),
+                        gte(restoreJobs.createdAt, sinceDate)
+                    )
+                );
+
+            return Number(result[0]?.count || 0);
+        } catch (error) {
+            logger.error({ orgId, error }, "Failed to count monthly drills for org");
+            return 0;
+        }
+    }
+
+    static async countMonthlyDrillsForProject(projectId: string, sinceDate: Date): Promise<number> {
+        try {
+            logger.info({ projectId, sinceDate }, "Counting monthly drills for project");
+            const result = await db
+                .select({ count: sql<number>`count(*)::int` })
+                .from(restoreJobs)
+                .innerJoin(backupFiles, eq(restoreJobs.backupFileId, backupFiles.id))
+                .innerJoin(backupJobs, eq(backupFiles.backupJobId, backupJobs.id))
+                .where(
+                    and(
+                        eq(backupJobs.projectId, projectId),
+                        eq(restoreJobs.targetDatabaseUrl, "headless:drill"),
+                        gte(restoreJobs.createdAt, sinceDate)
+                    )
+                );
+
+            return Number(result[0]?.count || 0);
+        } catch (error) {
+            logger.error({ projectId, error }, "Failed to count monthly drills for project");
+            return 0;
         }
     }
 }

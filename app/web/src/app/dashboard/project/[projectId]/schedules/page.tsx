@@ -1,5 +1,6 @@
 import { SchedulesPageClient } from "@/components/projects/schedules/schedules-page-client";
-import { ProjectRepository, ScheduleRepository } from "db";
+import { ProjectRepository, ScheduleRepository, OrganizationRepository } from "db";
+import { isOrganizationPro } from "shared";
 import { redirect } from "next/navigation";
 
 export const metadata = {
@@ -16,10 +17,15 @@ export default async function SchedulesPage({
 
   let project: { id: string; orgId?: string | null } | null = null;
   let rawSchedules: any[] = [];
+  let isPro = false;
 
   try {
     project = await ProjectRepository.getProjectById(projectId);
     rawSchedules = await ScheduleRepository.getSchedulesByProjectId(projectId);
+    if (project?.orgId) {
+      const org = await OrganizationRepository.getOrganizationById(project.orgId);
+      isPro = isOrganizationPro(org);
+    }
   } catch (err) {
     console.error("Failed to fetch schedules:", err);
   }
@@ -68,6 +74,7 @@ export default async function SchedulesPage({
       orgId={orgId}
       projectId={projectId}
       initialSchedules={initialSchedules}
+      isPro={isPro}
     />
   );
 }

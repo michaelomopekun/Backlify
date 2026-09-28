@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
-import { ProjectRepository, ScheduleRepository } from "db";
+import { OrganizationRepository, ProjectRepository, ScheduleRepository } from "db";
+import { isOrganizationPro, isCronAllowedForPlan } from "shared";
 
 import { backupQueue } from "@/lib/queues";
 
@@ -39,6 +40,27 @@ export async function createSchedule(formData: FormData) {
   try {
     const project = await ProjectRepository.getProjectById(projectId);
     if (!project) return { error: "That project no longer exists." };
+
+    let org = null;
+    if (project.orgId) {
+      org = await OrganizationRepository.getOrganizationById(project.orgId);
+    }
+
+    // 1. Enforce Frequency Limitation (Free allows daily/weekly, Pro allows hourly/sub-daily)
+    if (!isCronAllowedForPlan(cronExpression, org)) {
+      return {
+        error: "Hourly and sub-daily backup schedules require a Pro Plan ($3 or ₦2,000/mo). Free tier organizations support daily schedules.",
+      };
+    }
+
+    // 2. Enforce Schedules count per project (Free allows 1 schedule, Pro allows up to 24)
+    const existingSchedules = await ScheduleRepository.getSchedulesByProjectId(projectId);
+    const isPro = isOrganizationPro(org);
+    if (!isPro && existingSchedules.length >= 1) {
+      return {
+        error: "Free plan is limited to 1 backup schedule per project. Upgrade to Pro for multiple automated schedules.",
+      };
+    }
 
     const id = `sch-${uuidv4().substring(0, 12)}`;
 

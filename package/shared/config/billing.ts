@@ -70,10 +70,52 @@ export function getOrganizationStorageLimitBytes(org?: SubscriptionOwner | null)
 }
 
 /**
- * Returns human-readable storage quota string.
+ * Returns the maximum allowed connected projects/databases for an organization.
  */
-export function getOrganizationStorageLimitLabel(org?: SubscriptionOwner | null): string {
+export function getOrganizationMaxProjects(org?: SubscriptionOwner | null): number {
   return isOrganizationPro(org)
-    ? BILLING_CONFIG.QUOTAS.PRO.STORAGE_LIMIT_LABEL
-    : BILLING_CONFIG.QUOTAS.FREE.STORAGE_LIMIT_LABEL;
+    ? BILLING_CONFIG.QUOTAS.PRO.MAX_PROJECTS
+    : BILLING_CONFIG.QUOTAS.FREE.MAX_PROJECTS;
+}
+
+/**
+ * Returns the maximum allowed disaster recovery drills per month for an organization.
+ */
+export function getOrganizationMaxMonthlyDrills(org?: SubscriptionOwner | null): number {
+  return isOrganizationPro(org) ? Infinity : 1;
+}
+
+/**
+ * Checks whether an organization is allowed to bring custom cloud storage (AWS S3, R2, GCS).
+ */
+export function canOrganizationUseCustomVault(org?: SubscriptionOwner | null): boolean {
+  return isOrganizationPro(org);
+}
+
+/**
+ * Checks whether an organization can invite team members (Solo Owner on Free, Unlimited on Pro).
+ */
+export function canOrganizationInviteMembers(org?: SubscriptionOwner | null): boolean {
+  return isOrganizationPro(org);
+}
+
+/**
+ * Validates whether a cron expression is permitted on the organization's plan.
+ * Free plan permits daily (e.g. "0 2 * * *") or weekly/monthly runs, but disallows hourly ("0 * * * *", "* / 30", etc.).
+ */
+export function isCronAllowedForPlan(cronExpression: string, org?: SubscriptionOwner | null): boolean {
+  if (isOrganizationPro(org)) return true;
+
+  const trimmed = cronExpression.trim();
+  const parts = trimmed.split(/\s+/);
+  if (parts.length !== 5) return false;
+
+  const [min, hour] = parts;
+  // If hour field is "*" or has a step (like "*/2", "*/6"), it runs more than once a day -> requires Pro!
+  if (hour === "*" || hour.includes("/") || hour.includes(",")) {
+    return false;
+  }
+
+  // Daily or slower is allowed
+  return true;
 }

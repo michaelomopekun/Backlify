@@ -728,92 +728,137 @@ export function OrgSettingsClient({
                 className="h-8 px-3 text-xs font-medium bg-white text-black hover:bg-neutral-200 transition-colors"
               >
                 <IconUserPlus className="size-3.5 mr-1.5" />
-                Invite Member
+                Invite Member {!isPro && "(Pro)"}
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-[#121212] border-[#252525] text-white max-w-md">
               <DialogHeader>
-                <DialogTitle className="text-base text-white">Invite Team Member</DialogTitle>
+                <div className="flex items-center gap-2 mb-1">
+                  <DialogTitle className="text-base text-white">Invite Team Member</DialogTitle>
+                  {!isPro && (
+                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
+                      PRO FEATURE
+                    </span>
+                  )}
+                </div>
                 <DialogDescription className="text-xs text-muted-foreground">
-                  Send an invitation to join {organization.name}. They will receive access based on their assigned role.
+                  {!isPro
+                    ? "Team collaboration and role-based access control (RBAC) are exclusively available on the Pro plan."
+                    : `Send an invitation to join ${organization.name}. They will receive access based on their assigned role.`}
                 </DialogDescription>
               </DialogHeader>
 
-              <form onSubmit={handleInviteMember} className="space-y-4 py-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="invite-email" className="text-xs text-[#aaaaaa]">
-                    Email Address <span className="text-red-400">*</span>
-                  </Label>
-                  <Input
-                    id="invite-email"
-                    type="email"
-                    required
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="teammate@company.com"
-                    className="bg-[#181818] border-[#2c2c2c] text-white text-sm h-9"
-                  />
-                </div>
+              {!isPro ? (
+                <div className="space-y-4 py-3">
+                  <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-200 text-xs space-y-2">
+                    <div className="flex items-center gap-2 font-medium">
+                      <IconSparkles className="size-4 text-amber-400 shrink-0" />
+                      <span>Free Plan is Limited to 1 Seat (Solo Owner)</span>
+                    </div>
+                    <p className="text-muted-foreground text-[11.5px] leading-relaxed">
+                      Upgrade to Backlify Pro for <strong>$3 / month</strong> (or <strong>₦2,000 / month</strong> via Paystack) to invite unlimited engineers, assign Admin/Member roles, and collaborate seamlessly.
+                    </p>
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label htmlFor="invite-name" className="text-xs text-[#aaaaaa]">
-                    Full Name (Optional)
-                  </Label>
-                  <Input
-                    id="invite-name"
-                    value={inviteName}
-                    onChange={(e) => setInviteName(e.target.value)}
-                    placeholder="Jane Doe"
-                    className="bg-[#181818] border-[#2c2c2c] text-white text-sm h-9"
-                  />
+                  <DialogFooter className="pt-2 flex flex-col sm:flex-row gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsInviteOpen(false)}
+                      className="h-8.5 px-3 text-xs border-[#333333] text-muted-foreground hover:text-white"
+                    >
+                      Close
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setIsInviteOpen(false);
+                        router.push(`/dashboard/org/${organization.id}/billing`);
+                      }}
+                      className="h-8.5 px-4 text-xs font-semibold bg-amber-500 text-black hover:bg-amber-400 gap-1.5 transition-colors"
+                    >
+                      <IconSparkles className="size-3.5" />
+                      Upgrade to Pro ($3 / ₦2,000)
+                    </Button>
+                  </DialogFooter>
                 </div>
+              ) : (
+                <form onSubmit={handleInviteMember} className="space-y-4 py-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="invite-email" className="text-xs text-[#aaaaaa]">
+                      Email Address <span className="text-red-400">*</span>
+                    </Label>
+                    <Input
+                      id="invite-email"
+                      type="email"
+                      required
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      placeholder="teammate@company.com"
+                      className="bg-[#181818] border-[#2c2c2c] text-white text-sm h-9"
+                    />
+                  </div>
 
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-[#aaaaaa]">Role</Label>
-                  <Select value={inviteRole} onValueChange={setInviteRole}>
-                    <SelectTrigger className="bg-[#181818] border-[#2c2c2c] text-white text-sm h-9">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-[#161616] border-[#2c2c2c] text-white">
-                      <SelectItem value="member">
-                        <div className="text-xs">
-                          <span className="font-medium text-white">Member</span> — View and trigger backup jobs
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="admin">
-                        <div className="text-xs">
-                          <span className="font-medium text-white">Admin</span> — Manage projects, storage vaults, and settings
-                        </div>
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="invite-name" className="text-xs text-[#aaaaaa]">
+                      Full Name (Optional)
+                    </Label>
+                    <Input
+                      id="invite-name"
+                      value={inviteName}
+                      onChange={(e) => setInviteName(e.target.value)}
+                      placeholder="Jane Doe"
+                      className="bg-[#181818] border-[#2c2c2c] text-white text-sm h-9"
+                    />
+                  </div>
 
-                <DialogFooter className="pt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsInviteOpen(false)}
-                    className="h-8 px-3 text-xs border-[#333333] text-muted-foreground hover:text-white"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isInviting || !inviteEmail.trim()}
-                    className="h-8 px-3 text-xs font-medium bg-white text-black hover:bg-neutral-200"
-                  >
-                    {isInviting ? (
-                      <>
-                        <IconLoader2 className="size-3.5 mr-1.5 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      "Send Invitation"
-                    )}
-                  </Button>
-                </DialogFooter>
-              </form>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-[#aaaaaa]">Role</Label>
+                    <Select value={inviteRole} onValueChange={setInviteRole}>
+                      <SelectTrigger className="bg-[#181818] border-[#2c2c2c] text-white text-sm h-9">
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#161616] border-[#2c2c2c] text-white">
+                        <SelectItem value="member">
+                          <div className="text-xs">
+                            <span className="font-medium text-white">Member</span> — View and trigger backup jobs
+                          </div>
+                        </SelectItem>
+                        <SelectItem value="admin">
+                          <div className="text-xs">
+                            <span className="font-medium text-white">Admin</span> — Manage projects, storage vaults, and settings
+                          </div>
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <DialogFooter className="pt-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setIsInviteOpen(false)}
+                      className="h-8 px-3 text-xs border-[#333333] text-muted-foreground hover:text-white"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={isInviting || !inviteEmail.trim()}
+                      className="h-8 px-3 text-xs font-medium bg-white text-black hover:bg-neutral-200"
+                    >
+                      {isInviting ? (
+                        <>
+                          <IconLoader2 className="size-3.5 mr-1.5 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        "Send Invitation"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              )}
             </DialogContent>
           </Dialog>
         </div>

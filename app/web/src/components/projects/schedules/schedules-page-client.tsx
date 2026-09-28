@@ -17,7 +17,10 @@ import {
   IconRefresh,
   IconAlertTriangle,
   IconCircleCheck,
+  IconSparkles,
 } from "@tabler/icons-react";
+import { toast } from "sonner";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -395,8 +398,8 @@ function ScheduleCard({
    Cron Editor Drawer
 ───────────────────────────────────────────────────────────────────*/
 
-const PRESET_OPTIONS: { label: string; key: FrequencyPreset; cron: string; readable: string }[] = [
-  { label: "Hourly",   key: "hourly",  cron: "0 * * * *",   readable: "Every hour" },
+const PRESET_OPTIONS: { label: string; key: FrequencyPreset; cron: string; readable: string; proOnly?: boolean }[] = [
+  { label: "Hourly",   key: "hourly",  cron: "0 * * * *",   readable: "Every hour", proOnly: true },
   { label: "Daily",    key: "daily",   cron: "0 14 * * *",  readable: "Every day at 14:00 UTC" },
   { label: "Weekly",   key: "weekly",  cron: "0 0 * * 0",   readable: "Every Sunday at 00:00 UTC" },
   { label: "Monthly",  key: "monthly", cron: "0 0 1 * *",   readable: "1st of every month at 00:00 UTC" },
@@ -406,11 +409,15 @@ const PRESET_OPTIONS: { label: string; key: FrequencyPreset; cron: string; reada
 function CronEditorDrawer({
   open,
   editing,
+  isPro = false,
+  orgId,
   onClose,
   onSave,
 }: {
   open: boolean;
   editing: Schedule | null;
+  isPro?: boolean;
+  orgId?: string;
   onClose: () => void;
   onSave: (data: Partial<Schedule>) => void;
 }) {
@@ -418,7 +425,7 @@ function CronEditorDrawer({
   const [preset, setPreset] = useState<FrequencyPreset>("daily");
   const [cronStr, setCronStr] = useState(editing?.cron ?? "0 14 * * *");
   const [readable, setReadable] = useState(editing?.humanReadable ?? "Every day at 14:00 UTC");
-  const [retention, setRetention] = useState(editing?.retentionDays ?? 7);
+  const [retention, setRetention] = useState(editing?.retentionDays ?? (isPro ? 14 : 7));
   const [saved, setSaved] = useState(false);
 
   // Sync when editing changes
@@ -508,20 +515,36 @@ function CronEditorDrawer({
               Frequency
             </Label>
             <div className="grid grid-cols-5 gap-2">
-              {PRESET_OPTIONS.map((p) => (
-                <button
-                  key={p.key}
-                  type="button"
-                  onClick={() => handlePreset(p)}
-                  className={`py-2 rounded-lg text-xs font-medium border transition-colors ${
-                    preset === p.key
-                      ? "border-primary bg-primary/10 text-primary font-semibold"
-                      : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:border-border"
-                  }`}
-                >
-                  {p.label}
-                </button>
-              ))}
+              {PRESET_OPTIONS.map((p) => {
+                const isLocked = p.proOnly && !isPro;
+                return (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => {
+                      if (isLocked) {
+                        toast.error("Hourly automated backups require a Pro plan subscription ($3 or ₦2,000/mo).");
+                        return;
+                      }
+                      handlePreset(p);
+                    }}
+                    className={`py-2 rounded-lg text-xs font-medium border transition-colors flex items-center justify-center gap-1 ${
+                      preset === p.key
+                        ? "border-primary bg-primary/10 text-primary font-semibold"
+                        : isLocked
+                        ? "border-border/40 bg-muted/10 text-muted-foreground/60 hover:border-amber-500/30"
+                        : "border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:border-border"
+                    }`}
+                  >
+                    <span>{p.label}</span>
+                    {p.proOnly && (
+                      <span className="text-[9px] px-1 py-0.2 rounded bg-amber-500/20 text-amber-300 font-mono font-bold leading-none">
+                        PRO
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -575,21 +598,27 @@ function CronEditorDrawer({
               </Label>
               <span className="text-xs text-foreground font-medium">
                 Keep last <span className="text-foreground font-semibold">{retention}</span> days
+                {!isPro && <span className="text-amber-400 text-[10px] ml-1.5 font-normal">(Free: max 7d)</span>}
               </span>
             </div>
             <input
               type="range"
               min={1}
-              max={90}
+              max={isPro ? 90 : 7}
               value={retention}
               onChange={(e) => setRetention(Number(e.target.value))}
               className="w-full h-1 appearance-none bg-muted/60 rounded-full accent-primary cursor-pointer"
             />
             <div className="flex justify-between text-[11px] text-muted-foreground">
               <span>1d</span>
-              <span>30d</span>
-              <span>90d</span>
+              <span>{isPro ? "30d" : "4d"}</span>
+              <span>{isPro ? "90d" : "7d (Free)"}</span>
             </div>
+            {!isPro && (
+              <p className="text-[11px] text-muted-foreground">
+                Free plan keeps up to 7 daily snapshots. Upgrade to Pro for 30–90 days retention.
+              </p>
+            )}
           </div>
 
           {/* Target DB info */}
@@ -651,10 +680,12 @@ export function SchedulesPageClient({
   orgId,
   projectId,
   initialSchedules,
+  isPro = false,
 }: {
   orgId: string;
   projectId: string;
   initialSchedules?: any[];
+  isPro?: boolean;
 }) {
   const [schedules, setSchedules] = useState<Schedule[]>(() => {
     if (initialSchedules && initialSchedules.length > 0) {
@@ -668,7 +699,7 @@ export function SchedulesPageClient({
         nextRunLabel: s.nextRunRel || "in ~3h",
         lastRunLabel: s.lastRun || "Never",
         lastRunOk: s.lastRunStatus === "success",
-        retentionDays: s.retentionDays || 14,
+        retentionDays: s.retentionDays || (isPro ? 14 : 7),
         avgDurationSec: 72,
         totalRuns: 42,
       }));
@@ -680,6 +711,7 @@ export function SchedulesPageClient({
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
   const [runningId, setRunningId] = useState<string | null>(null);
 
+  const scheduleQuotaReached = !isPro && schedules.length >= 1;
   const activeCount = schedules.filter((s) => s.status === "active").length;
   const failingCount = schedules.filter((s) => s.status === "failing").length;
 
@@ -710,6 +742,7 @@ export function SchedulesPageClient({
   async function handleDelete(id: string) {
     setSchedules((prev) => prev.filter((s) => s.id !== id));
     await deleteSchedule(id, projectId);
+    toast.success("Schedule deleted");
   }
 
   function handleEdit(s: Schedule) {
@@ -734,8 +767,14 @@ export function SchedulesPageClient({
       setSchedules((prev) =>
         prev.map((s) => (s.id === editingSchedule.id ? { ...s, ...data } : s))
       );
+      toast.success("Schedule updated");
     } else {
       const res = await createSchedule(formData);
+      if (res?.error) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success("Schedule created successfully");
       const newSchedule: Schedule = {
         id: `sch-${Date.now()}`,
         name: data.name ?? "New Schedule",
@@ -746,7 +785,7 @@ export function SchedulesPageClient({
         nextRunLabel: "in 2h",
         lastRunLabel: "Never",
         lastRunOk: true,
-        retentionDays: data.retentionDays ?? 7,
+        retentionDays: data.retentionDays ?? (isPro ? 14 : 7),
         avgDurationSec: 0,
         totalRuns: 0,
       };
@@ -756,6 +795,24 @@ export function SchedulesPageClient({
 
   return (
     <div className="space-y-16 sm:space-y-20 pb-28 sm:pb-24">
+      {scheduleQuotaReached && (
+        <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <IconAlertTriangle className="size-4 shrink-0 text-amber-400" />
+            <span>
+              <strong>Schedule Limit Reached (1/1):</strong> Free tier databases include 1 automated daily backup schedule. Upgrade to Pro for sub-daily cadences and multiple schedules.
+            </span>
+          </div>
+          <Link
+            href={`/dashboard/org/${orgId}/billing`}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-black font-semibold text-xs hover:bg-amber-400 transition-colors shrink-0"
+          >
+            <IconSparkles className="size-3.5" />
+            Upgrade to Pro ($3 / ₦2,000)
+          </Link>
+        </div>
+      )}
+
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div className="space-y-1.5">
@@ -765,11 +822,24 @@ export function SchedulesPageClient({
           </p>
         </div>
         <Button
-          onClick={() => { setEditingSchedule(null); setDrawerOpen(true); }}
+          onClick={() => {
+            if (scheduleQuotaReached) {
+              toast.error("Free plan databases support 1 automated schedule. Upgrade to Pro for unlimited schedules.");
+              return;
+            }
+            setEditingSchedule(null);
+            setDrawerOpen(true);
+          }}
           className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-sm font-semibold h-9.5 px-4 shadow-xs shrink-0 mt-1 sm:mt-0"
         >
-          <IconPlus className="size-4 mr-1.5" />
-          New Schedule
+          {scheduleQuotaReached ? (
+            "1/1 Schedule Used (Free)"
+          ) : (
+            <>
+              <IconPlus className="size-4 mr-1.5" />
+              New Schedule
+            </>
+          )}
         </Button>
       </div>
 
@@ -860,6 +930,8 @@ export function SchedulesPageClient({
       <CronEditorDrawer
         open={drawerOpen}
         editing={editingSchedule}
+        isPro={isPro}
+        orgId={orgId}
         onClose={() => { setDrawerOpen(false); setEditingSchedule(null); }}
         onSave={handleSave}
       />

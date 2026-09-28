@@ -1,5 +1,6 @@
 import { RestoresPageClient } from "@/components/projects/restores/restores-page-client";
-import { ProjectRepository, BackupRepository, RestoreRepository } from "db";
+import { ProjectRepository, BackupRepository, RestoreRepository, OrganizationRepository } from "db";
+import { isOrganizationPro } from "shared";
 import { redirect } from "next/navigation";
 import { formatBytes } from "@/lib/format";
 
@@ -18,10 +19,24 @@ export default async function RestoresPage({
   let project: { id: string; orgId?: string | null } | null = null;
   let rawBackups: any[] = [];
   let rawRestores: any[] = [];
+  let isPro = false;
+  let monthlyDrillsUsed = 0;
+
   try {
     project = await ProjectRepository.getProjectById(projectId);
     rawBackups = await BackupRepository.listBackups({ projectId });
     rawRestores = await RestoreRepository.listRestoreJobsByProjectId(projectId);
+
+    if (project?.orgId) {
+      const org = await OrganizationRepository.getOrganizationById(project.orgId);
+      isPro = isOrganizationPro(org);
+
+      const startOfMonth = new Date();
+      startOfMonth.setUTCDate(1);
+      startOfMonth.setUTCHours(0, 0, 0, 0);
+
+      monthlyDrillsUsed = await RestoreRepository.countMonthlyDrillsForOrg(org.id, startOfMonth);
+    }
   } catch {}
 
   if (!project) {
@@ -84,6 +99,8 @@ export default async function RestoresPage({
       projectId={projectId}
       recoveryPoints={recoveryPoints}
       initialDrills={initialDrills}
+      isPro={isPro}
+      monthlyDrillsUsed={monthlyDrillsUsed}
     />
   );
 }
