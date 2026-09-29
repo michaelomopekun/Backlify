@@ -63,14 +63,12 @@ export async function POST(req: NextRequest) {
     try {
       if (project.orgId) {
         const orgProjects = (await ProjectRepository.getAllProjects()).filter((p) => p.orgId === project.orgId);
-        const orgProjectIds = new Set(orgProjects.map((p) => p.id));
-        const allBackups = await BackupRepository.listBackups({});
-        currentStorageBytes = allBackups
-          .filter((b) => b.projectId && orgProjectIds.has(b.projectId))
-          .reduce((sum, b) => sum + (b.fileSize || 0), 0);
+        const orgProjectIds = orgProjects.map((p) => p.id);
+        const stats = await BackupRepository.getActiveStorageStatsForProjects(orgProjectIds);
+        currentStorageBytes = stats.totalBytes;
       } else {
-        const projectBackups = await BackupRepository.listBackups({ projectId });
-        currentStorageBytes = projectBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+        const stats = await BackupRepository.getActiveStorageStatsForProjects([projectId]);
+        currentStorageBytes = stats.totalBytes;
       }
     } catch (err) {
       console.warn("Storage quota check failed, continuing backup:", err);

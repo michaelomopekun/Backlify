@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-react";
 import { ProjectRepository, OrganizationRepository, BackupRepository, ScheduleRepository } from "db";
 import { requireCurrentUser } from "@/lib/current-user";
+import { isOrganizationPro, BILLING_CONFIG } from "shared/config/billing";
 import { Box } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 
@@ -36,6 +37,16 @@ export default async function OrgProjectsPage({ params }: Props) {
   }
 
   const orgName = org.name;
+  const isPro = isOrganizationPro(org as any);
+  const storageLimitBytes = isPro
+    ? BILLING_CONFIG.QUOTAS.PRO.STORAGE_LIMIT_BYTES
+    : BILLING_CONFIG.QUOTAS.FREE.STORAGE_LIMIT_BYTES;
+  const storageLimitLabel = isPro
+    ? BILLING_CONFIG.QUOTAS.PRO.STORAGE_LIMIT_LABEL
+    : BILLING_CONFIG.QUOTAS.FREE.STORAGE_LIMIT_LABEL;
+  const maxProjects = isPro ? BILLING_CONFIG.QUOTAS.PRO.MAX_PROJECTS : BILLING_CONFIG.QUOTAS.FREE.MAX_PROJECTS;
+  const maxSnapshots = isPro ? 500 : 50;
+  const maxSchedules = isPro ? 50 : 3;
 
   let dbProjects: Array<{ id: string; orgId: string; name: string; databaseUrl: string; createdAt: Date }> = [];
   try {
@@ -43,24 +54,23 @@ export default async function OrgProjectsPage({ params }: Props) {
     dbProjects = all.filter((p) => p.orgId === orgId);
   } catch {}
 
-  let totalBackupsCount = 0;
+  const orgProjectIds = dbProjects.map((p) => p.id);
+
+  let activeSnapshotsCount = 0;
   let totalStorageBytes = 0;
   try {
-    const allBackups = await BackupRepository.listBackups({});
-    const orgProjectIds = new Set(dbProjects.map((p) => p.id));
-    const orgBackups = allBackups.filter((b) => b.projectId && orgProjectIds.has(b.projectId));
-    totalBackupsCount = orgBackups.length;
-    totalStorageBytes = orgBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+    const stats = await BackupRepository.getActiveStorageStatsForProjects(orgProjectIds);
+    activeSnapshotsCount = stats.count;
+    totalStorageBytes = stats.totalBytes;
   } catch {}
 
   let activeSchedulesCount = 0;
   try {
-    const activeSchedules = await ScheduleRepository.getAllActiveSchedules();
-    activeSchedulesCount = activeSchedules.length;
+    const orgSchedules = await ScheduleRepository.getSchedulesByProjectIds(orgProjectIds);
+    activeSchedulesCount = orgSchedules.filter((s) => s.isActive).length;
   } catch {}
 
-  const FREE_TIER_STORAGE_BYTES = 50 * 1024 * 1024; // 50 MB
-  const storagePercentage = Math.min(100, Math.round((totalStorageBytes / FREE_TIER_STORAGE_BYTES) * 100));
+  const storagePercentage = Math.min(100, Math.round((totalStorageBytes / storageLimitBytes) * 100));
   const isNearStorageLimit = storagePercentage >= 80;
 
   const storageUsedStr = totalStorageBytes === 0
@@ -195,23 +205,25 @@ export default async function OrgProjectsPage({ params }: Props) {
                 <div className="rounded-lg border border-[#1e1e1e] bg-[#111111] p-5 space-y-5">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-[13px] font-medium text-white">Free plan usage</h3>
+                      <h3 className="text-[13px] font-medium text-white">
+                        {isPro ? "Pro plan usage" : "Free plan usage"}
+                      </h3>
                       <p className="text-[11px] text-[#666666] mt-0.5">Current billing cycle</p>
                     </div>
                     <Link
                       href={`/dashboard/org/${orgId}/billing`}
                       className="flex items-center h-7 px-2.5 rounded-md border border-[#2a2a2a] bg-transparent hover:bg-[#1c1c1c] text-white font-normal text-[11px] transition-colors"
                     >
-                      Upgrade to Pro
+                      {isPro ? "Manage Plan" : "Upgrade to Pro"}
                     </Link>
                   </div>
 
                   <div className="space-y-3 pt-1">
                     {[
-                      { label: "Projects", value: `${displayProjects.length}`, limit: "2" },
-                      { label: "Total backups", value: `${totalBackupsCount}`, limit: "50" },
-                      { label: "Storage used", value: storageUsedStr, limit: "50 MB" },
-                      { label: "Active schedules", value: `${activeSchedulesCount}`, limit: "3" },
+                      { label: "Projects", value: `${displayProjects.length}`, limit: `${maxProjects}` },
+                      { label: "Active snapshots", value: `${activeSnapshotsCount}`, limit: `${maxSnapshots}` },
+                      { label: "Storage used", value: storageUsedStr, limit: storageLimitLabel },
+                      { label: "Active schedules", value: `${activeSchedulesCount}`, limit: `${maxSchedules}` },
                     ].map((item) => (
                       <div key={item.label} className="flex items-center justify-between text-[12px]">
                         <div className="flex items-center gap-2.5">
@@ -236,7 +248,7 @@ export default async function OrgProjectsPage({ params }: Props) {
                           ? "text-amber-400 font-semibold"
                           : "text-[#888888]"
                       }`}>
-                        {storagePercentage}% ({storageUsedStr} / 50 MB)
+                        {storagePercentage}% ({storageUsedStr} / {storageLimitLabel})
                       </span>
                     </div>
                     <div className="h-1.5 w-full bg-[#1e1e1e] rounded-full overflow-hidden">
@@ -254,8 +266,12 @@ export default async function OrgProjectsPage({ params }: Props) {
                     {isNearStorageLimit && (
                       <div className="rounded bg-amber-500/10 border border-amber-500/20 p-2.5 text-[11px] text-amber-200/90 leading-relaxed">
                         {storagePercentage >= 100
-                          ? "You've hit the 50 MB free storage limit. Upgrade to Pro for unlimited storage and backups."
-                          : "You're getting close to your 50 MB free storage limit. Upgrade to Pro to keep backups running smoothly."}
+                          ? isPro
+                            ? `You've hit the ${storageLimitLabel} storage limit. Clean up older backups or attach a custom S3 vault.`
+                            : `You've hit the ${storageLimitLabel} free storage limit. Upgrade to Pro for 50 GB storage and higher limits.`
+                          : isPro
+                            ? `You're getting close to your ${storageLimitLabel} storage limit.`
+                            : `You're getting close to your ${storageLimitLabel} free storage limit. Upgrade to Pro to keep backups running smoothly.`}
                       </div>
                     )}
                   </div>

@@ -1,6 +1,6 @@
 import { BackupJobStatusType, BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 
-import { db, and, eq, desc, lt, or, inArray, isNull } from "../../index";
+import { db, and, eq, desc, lt, or, inArray, isNull, sql } from "../../index";
 
 import { backupJobs } from "../../schema/backup-job";
 
@@ -373,6 +373,42 @@ export class BackupRepository {
         }
 
     }
+
+    /**
+     * Aggregates active (completed, unpurged) backup snapshots and total storage bytes
+     * for a list of project IDs directly in the database.
+     */
+    static async getActiveStorageStatsForProjects(projectIds: string[]): Promise<{ count: number; totalBytes: number }> {
+        if (!projectIds || projectIds.length === 0) {
+            return { count: 0, totalBytes: 0 };
+        }
+
+        try {
+            const result = await db
+                .select({
+                    count: sql<number>`count(*)`.mapWith(Number),
+                    totalBytes: sql<number>`coalesce(sum(${backupFiles.fileSize}), 0)`.mapWith(Number),
+                })
+                .from(backupJobs)
+                .innerJoin(backupFiles, eq(backupFiles.backupJobId, backupJobs.id))
+                .where(
+                    and(
+                        inArray(backupJobs.projectId, projectIds),
+                        eq(backupJobs.status, BACKUP_JOB_STATUS.COMPLETED as any),
+                        isNull(backupFiles.purgedAt)
+                    )
+                );
+
+            return {
+                count: result[0]?.count || 0,
+                totalBytes: result[0]?.totalBytes || 0,
+            };
+        } catch (error) {
+            logger.error({ projectIds, error }, "Failed to calculate active storage stats");
+            return { count: 0, totalBytes: 0 };
+        }
+    }
+
 
 
     /**

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, eq, inArray, and, sql } from "db";
+import { db, eq, inArray, and, sql, isNull } from "db";
 import { backupJobs } from "db/schema/backup-job";
 import { backupFiles } from "db/schema/backup-file";
 import { backupSchedules } from "db/schema/backup-schedule";
@@ -53,14 +53,20 @@ export async function GET() {
       }
     }
 
-    // 2. Total storage used for user's projects
+    // 2. Total active storage used for user's projects (completed & unpurged)
     const storageResult = await db
       .select({
-        totalBytes: sql<number>`sum(${backupFiles.fileSize})`.mapWith(Number),
+        totalBytes: sql<number>`coalesce(sum(${backupFiles.fileSize}), 0)`.mapWith(Number),
       })
       .from(backupFiles)
       .innerJoin(backupJobs, eq(backupFiles.backupJobId, backupJobs.id))
-      .where(inArray(backupJobs.projectId, projectIds));
+      .where(
+        and(
+          inArray(backupJobs.projectId, projectIds),
+          eq(backupJobs.status, "completed"),
+          isNull(backupFiles.purgedAt)
+        )
+      );
 
     const totalStorageBytes = storageResult[0]?.totalBytes || 0;
 
