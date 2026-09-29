@@ -21,8 +21,10 @@ export async function POST(req: NextRequest) {
     }
 
     const hash = crypto.createHmac("sha512", paystackSecretKey).update(rawBody).digest("hex");
+    const hashBuf = Buffer.from(hash, "utf-8");
+    const sigBuf = Buffer.from(signature, "utf-8");
 
-    if (hash !== signature) {
+    if (hashBuf.length !== sigBuf.length || !crypto.timingSafeEqual(hashBuf, sigBuf)) {
       logger.error("Invalid Paystack webhook signature");
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }

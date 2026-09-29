@@ -9,19 +9,21 @@ import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 import type { RestoreJobStatusType } from "shared/constants/restoreJobStatus";
 import { emitJobTelemetry } from "shared/config/job-telemetry";
 import { isOrganizationPro } from "shared/config/billing";
+import { validateSafeDatabaseUrl } from "shared/config/security";
+import { getCurrentUser } from "@/lib/current-user";
+import { getUserOrgRole, hasMinRole } from "@/lib/auth-guard";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 import { restoreQueue } from "@/lib/queues";
 
 /**
  * Start a restore.
- *
- * Mirrors `POST /api/restores` step for step: verify the file exists, write the
- * job row, enqueue, then move pending -> queued. The row is written before the
- * enqueue so a restore can never run without a record of it — this is the one
- * operation in the app that overwrites a live database, and an untracked one
- * would be unexplainable after the fact.
+ * Requires authenticated session, admin/owner role, and SSRF validation.
  */
 export async function triggerRestore(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Authentication required to trigger a restore." };
+
   const backupFileId = formData.get("backupFileId")?.toString();
   const targetDatabaseUrl = formData.get("targetDatabaseUrl")?.toString().trim();
   const projectId = formData.get("projectId")?.toString();
@@ -38,9 +40,40 @@ export async function triggerRestore(formData: FormData) {
     return { error: "Type RESTORE to confirm — this overwrites the target database." };
   }
 
+  // Rate limiting: max 5 restores per 5 min
+  const rateLimit = await checkRateLimit(`restore-trigger:${user.id}`, 5, 300);
+  if (!rateLimit.allowed) {
+    return { error: "Too many restore operations initiated. Please wait before triggering another restore." };
+  }
+
+  // SSRF Protection: ensure destination is not localhost, private IP, or metadata endpoint
+  const ssrfCheck = await validateSafeDatabaseUrl(targetDatabaseUrl);
+  if (!ssrfCheck.safe) {
+    return { error: ssrfCheck.error || "Restricted restore target: private networks, loopback, and metadata endpoints are blocked." };
+  }
+
   try {
     const file = await BackupFileRepository.getBackupFileById(backupFileId);
     if (!file) return { error: "That backup file no longer exists." };
+
+    // Resolve project and authorize admin or owner role
+    let targetProjectId = projectId;
+    if (!targetProjectId && file.backupJobId) {
+      const job = await BackupRepository.getJobById(file.backupJobId);
+      if (job?.projectId) targetProjectId = job.projectId;
+    }
+
+    if (!targetProjectId) {
+      return { error: "Cannot verify project authorization for this backup file." };
+    }
+
+    const project = await ProjectRepository.getProjectById(targetProjectId);
+    if (!project) return { error: "Associated project not found." };
+
+    const membership = await getUserOrgRole(user.id, user.email, project.orgId);
+    if (!membership || !hasMinRole(membership.role, "admin")) {
+      return { error: "Forbidden: Restoring requires admin or owner permissions in the organization." };
+    }
 
     const jobId = `backlify-restoreJob-${uuidv4().substring(0, 12)}`;
 
@@ -83,13 +116,22 @@ export async function triggerRestore(formData: FormData) {
  * Verifies checksum, encryption key, archive structure, and table definitions without touching any live database.
  */
 export async function triggerDrill(projectId: string, backupFileId?: string) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Authentication required to run DR drills." };
+
   if (!projectId) return { error: "Project ID is required" };
 
   try {
-    // Enforce Disaster Recovery Drill Quotas (1/mo on Free, Unlimited on Pro)
     const project = await ProjectRepository.getProjectById(projectId);
     if (!project) return { error: "Project not found" };
 
+    // Authorize: user must belong to project's org
+    const membership = await getUserOrgRole(user.id, user.email, project.orgId);
+    if (!membership) {
+      return { error: "Forbidden: You do not have permission to run DR drills for this project." };
+    }
+
+    // Enforce Disaster Recovery Drill Quotas (1/mo on Free, Unlimited on Pro)
     const org = project.orgId ? await OrganizationRepository.getOrganizationById(project.orgId) : null;
     if (!isOrganizationPro(org)) {
       const startOfMonth = new Date();
@@ -187,4 +229,3 @@ export async function triggerDrill(projectId: string, backupFileId?: string) {
     return { error: "Could not initiate the DR drill. Please try again in a moment." };
   }
 }
-

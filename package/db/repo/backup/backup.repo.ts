@@ -30,6 +30,8 @@ export interface ListBackupsParams {
 
     projectId?: string;
 
+    projectIds?: string[];
+
     statuses?: readonly BackupJobStatusType[];
 
     limit?: number;
@@ -381,15 +383,23 @@ export class BackupRepository {
      */
     static async listBackups(params: ListBackupsParams = {}) {
 
-        const { projectId, statuses, limit = 50, offset = 0 } = params;
+        const { projectId, projectIds, statuses, limit = 10, offset = 0 } = params;
 
         try {
+
+            if (projectIds !== undefined && projectIds.length === 0) {
+                return [];
+            }
 
             const filters = [];
 
             if (projectId) {
 
                 filters.push(eq(backupJobs.projectId, projectId));
+
+            } else if (projectIds && projectIds.length > 0) {
+
+                filters.push(inArray(backupJobs.projectId, projectIds));
 
             }
 

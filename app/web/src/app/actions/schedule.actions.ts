@@ -5,16 +5,14 @@ import { v4 as uuidv4 } from "uuid";
 
 import { OrganizationRepository, ProjectRepository, ScheduleRepository } from "db";
 import { isOrganizationPro, isCronAllowedForPlan } from "shared";
+import { getCurrentUser } from "@/lib/current-user";
+import { getUserOrgRole, hasMinRole } from "@/lib/auth-guard";
 
 import { backupQueue } from "@/lib/queues";
 
 /**
  * Schedule mutations.
- *
- * Order matters and mirrors `POST /api/schedules`: BullMQ gets the repeat
- * pattern first because it's the thing that validates the cron expression. Only
- * once it accepts do we write the row — otherwise a typo leaves a schedule in
- * the database that will never fire.
+ * Scoped with authenticated sessions and RBAC checks.
  */
 
 const PRESETS: Record<string, string> = {
@@ -24,6 +22,9 @@ const PRESETS: Record<string, string> = {
 };
 
 export async function createSchedule(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Authentication required to create a schedule." };
+
   const projectId = formData.get("projectId")?.toString();
   const raw = formData.get("cronExpression")?.toString().trim();
   const timezone = formData.get("timezone")?.toString().trim() || "UTC";
@@ -40,6 +41,12 @@ export async function createSchedule(formData: FormData) {
   try {
     const project = await ProjectRepository.getProjectById(projectId);
     if (!project) return { error: "That project no longer exists." };
+
+    // Authorize: requires admin or owner role
+    const membership = await getUserOrgRole(user.id, user.email, project.orgId);
+    if (!membership || !hasMinRole(membership.role, "admin")) {
+      return { error: "Forbidden: Only organization admins and owners can configure backup schedules." };
+    }
 
     let org = null;
     if (project.orgId) {
@@ -103,7 +110,18 @@ export async function setScheduleActive(
   projectId: string,
   isActive: boolean
 ) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Authentication required." };
+
   try {
+    const project = await ProjectRepository.getProjectById(projectId);
+    if (!project) return { error: "Project not found." };
+
+    const membership = await getUserOrgRole(user.id, user.email, project.orgId);
+    if (!membership || !hasMinRole(membership.role, "admin")) {
+      return { error: "Forbidden: Only admins and owners can modify backup schedules." };
+    }
+
     const schedule = await ScheduleRepository.getScheduleById(scheduleId);
     if (!schedule) return { error: "That schedule no longer exists." };
 
@@ -135,7 +153,18 @@ export async function setScheduleActive(
 }
 
 export async function deleteSchedule(scheduleId: string, projectId: string) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Authentication required." };
+
   try {
+    const project = await ProjectRepository.getProjectById(projectId);
+    if (!project) return { error: "Project not found." };
+
+    const membership = await getUserOrgRole(user.id, user.email, project.orgId);
+    if (!membership || !hasMinRole(membership.role, "admin")) {
+      return { error: "Forbidden: Only admins and owners can delete backup schedules." };
+    }
+
     const schedule = await ScheduleRepository.getScheduleById(scheduleId);
     if (schedule) {
       await removeRepeat(scheduleId, schedule.cronExpression, schedule.timezone);

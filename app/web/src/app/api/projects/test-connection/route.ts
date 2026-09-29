@@ -1,12 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
 import postgres from "postgres";
-import { ProjectRepository } from "db";
 import { decryptDatabaseUrl } from "shared/config/encryption";
 import { getBacklifyEgressIp } from "shared/config/network";
+import { validateSafeDatabaseUrl } from "shared/config/security";
+import { requireAuth, authorizeProject } from "@/lib/auth-guard";
+import { checkRateLimit, rateLimitResponse, attachRateLimitHeaders, getClientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
+  // 1. Require Authentication
+  const auth = await requireAuth();
+  if (!auth.authorized) {
+    return auth.response;
+  }
+
+  // 2. Sliding window Rate Limiting (10 tests per 60 seconds per user / IP)
+  const identifier = auth.user.id || getClientIp(req);
+  const rateLimit = await checkRateLimit(`test-conn:${identifier}`, 10, 60);
+  if (!rateLimit.allowed) {
+    return rateLimitResponse(rateLimit, "Too many connection test attempts. Please wait a moment before testing again.");
+  }
+
   let sql: ReturnType<typeof postgres> | null = null;
   let targetUrl: string | null = null;
 
@@ -14,16 +29,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json().catch(() => ({}));
     const { projectId, databaseUrl } = body;
 
-
+    // 3. Project-scoped authorization or direct URL verification
     if (projectId) {
-      const project = await ProjectRepository.getProjectById(projectId);
-      if (!project) {
-        return NextResponse.json(
-          { success: false, error: "Project not found" },
-          { status: 404 }
-        );
+      const projectAuth = await authorizeProject(projectId, "member");
+      if (!projectAuth.authorized) {
+        return projectAuth.response;
       }
-      targetUrl = project.databaseUrl;
+      targetUrl = projectAuth.project.databaseUrl;
     } else if (databaseUrl && typeof databaseUrl === "string") {
       targetUrl = decryptDatabaseUrl(databaseUrl.trim());
     }
@@ -35,9 +47,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 4. Validate protocol
     if (!/^postgres(ql)?:\/\//i.test(targetUrl)) {
       return NextResponse.json(
         { success: false, error: "Invalid protocol. Connection string must begin with postgresql:// or postgres://" },
+        { status: 400 }
+      );
+    }
+
+    // 5. SSRF Defense: Validate that the database host does not point to internal, cloud-metadata, or loopback IPs
+    const ssrfCheck = await validateSafeDatabaseUrl(targetUrl);
+    if (!ssrfCheck.safe) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: ssrfCheck.error || "Prohibited target: private network and loopback destinations are restricted for security.",
+          isSecurityViolation: true,
+        },
         { status: 400 }
       );
     }
@@ -78,11 +104,10 @@ export async function POST(req: NextRequest) {
 
     const firstRow = rows[0];
     const rawVersion = firstRow.full_version || "PostgreSQL";
-    // Extract short version e.g. "PostgreSQL 16.2"
     const match = rawVersion.match(/PostgreSQL\s+([\d.]+)/i);
     const shortVersion = match ? `PostgreSQL ${match[1]}` : rawVersion.split(",")[0];
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       latencyMs,
       version: shortVersion,
@@ -92,6 +117,8 @@ export async function POST(req: NextRequest) {
       ssl: sslMode === "require" || urlLower.includes("ssl"),
       rawVersion,
     });
+
+    return attachRateLimitHeaders(response, rateLimit);
   } catch (err: any) {
     const message = err?.message || String(err);
     const code = err?.code || "";
@@ -100,7 +127,7 @@ export async function POST(req: NextRequest) {
 
     if (code === "28P01" || message.includes("password authentication failed")) {
       userFriendlyError = "Authentication failed. Check your database username and password.";
-    } else if (code === "3D000" || message.includes("database") && message.includes("does not exist")) {
+    } else if (code === "3D000" || (message.includes("database") && message.includes("does not exist"))) {
       userFriendlyError = "Database does not exist. Check the database name in your connection string.";
     } else if (code === "ECONNREFUSED" || message.includes("ECONNREFUSED")) {
       userFriendlyError = "Connection refused. Verify the host and port, and ensure your database is running.";
@@ -121,7 +148,7 @@ export async function POST(req: NextRequest) {
       message.includes("no pg_hba.conf entry") ||
       (code === "ECONNREFUSED" && !targetUrl?.includes("localhost") && !targetUrl?.includes("127.0.0.1"));
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         success: false,
         error: userFriendlyError,
@@ -129,8 +156,10 @@ export async function POST(req: NextRequest) {
         isFirewallLikely,
         egressIp: getBacklifyEgressIp(),
       },
-      { status: 200 } // Return 200 with success: false so client can render structured diagnostics
+      { status: 200 }
     );
+
+    return attachRateLimitHeaders(response, rateLimit);
   } finally {
     if (sql) {
       try {

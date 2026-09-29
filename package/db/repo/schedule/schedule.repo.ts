@@ -1,4 +1,4 @@
-import { db, eq } from "../../index";
+import { db, eq, inArray } from "../../index";
 
 import { backupSchedules } from "../../schema/backup-schedule";
 
@@ -119,6 +119,32 @@ export class ScheduleRepository {
     } catch (error) {
 
       logger.error({ projectId, error }, "Failed to fetch backup schedules for project");
+
+      throw error;
+
+    }
+
+  }
+
+  static async getSchedulesByProjectIds(projectIds: string[]) {
+
+    try {
+
+      if (!projectIds || projectIds.length === 0) {
+
+        return [];
+
+      }
+
+      logger.info({ count: projectIds.length }, "Fetching backup schedules for multiple projects");
+
+      const result = await db.select().from(backupSchedules).where(inArray(backupSchedules.projectId, projectIds));
+
+      return result;
+
+    } catch (error) {
+
+      logger.error({ projectIds, error }, "Failed to fetch backup schedules for project IDs");
 
       throw error;
 

@@ -4,6 +4,9 @@ import { v4 as uuidv4 } from "uuid";
 import { OrganizationRepository } from "db";
 import { logger } from "shared/config/logger";
 import { canOrganizationInviteMembers } from "shared/config/billing";
+import { authorizeOrg } from "@/lib/auth-guard";
+
+export const dynamic = "force-dynamic";
 
 const AddMemberSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -19,6 +22,12 @@ export async function GET(
     const { id } = await params;
     if (!id) {
       return NextResponse.json({ success: false, error: "Organization ID is required" }, { status: 400 });
+    }
+
+    // Authorize: user must be an active member of this organization
+    const auth = await authorizeOrg(id, "member");
+    if (!auth.authorized) {
+      return auth.response;
     }
 
     const members = await OrganizationRepository.getOrganizationMembers(id);
@@ -46,10 +55,13 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Organization ID is required" }, { status: 400 });
     }
 
-    const org = await OrganizationRepository.getOrganizationById(id);
-    if (!org) {
-      return NextResponse.json({ success: false, error: "Organization not found" }, { status: 404 });
+    // Authorize: Only admin or owner can invite members
+    const auth = await authorizeOrg(id, "admin");
+    if (!auth.authorized) {
+      return auth.response;
     }
+
+    const org = auth.org;
 
     if (!canOrganizationInviteMembers(org)) {
       return NextResponse.json(
@@ -61,7 +73,7 @@ export async function POST(
       );
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const validated = AddMemberSchema.safeParse(body);
 
     if (!validated.success) {
@@ -119,6 +131,12 @@ export async function DELETE(
         { success: false, error: "Both Organization ID and memberId query parameter are required" },
         { status: 400 }
       );
+    }
+
+    // Authorize: Only admin or owner can remove team members
+    const auth = await authorizeOrg(id, "admin");
+    if (!auth.authorized) {
+      return auth.response;
     }
 
     const removed = await OrganizationRepository.removeMember(id, memberId);

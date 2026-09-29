@@ -6,27 +6,40 @@ import { v4 as uuidv4 } from "uuid";
 import { BackupRepository, OrganizationRepository, ProjectRepository, ScheduleRepository } from "db";
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 import type { BackupJobStatusType } from "shared/constants/backupJobStatus";
-import { getOrganizationMaxProjects, isOrganizationPro, getOrganizationStorageLimitBytes, isCronAllowedForPlan } from "shared";
+import { getOrganizationMaxProjects, isOrganizationPro, isCronAllowedForPlan } from "shared";
+import { validateSafeDatabaseUrl } from "shared/config/security";
+import { getCurrentUser } from "@/lib/current-user";
+import { getUserOrgRole, hasMinRole } from "@/lib/auth-guard";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 import { backupQueue } from "@/lib/queues";
 
 /**
  * Mutations for the dashboard.
- *
- * These duplicate what `POST /api/backups` and friends do rather than calling
- * them over HTTP — a server action fetching its own origin needs an absolute URL
- * and loses the error types. The API routes stay for external callers.
- *
- * Every action returns `{ error }` or `{ success: true }`, matching
- * `waitlist.actions.ts`, so the forms all read the same way.
+ * Scoped with authenticated sessions, RBAC permissions, and SSRF validation.
  */
 
 export async function triggerBackup(projectId: string) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Authentication required to trigger backups." };
+
   if (!projectId) return { error: "Choose a project first." };
 
   try {
     const project = await ProjectRepository.getProjectById(projectId);
     if (!project) return { error: "That project no longer exists." };
+
+    // Authorize: user must belong to the organization
+    const membership = await getUserOrgRole(user.id, user.email, project.orgId);
+    if (!membership) {
+      return { error: "Forbidden: You are not authorized to trigger backups for this project." };
+    }
+
+    // Rate limiting: max 15 triggers per 5 min
+    const rateLimit = await checkRateLimit(`backup-trigger:${projectId}:${user.id}`, 15, 300);
+    if (!rateLimit.allowed) {
+      return { error: "Too many backup triggers queued. Please wait a few moments." };
+    }
 
     // Enforce Tier Storage Quota (50 MB on Free, 50 GB on Pro)
     let isPro = false;
@@ -105,6 +118,9 @@ export async function triggerBackup(projectId: string) {
 }
 
 export async function createProject(formData: FormData) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Authentication required to create a project." };
+
   const name = formData.get("name")?.toString().trim();
   const databaseUrl = formData.get("databaseUrl")?.toString().trim();
   const orgId = formData.get("orgId")?.toString().trim() || "default-org";
@@ -116,10 +132,22 @@ export async function createProject(formData: FormData) {
     return { error: "That doesn't look like a PostgreSQL connection string." };
   }
 
+  // SSRF Defense
+  const ssrfCheck = await validateSafeDatabaseUrl(databaseUrl);
+  if (!ssrfCheck.safe) {
+    return { error: ssrfCheck.error || "Restricted database target." };
+  }
+
   try {
     const existingOrg = await OrganizationRepository.getOrganizationById(orgId);
     if (!existingOrg) {
       return { error: "Organization not found. Please create an organization first." };
+    }
+
+    // Authorize: user must have admin or owner role in the org
+    const membership = await getUserOrgRole(user.id, user.email, orgId);
+    if (!membership || !hasMinRole(membership.role, "admin")) {
+      return { error: "Forbidden: Only organization admins and owners can add databases." };
     }
 
     // Enforce Plan Database Quota (2 on Free, 50 on Pro)
@@ -134,7 +162,7 @@ export async function createProject(formData: FormData) {
     }
 
     const projectId = `proj-${uuidv4().substring(0, 8)}`;
-    const project = await ProjectRepository.createProject({
+    await ProjectRepository.createProject({
       id: projectId,
       orgId,
       name,
@@ -183,6 +211,9 @@ export async function createProject(formData: FormData) {
 }
 
 export async function updateRetention(projectId: string, retentionCount: number) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Authentication required." };
+
   if (!Number.isInteger(retentionCount) || retentionCount < 1) {
     return { error: "Keep at least one backup." };
   }
@@ -190,6 +221,11 @@ export async function updateRetention(projectId: string, retentionCount: number)
   try {
     const project = await ProjectRepository.getProjectById(projectId);
     if (!project) return { error: "Project not found." };
+
+    const membership = await getUserOrgRole(user.id, user.email, project.orgId);
+    if (!membership || !hasMinRole(membership.role, "admin")) {
+      return { error: "Forbidden: Only admins and owners can adjust retention policies." };
+    }
 
     const org = project.orgId ? await OrganizationRepository.getOrganizationById(project.orgId) : null;
     if (!isOrganizationPro(org) && retentionCount > 7) {

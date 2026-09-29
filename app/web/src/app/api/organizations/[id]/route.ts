@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { OrganizationRepository, ProjectRepository, BackupRepository } from "db";
 import { logger } from "shared/config/logger";
+import { authorizeOrg } from "@/lib/auth-guard";
+
+export const dynamic = "force-dynamic";
 
 const UpdateOrgSchema = z.object({
   name: z.string().min(1, "Organization name cannot be empty").max(255).optional(),
@@ -23,12 +26,15 @@ export async function GET(
       return NextResponse.json({ success: false, error: "Organization ID is required" }, { status: 400 });
     }
 
-    const org = await OrganizationRepository.getOrganizationById(id);
-    if (!org) {
-      return NextResponse.json({ success: false, error: "Organization not found" }, { status: 404 });
+    // Authorize: user must be a member of this organization
+    const auth = await authorizeOrg(id, "member");
+    if (!auth.authorized) {
+      return auth.response;
     }
 
-    // Compute basic usage statistics
+    const org = auth.org;
+
+    // Compute basic usage statistics scoped to this organization
     const allProjects = await ProjectRepository.getAllProjects();
     const orgProjects = allProjects.filter((p) => p.orgId === id);
 
@@ -44,6 +50,7 @@ export async function GET(
       success: true,
       organization: {
         ...org,
+        role: auth.role,
         projectsCount: orgProjects.length,
         totalStorageBytes,
       },
@@ -67,12 +74,14 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "Organization ID is required" }, { status: 400 });
     }
 
-    const org = await OrganizationRepository.getOrganizationById(id);
-    if (!org) {
-      return NextResponse.json({ success: false, error: "Organization not found" }, { status: 404 });
+    // Authorize: requires admin or owner role
+    const auth = await authorizeOrg(id, "admin");
+    if (!auth.authorized) {
+      return auth.response;
     }
 
-    const body = await req.json();
+    const org = auth.org;
+    const body = await req.json().catch(() => ({}));
     const validated = UpdateOrgSchema.safeParse(body);
 
     if (!validated.success) {
@@ -120,9 +129,10 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: "Organization ID is required" }, { status: 400 });
     }
 
-    const org = await OrganizationRepository.getOrganizationById(id);
-    if (!org) {
-      return NextResponse.json({ success: false, error: "Organization not found" }, { status: 404 });
+    // Authorize: Only the organization owner can delete the organization
+    const auth = await authorizeOrg(id, "owner");
+    if (!auth.authorized) {
+      return auth.response;
     }
 
     const deleted = await OrganizationRepository.deleteOrganization(id);
