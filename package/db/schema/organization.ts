@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, varchar, uniqueIndex } from 'drizzle-orm/pg-core';
 
 
 export const organizations = pgTable('organizations', {
@@ -26,5 +26,7 @@ export const organizationMembers = pgTable('organization_members', {
   role: varchar('role', { length: 50 }).notNull().default('member'), // 'owner' | 'admin' | 'member'
   invitedAt: timestamp('invited_at').notNull().defaultNow(),
   joinedAt: timestamp('joined_at'),
-});
+}, (table) => ({
+  userOrgIdx: uniqueIndex('idx_org_members_user_org').on(table.userId, table.orgId),
+}));
 

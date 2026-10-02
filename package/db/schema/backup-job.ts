@@ -36,5 +36,6 @@ export const backupJobs = pgTable('backup_jobs', {
 
 }, (table) => ({
   projectStatusIdx: index('idx_backup_jobs_project_status').on(table.projectId, table.status),
+  projectCreatedIdx: index('idx_backup_jobs_project_created').on(table.projectId, table.createdAt),
   createdAtIdx: index('idx_backup_jobs_created_at').on(table.createdAt),
 }));

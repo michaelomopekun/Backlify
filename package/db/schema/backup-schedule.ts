@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, varchar, index } from 'drizzle-orm/pg-core';
 
 import { projects } from './project';
 
@@ -28,4 +28,6 @@ export const backupSchedules = pgTable('backup_schedules', {
 
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 
-});
+}, (table) => ({
+  projectIdActiveIdx: index('idx_backup_schedules_project_active').on(table.projectId, table.isActive),
+}));
