@@ -146,8 +146,22 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId") ?? undefined;
     const status = searchParams.get("status");
-    const limit = Math.min(Number(searchParams.get("limit")) || 50, 200);
-    const offset = Math.max(Number(searchParams.get("offset")) || 0, 0);
+    const typeParam = searchParams.get("type");
+    const type = typeParam === "manual" || typeParam === "scheduled" ? typeParam : undefined;
+    const retention = searchParams.get("retention");
+    const isPurged = retention === "active" ? false : retention === "pruned" ? true : undefined;
+    const search = searchParams.get("search")?.trim() || undefined;
+
+    // Pagination: page (1-based), pageSize/limit (default 10, max 100)
+    const page = Math.max(Number(searchParams.get("page")) || 1, 1);
+    const pageSize = Math.min(
+      Math.max(Number(searchParams.get("pageSize") || searchParams.get("limit")) || 10, 1),
+      100
+    );
+    const offset = searchParams.has("offset")
+      ? Math.max(Number(searchParams.get("offset")) || 0, 0)
+      : (page - 1) * pageSize;
+    const limit = pageSize;
 
     // If specific projectId requested, check authorization on that project
     let authorizedProjectIds: string[] | undefined;
@@ -180,17 +194,40 @@ export async function GET(req: NextRequest) {
       statuses = requested as any;
     }
 
-    const backups = await BackupRepository.listBackups({
-      projectId,
-      projectIds: projectId ? undefined : authorizedProjectIds,
-      statuses,
-      limit,
-      offset,
-    });
+    const [backups, total, stats] = await Promise.all([
+      BackupRepository.listBackups({
+        projectId,
+        projectIds: projectId ? undefined : authorizedProjectIds,
+        statuses,
+        type,
+        isPurged,
+        search,
+        limit,
+        offset,
+      }),
+      BackupRepository.countBackups({
+        projectId,
+        projectIds: projectId ? undefined : authorizedProjectIds,
+        statuses,
+        type,
+        isPurged,
+        search,
+      }),
+      projectId ? BackupRepository.getProjectBackupStats(projectId) : null,
+    ]);
+
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
     return NextResponse.json({
       success: true,
       backups,
+      pagination: {
+        total,
+        page,
+        pageSize,
+        totalPages,
+      },
+      stats,
     });
   } catch (error) {
     console.error("Failed to list backup jobs:", error);

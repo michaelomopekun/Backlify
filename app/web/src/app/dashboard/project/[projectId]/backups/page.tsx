@@ -19,15 +19,21 @@ export default async function BackupsPage({
   let project: { id: string; orgId?: string | null; databaseUrl?: string } | null = null;
   let rawBackups: any[] = [];
   let userRole: OrgRole = "member";
+  let projectStats: any = null;
+  let totalCount = 0;
 
   try {
-    const [fetchedProject, fetchedBackups, user] = await Promise.all([
+    const [fetchedProject, fetchedStats, fetchedBackups, fetchedTotal, user] = await Promise.all([
       ProjectRepository.getProjectById(projectId),
-      BackupRepository.listBackups({ projectId }),
+      BackupRepository.getProjectBackupStats(projectId),
+      BackupRepository.listBackups({ projectId, limit: 10, offset: 0 }),
+      BackupRepository.countBackups({ projectId }),
       getCurrentUser(),
     ]);
     project = fetchedProject;
+    projectStats = fetchedStats;
     rawBackups = fetchedBackups;
+    totalCount = fetchedTotal;
 
     if (user && project?.orgId) {
       const roleInfo = await getUserOrgRole(user.id, user.email, project.orgId);
@@ -95,6 +101,8 @@ export default async function BackupsPage({
       orgId={orgId}
       projectId={projectId}
       initialBackups={initialBackups}
+      initialStats={projectStats}
+      initialTotal={totalCount}
       canDelete={canDelete}
       userRole={userRole}
     />

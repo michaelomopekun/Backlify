@@ -45,10 +45,8 @@ export default async function OrgSettingsPage({ params }: Props) {
     const orgProjects = allProjects.filter((p) => p.orgId === orgId);
     projectsCount = orgProjects.length;
 
-    const allBackups = await BackupRepository.listBackups({});
-    const orgProjectIds = new Set(orgProjects.map((p) => p.id));
-    const orgBackups = allBackups.filter((b) => b.projectId && orgProjectIds.has(b.projectId));
-    totalStorageBytes = orgBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+    const stats = await BackupRepository.getActiveStorageStatsForOrg(orgId);
+    totalStorageBytes = stats.totalBytes;
   } catch {}
 
   // Fetch team members

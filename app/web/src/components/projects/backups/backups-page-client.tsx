@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   IconCloudUpload,
   IconDatabaseImport,
@@ -11,6 +11,8 @@ import {
   IconTrash,
   IconSearch,
   IconChevronDown,
+  IconChevronLeft,
+  IconChevronRight,
   IconBolt,
   IconCheck,
   IconX,
@@ -20,6 +22,7 @@ import {
   IconTerminal2,
   IconAlertTriangle,
 } from "@tabler/icons-react";
+import type { ProjectBackupStats } from "db";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/shared/stat-card";
@@ -355,16 +358,27 @@ export function BackupsPageClient({
   orgId,
   projectId,
   initialBackups,
+  initialStats,
+  initialTotal = 0,
   canDelete = false,
   userRole = "member",
 }: {
   orgId: string;
   projectId: string;
   initialBackups?: Backup[];
+  initialStats?: ProjectBackupStats;
+  initialTotal?: number;
   canDelete?: boolean;
   userRole?: string;
 }) {
   const [backupsList, setBackupsList] = useState<Backup[]>(initialBackups ?? []);
+  const [stats, setStats] = useState<ProjectBackupStats | undefined>(initialStats);
+  const [totalCount, setTotalCount] = useState<number>(initialTotal || initialBackups?.length || 0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [isLoading, setIsLoading] = useState(false);
+  const isFirstRender = useRef(true);
+
   const [showPanel, setShowPanel] = useState(false);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState<"all" | BackupType>("all");
@@ -373,6 +387,97 @@ export function BackupsPageClient({
   const [activeTelemetryJobId, setActiveTelemetryJobId] = useState<string | null>(null);
   const [snapshotToDelete, setSnapshotToDelete] = useState<Backup | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const fetchPage = async (
+    targetPage: number,
+    targetPageSize: number,
+    s: string,
+    tf: string,
+    sf: string,
+    rf: string
+  ) => {
+    setIsLoading(true);
+    try {
+      const q = new URLSearchParams({
+        projectId,
+        page: String(targetPage),
+        pageSize: String(targetPageSize),
+      });
+      if (s.trim()) q.set("search", s.trim());
+      if (tf !== "all") q.set("type", tf);
+      if (sf !== "all") q.set("status", sf);
+      if (rf !== "all") q.set("retention", rf);
+
+      const res = await fetch(`/api/backups?${q.toString()}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data.success && Array.isArray(data.backups)) {
+        const mapped: Backup[] = data.backups.map((b: any) => {
+          const started = b.startedAt
+            ? new Date(b.startedAt).getTime()
+            : b.createdAt
+            ? new Date(b.createdAt).getTime()
+            : 0;
+          const completed = b.completedAt
+            ? new Date(b.completedAt).getTime()
+            : b.failedAt
+            ? new Date(b.failedAt).getTime()
+            : 0;
+          const durationSec = completed > started ? Math.round((completed - started) / 1000) : 0;
+          const fileSize = typeof b.fileSize === "number" ? b.fileSize : 0;
+          const isPurged = Boolean(b.purgedAt);
+
+          let status: "complete" | "in_progress" | "failed" = "in_progress";
+          if (b.status === "completed") status = "complete";
+          else if (b.status === "failed") status = "failed";
+
+          return {
+            id: b.id,
+            createdAt: b.createdAt ? new Date(b.createdAt).toISOString() : new Date().toISOString(),
+            timestamp: b.createdAt
+              ? new Date(b.createdAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  timeZone: "UTC",
+                }) + " UTC"
+              : "Just now",
+            type: (b.triggerType === "manual" || Boolean(b.id && b.id.toLowerCase().includes("manual"))
+              ? "manual"
+              : "scheduled") as "manual" | "scheduled",
+            status,
+            fileSize,
+            durationSec,
+            isPurged,
+            purgedAt: b.purgedAt ? new Date(b.purgedAt).toISOString() : null,
+            label: b.fileName ?? undefined,
+          };
+        });
+
+        setBackupsList(mapped);
+        if (data.pagination) {
+          setTotalCount(data.pagination.total);
+        }
+        if (data.stats) {
+          setStats(data.stats);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch backups page:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    fetchPage(page, pageSize, search, typeFilter, statusFilter, retentionFilter);
+  }, [page, pageSize, search, typeFilter, statusFilter, retentionFilter]);
 
   const handleDeleteSnapshot = async () => {
     if (!snapshotToDelete) return;
@@ -388,8 +493,8 @@ export function BackupsPageClient({
         toast.error(res.error);
       } else {
         toast.success("Snapshot and backup artifact deleted successfully.");
-        setBackupsList((prev) => prev.filter((b) => b.id !== snapshotToDelete.id));
         setSnapshotToDelete(null);
+        fetchPage(page, pageSize, search, typeFilter, statusFilter, retentionFilter);
       }
     } catch (err) {
       toast.error("Failed to delete snapshot. Please try again.");
@@ -399,48 +504,29 @@ export function BackupsPageClient({
   };
 
   const handleBackupSuccess = (jobId: string, label?: string) => {
-    const newEntry: Backup = {
-      id: jobId,
-      timestamp: "Just now",
-      type: "manual",
-      status: "in_progress",
-      fileSize: 0,
-      durationSec: 0,
-      isPurged: false,
-      label: label ?? "manual-trigger",
-    };
-    setBackupsList((prev) => [newEntry, ...prev]);
     setActiveTelemetryJobId(jobId);
+    fetchPage(page, pageSize, search, typeFilter, statusFilter, retentionFilter);
   };
 
-  const filtered = backupsList.filter((b) => {
-    const matchSearch =
-      b.timestamp.toLowerCase().includes(search.toLowerCase()) ||
-      (b.label ?? "").toLowerCase().includes(search.toLowerCase());
-    const matchType = typeFilter === "all" || b.type === typeFilter;
-    const matchStatus = statusFilter === "all" || b.status === statusFilter;
-    const matchRetention =
-      retentionFilter === "all"
-        ? true
-        : retentionFilter === "active"
-        ? !b.isPurged
-        : Boolean(b.isPurged);
-    return matchSearch && matchType && matchStatus && matchRetention;
-  });
+  // Aggregated metrics from database stats
+  const totalSnapshots = stats ? stats.totalSnapshots : totalCount;
+  const activeCount = stats ? stats.activeCount : backupsList.filter((b) => !b.isPurged).length;
+  const prunedCount = stats ? stats.prunedCount : backupsList.filter((b) => b.isPurged).length;
+  const totalStorageBytes = stats
+    ? stats.totalStorageBytes
+    : backupsList.filter((b) => b.status === "complete" && !b.isPurged).reduce((sum, b) => sum + b.fileSize, 0);
+  const successRate = stats
+    ? stats.successRate
+    : backupsList.length > 0
+    ? Math.round((backupsList.filter((b) => b.status === "complete").length / backupsList.length) * 100)
+    : null;
+  const successCount = stats ? stats.completedCount : backupsList.filter((b) => b.status === "complete").length;
+  const failedCount = stats ? stats.failedCount : backupsList.filter((b) => b.status === "failed").length;
+  const manualCount = stats ? stats.manualCount : backupsList.filter((b) => b.type === "manual").length;
+  const inProgressCount = stats ? stats.inProgressCount : backupsList.filter((b) => b.status === "in_progress").length;
+  const scheduledCount = stats ? stats.scheduledCount : backupsList.filter((b) => b.type === "scheduled").length;
 
-  const scheduledCount = backupsList.filter((b) => b.type === "scheduled").length;
-  const manualCount = backupsList.filter((b) => b.type === "manual").length;
-  const failedCount = backupsList.filter((b) => b.status === "failed").length;
-  const inProgressCount = backupsList.filter((b) => b.status === "in_progress").length;
-  
-  // Storage is only consumed by active (non-purged) snapshots
-  const activeCompletedBackups = backupsList.filter((b) => b.status === "complete" && !b.isPurged);
-  const totalStorageBytes = activeCompletedBackups.reduce((sum, b) => sum + b.fileSize, 0);
-  const activeCount = backupsList.filter((b) => !b.isPurged).length;
-  const prunedCount = backupsList.filter((b) => b.isPurged).length;
-
-  const successCount = backupsList.filter((b) => b.status === "complete").length;
-  const successRate = backupsList.length > 0 ? Math.round((successCount / backupsList.length) * 100) : null;
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const past7Days = Array.from({ length: 7 }, (_, i) => {
     const d = new Date();
@@ -452,7 +538,9 @@ export function BackupsPageClient({
     const month = d.getMonth();
     const dateNum = d.getDate();
 
-    const dayEvents = backupsList
+    const eventSource = stats?.recentEvents && stats.recentEvents.length > 0 ? stats.recentEvents : backupsList;
+
+    const dayEvents = eventSource
       .filter((b) => {
         if (b.createdAt) {
           const bd = new Date(b.createdAt);
@@ -462,7 +550,7 @@ export function BackupsPageClient({
             bd.getDate() === dateNum
           );
         }
-        return b.timestamp.toLowerCase().includes(dateLabel.toLowerCase());
+        return false;
       })
       .map((b) => ({ type: b.type, status: b.status }));
 
@@ -478,8 +566,8 @@ export function BackupsPageClient({
         <div className="space-y-1.5">
           <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">Backups</h1>
           <p className="text-xs sm:text-sm text-muted-foreground font-normal">
-            {backupsList.length > 0
-              ? `${formatBytes(totalStorageBytes)} active vault storage · ${backupsList.length} total snapshot${backupsList.length === 1 ? "" : "s"} (${activeCount} active, ${prunedCount} pruned)`
+            {totalSnapshots > 0
+              ? `${formatBytes(totalStorageBytes)} active vault storage · ${totalSnapshots} total snapshot${totalSnapshots === 1 ? "" : "s"} (${activeCount} active, ${prunedCount} pruned)`
               : "No snapshots created yet"}
           </p>
         </div>
@@ -497,7 +585,7 @@ export function BackupsPageClient({
         <StatCard
           icon={IconDatabaseImport}
           label="Total Snapshots"
-          value={String(backupsList.length)}
+          value={String(totalSnapshots)}
           sub={`${activeCount} active · ${prunedCount} pruned`}
           accent="text-emerald-400"
         />
@@ -505,14 +593,14 @@ export function BackupsPageClient({
           icon={IconCloudUpload}
           label="Total Stored"
           value={formatBytes(totalStorageBytes)}
-          sub={activeCompletedBackups.length > 0 ? "AES-256 Encrypted in Vault" : "Storage Standby"}
+          sub={activeCount > 0 ? "AES-256 Encrypted in Vault" : "Storage Standby"}
           accent="text-blue-400"
         />
         <StatCard
           icon={IconShieldCheck}
           label="Success Rate"
           value={successRate !== null ? `${successRate}%` : "—"}
-          sub={backupsList.length > 0 ? `${successCount} of ${backupsList.length} succeeded` : "No backups recorded"}
+          sub={totalSnapshots > 0 ? `${successCount} of ${totalSnapshots} succeeded` : "No backups recorded"}
           accent="text-emerald-400"
         />
         <StatCard
@@ -556,7 +644,7 @@ export function BackupsPageClient({
 
         {/* Summary strip */}
         <div className="pt-4 border-t border-border/50 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground">
-          <span><span className="text-foreground font-medium">{backupsList.length}</span> total backups</span>
+          <span><span className="text-foreground font-medium">{totalSnapshots}</span> total backups</span>
           <span>·</span>
           <span><span className="text-emerald-400 font-medium">{successCount}</span> succeeded</span>
           <span>·</span>
@@ -587,7 +675,10 @@ export function BackupsPageClient({
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
                 placeholder="Search…"
                 className="h-8 pl-8 pr-3 bg-[#111111] border border-[#1e1e1e] rounded text-[12px] text-white placeholder-[#444444] focus:outline-none focus:border-[#333333] transition-colors w-full sm:w-44"
               />
@@ -603,9 +694,9 @@ export function BackupsPageClient({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-32 bg-[#111111] border-[#222222] text-[12px]">
-                <DropdownMenuItem onClick={() => setTypeFilter("all")}>All types</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTypeFilter("scheduled")}>Scheduled</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setTypeFilter("manual")}>Manual</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setTypeFilter("all"); setPage(1); }}>All types</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setTypeFilter("scheduled"); setPage(1); }}>Scheduled</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setTypeFilter("manual"); setPage(1); }}>Manual</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -618,10 +709,10 @@ export function BackupsPageClient({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-36 bg-[#111111] border-[#222222] text-[12px]">
-                <DropdownMenuItem onClick={() => setStatusFilter("all")}>All statuses</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("complete")}>Complete</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("in_progress")}>In Progress</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter("failed")}>Failed</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setStatusFilter("all"); setPage(1); }}>All statuses</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setStatusFilter("complete"); setPage(1); }}>Complete</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setStatusFilter("in_progress"); setPage(1); }}>In Progress</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setStatusFilter("failed"); setPage(1); }}>Failed</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -635,9 +726,9 @@ export function BackupsPageClient({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-36 bg-[#111111] border-[#222222] text-[12px]">
-                <DropdownMenuItem onClick={() => setRetentionFilter("all")}>All Snapshots</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setRetentionFilter("active")}>Active Only</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setRetentionFilter("pruned")}>Pruned Only</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setRetentionFilter("all"); setPage(1); }}>All Snapshots</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setRetentionFilter("active"); setPage(1); }}>Active Only</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => { setRetentionFilter("pruned"); setPage(1); }}>Pruned Only</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -656,16 +747,21 @@ export function BackupsPageClient({
             </div>
 
             {/* Rows */}
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <div className="px-5 py-12 flex items-center justify-center gap-2 text-[13px] text-[#777777] font-mono">
+                <IconLoader2 className="size-4 animate-spin text-primary" />
+                Loading snapshots…
+              </div>
+            ) : backupsList.length === 0 ? (
               <div className="px-5 py-12 text-center text-[13px] text-[#444444] font-mono">
                 No backups match your filters
               </div>
             ) : (
-              filtered.map((backup, idx) => (
+              backupsList.map((backup, idx) => (
                 <div
                   key={backup.id}
                   className={`group grid grid-cols-[minmax(180px,1fr)_100px_80px_95px_80px_48px] gap-3 px-5 py-3.5 items-center hover:bg-[#121212] transition-colors ${
-                    idx !== filtered.length - 1 ? "border-b border-[#161616]" : ""
+                    idx !== backupsList.length - 1 ? "border-b border-[#161616]" : ""
                   }`}
                 >
                   {/* Timestamp + label + Pruned badge */}
@@ -805,10 +901,100 @@ export function BackupsPageClient({
           </div>
         </div>
 
-        {/* Footer count */}
-        <p className="text-[11px] text-[#444444] font-mono px-1">
-          Showing {filtered.length} of {backupsList.length} snapshot{backupsList.length === 1 ? "" : "s"}
-        </p>
+        {/* Pagination Bar */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 pb-1 px-1">
+          <div className="text-xs text-[#777777] font-mono">
+            {totalCount === 0 ? (
+              "No snapshots found"
+            ) : (
+              <>
+                Showing{" "}
+                <span className="text-white font-medium">
+                  {(page - 1) * pageSize + 1}
+                </span>{" "}
+                to{" "}
+                <span className="text-white font-medium">
+                  {Math.min(page * pageSize, totalCount)}
+                </span>{" "}
+                of <span className="text-white font-medium">{totalCount}</span> snapshot{totalCount === 1 ? "" : "s"}
+              </>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-1.5 mr-1">
+              <span className="text-[11px] text-[#555555] font-mono">Per page:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setPage(1);
+                }}
+                className="bg-[#121212] border border-[#222222] rounded text-xs text-white px-2 py-1 focus:outline-none focus:border-[#444444] cursor-pointer font-mono"
+              >
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page <= 1 || isLoading}
+              className="h-8 px-2.5 text-xs bg-[#121212] border-[#222222] text-white hover:bg-[#1c1c1c] disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              <IconChevronLeft className="size-3.5 mr-1" />
+              Previous
+            </Button>
+
+            {/* Page number buttons */}
+            <div className="flex items-center gap-1">
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => {
+                  if (totalPages <= 5) return true;
+                  if (p === 1 || p === totalPages) return true;
+                  return Math.abs(p - page) <= 1;
+                })
+                .map((p, idx, arr) => {
+                  const prevPageNum = arr[idx - 1];
+                  const showEllipsisBefore = prevPageNum && p - prevPageNum > 1;
+
+                  return (
+                    <div key={p} className="flex items-center gap-1">
+                      {showEllipsisBefore && (
+                        <span className="text-[11px] text-[#555] px-0.5 font-mono">…</span>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setPage(p)}
+                        disabled={isLoading}
+                        className={`size-8 rounded text-xs font-mono transition-colors ${
+                          page === p
+                            ? "bg-primary text-primary-foreground font-semibold"
+                            : "bg-[#121212] border border-[#222222] text-[#888888] hover:text-white hover:bg-[#1c1c1c]"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    </div>
+                  );
+                })}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={page >= totalPages || isLoading}
+              className="h-8 px-2.5 text-xs bg-[#121212] border-[#222222] text-white hover:bg-[#1c1c1c] disabled:opacity-30 disabled:cursor-not-allowed"
+            >
+              Next
+              <IconChevronRight className="size-3.5 ml-1" />
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Trigger backup panel */}

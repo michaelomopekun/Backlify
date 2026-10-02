@@ -40,10 +40,8 @@ export async function GET(
 
     let totalStorageBytes = 0;
     try {
-      const allBackups = await BackupRepository.listBackups({});
-      const orgProjectIds = new Set(orgProjects.map((p) => p.id));
-      const orgBackups = allBackups.filter((b) => b.projectId && orgProjectIds.has(b.projectId));
-      totalStorageBytes = orgBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+      const stats = await BackupRepository.getActiveStorageStatsForOrg(id);
+      totalStorageBytes = stats.totalBytes;
     } catch {}
 
     return NextResponse.json({
