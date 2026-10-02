@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, pgEnum } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, pgEnum, index } from 'drizzle-orm/pg-core';
 
 import { backupFiles } from './backup-file';
 
@@ -30,4 +30,6 @@ export const restoreJobs = pgTable('restore_jobs', {
   
   createdAt: timestamp('created_at').notNull().defaultNow(),
 
-});
+}, (table) => ({
+  fileCreatedIdx: index('idx_restore_jobs_file_created').on(table.backupFileId, table.createdAt),
+}));

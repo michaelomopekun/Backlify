@@ -20,8 +20,12 @@ export default async function SchedulesPage({
   let isPro = false;
 
   try {
-    project = await ProjectRepository.getProjectById(projectId);
-    rawSchedules = await ScheduleRepository.getSchedulesByProjectId(projectId);
+    const [fetchedProject, fetchedSchedules] = await Promise.all([
+      ProjectRepository.getProjectById(projectId),
+      ScheduleRepository.getSchedulesByProjectId(projectId),
+    ]);
+    project = fetchedProject;
+    rawSchedules = fetchedSchedules;
     if (project?.orgId) {
       const org = await OrganizationRepository.getOrganizationById(project.orgId);
       isPro = isOrganizationPro(org);

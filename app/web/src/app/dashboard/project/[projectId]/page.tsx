@@ -19,9 +19,11 @@ export default async function ProjectOverviewPage({ params }: Props) {
   try {
     project = await ProjectRepository.getProjectById(projectId);
     if (project) {
-      schedules = await ScheduleRepository.getSchedulesByProjectId(projectId);
-      backupJobs = await BackupRepository.listBackups({ projectId });
-      restoreJobs = await RestoreRepository.listRestoreJobsByProjectId(projectId);
+      [schedules, backupJobs, restoreJobs] = await Promise.all([
+        ScheduleRepository.getSchedulesByProjectId(projectId),
+        BackupRepository.listBackups({ projectId }),
+        RestoreRepository.listRestoreJobsByProjectId(projectId),
+      ]);
     }
   } catch (err) {
     console.error("Failed to load project overview data:", err);

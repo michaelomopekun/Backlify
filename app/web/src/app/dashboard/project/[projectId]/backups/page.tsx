@@ -18,8 +18,12 @@ export default async function BackupsPage({
   let rawBackups: any[] = [];
 
   try {
-    project = await ProjectRepository.getProjectById(projectId);
-    rawBackups = await BackupRepository.listBackups({ projectId });
+    const [fetchedProject, fetchedBackups] = await Promise.all([
+      ProjectRepository.getProjectById(projectId),
+      BackupRepository.listBackups({ projectId }),
+    ]);
+    project = fetchedProject;
+    rawBackups = fetchedBackups;
   } catch (err) {
     console.error("Failed to load project backups:", err);
   }

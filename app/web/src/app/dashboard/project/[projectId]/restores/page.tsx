@@ -23,9 +23,14 @@ export default async function RestoresPage({
   let monthlyDrillsUsed = 0;
 
   try {
-    project = await ProjectRepository.getProjectById(projectId);
-    rawBackups = await BackupRepository.listBackups({ projectId });
-    rawRestores = await RestoreRepository.listRestoreJobsByProjectId(projectId);
+    const [fetchedProject, fetchedBackups, fetchedRestores] = await Promise.all([
+      ProjectRepository.getProjectById(projectId),
+      BackupRepository.listBackups({ projectId }),
+      RestoreRepository.listRestoreJobsByProjectId(projectId),
+    ]);
+    project = fetchedProject;
+    rawBackups = fetchedBackups;
+    rawRestores = fetchedRestores;
 
     if (project?.orgId) {
       const org = await OrganizationRepository.getOrganizationById(project.orgId);
