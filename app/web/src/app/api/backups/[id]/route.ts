@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { BackupFileRepository } from "db";
+import { BackupFileRepository, BackupRepository } from "db";
 import { maskDatabaseUrl } from "shared/config/encryption";
+import { StorageService } from "shared";
 import { authorizeBackupJob } from "@/lib/auth-guard";
 
 export const dynamic = "force-dynamic";
@@ -57,6 +58,49 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
         success: false,
         message: "Internal server error",
         details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { id } = await params;
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Job ID is required" }, { status: 400 });
+    }
+
+    // Authorize: caller must have at least 'admin' role (owner or admin)
+    const auth = await authorizeBackupJob(id, "admin");
+    if (!auth.authorized) {
+      return auth.response;
+    }
+
+    // Try deleting cloud storage file if exists
+    try {
+      const file = await BackupFileRepository.getBackupFileByJobId(id);
+      if (file && file.filePath) {
+        const storageService = new StorageService();
+        await storageService.deleteFile(file.filePath);
+      }
+    } catch (storageErr) {
+      console.warn("Storage deletion skipped or failed for snapshot:", id, storageErr);
+    }
+
+    // Delete backup job (cascades to backupFiles & restoreJobs in database)
+    await BackupRepository.deleteBackupJob(id);
+
+    return NextResponse.json({
+      success: true,
+      message: "Snapshot deleted successfully",
+    });
+  } catch (error) {
+    console.error("Failed to delete snapshot:", error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : "Internal server error",
       },
       { status: 500 }
     );

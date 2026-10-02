@@ -18,7 +18,9 @@ import {
   IconDotsVertical,
   IconFilter,
   IconTerminal2,
+  IconAlertTriangle,
 } from "@tabler/icons-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/shared/stat-card";
 import { JobTelemetryDrawer } from "@/components/shared/job-telemetry-drawer";
@@ -29,6 +31,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import { formatBytes } from "@/lib/format";
 
@@ -205,7 +215,7 @@ function ActivityBar({
    Trigger Backup Side Panel
 ───────────────────────────────────────────────────────────────────*/
 
-import { triggerBackup } from "@/app/actions/backup.actions";
+import { triggerBackup, deleteSnapshot } from "@/app/actions/backup.actions";
 
 function TriggerPanel({
   projectId,
@@ -345,10 +355,14 @@ export function BackupsPageClient({
   orgId,
   projectId,
   initialBackups,
+  canDelete = false,
+  userRole = "member",
 }: {
   orgId: string;
   projectId: string;
   initialBackups?: Backup[];
+  canDelete?: boolean;
+  userRole?: string;
 }) {
   const [backupsList, setBackupsList] = useState<Backup[]>(initialBackups ?? []);
   const [showPanel, setShowPanel] = useState(false);
@@ -357,6 +371,32 @@ export function BackupsPageClient({
   const [statusFilter, setStatusFilter] = useState<"all" | BackupStatus>("all");
   const [retentionFilter, setRetentionFilter] = useState<"all" | "active" | "pruned">("all");
   const [activeTelemetryJobId, setActiveTelemetryJobId] = useState<string | null>(null);
+  const [snapshotToDelete, setSnapshotToDelete] = useState<Backup | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteSnapshot = async () => {
+    if (!snapshotToDelete) return;
+    if (!canDelete) {
+      toast.error("Permission denied: Only organization admins and owners can delete snapshots.");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const res = await deleteSnapshot(snapshotToDelete.id);
+      if (res?.error) {
+        toast.error(res.error);
+      } else {
+        toast.success("Snapshot and backup artifact deleted successfully.");
+        setBackupsList((prev) => prev.filter((b) => b.id !== snapshotToDelete.id));
+        setSnapshotToDelete(null);
+      }
+    } catch (err) {
+      toast.error("Failed to delete snapshot. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   const handleBackupSuccess = (jobId: string, label?: string) => {
     const newEntry: Backup = {
@@ -732,8 +772,29 @@ export function BackupsPageClient({
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator className="bg-[#1e1e1e]" />
-                        <DropdownMenuItem className="gap-2 cursor-pointer text-red-400 focus:text-red-400">
-                          <IconTrash className="size-3.5" /> Delete snapshot
+                        <DropdownMenuItem
+                          onClick={() => {
+                            if (!canDelete) {
+                              toast.error(
+                                "Permission denied: Only organization admins and owners can delete snapshots."
+                              );
+                              return;
+                            }
+                            setSnapshotToDelete(backup);
+                          }}
+                          className={`gap-2 cursor-pointer ${
+                            canDelete
+                              ? "text-red-400 focus:text-red-400 focus:bg-red-500/10"
+                              : "text-muted-foreground/60 cursor-not-allowed"
+                          }`}
+                        >
+                          <IconTrash className="size-3.5" />
+                          <span>Delete snapshot</span>
+                          {!canDelete && (
+                            <span className="ml-auto text-[10px] text-muted-foreground font-mono">
+                              (Admin only)
+                            </span>
+                          )}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -767,6 +828,84 @@ export function BackupsPageClient({
         onClose={() => setActiveTelemetryJobId(null)}
         title="Backup Worker Live Console"
       />
+
+      {/* Delete Snapshot Confirmation Modal */}
+      <Dialog
+        open={Boolean(snapshotToDelete)}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) {
+            setSnapshotToDelete(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md bg-[#121212] border-[#222222] text-foreground">
+          <DialogHeader className="gap-2">
+            <div className="size-10 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400">
+              <IconAlertTriangle className="size-5" />
+            </div>
+            <DialogTitle className="text-lg font-semibold tracking-tight text-white">
+              Delete Snapshot Permanently?
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
+              This will permanently delete this database backup snapshot from Backlify and purge the encrypted dump file from cloud storage. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+
+          {snapshotToDelete && (
+            <div className="rounded-lg bg-[#181818] border border-[#262626] p-3 text-xs space-y-2">
+              <div className="flex justify-between items-center text-muted-foreground">
+                <span>Snapshot ID:</span>
+                <span className="font-mono text-white text-[11px] select-all">{snapshotToDelete.id}</span>
+              </div>
+              <div className="flex justify-between items-center text-muted-foreground">
+                <span>Created:</span>
+                <span className="text-white font-medium">{snapshotToDelete.timestamp}</span>
+              </div>
+              <div className="flex justify-between items-center text-muted-foreground">
+                <span>Size:</span>
+                <span className="text-white font-medium">{formatBytes(snapshotToDelete.fileSize)}</span>
+              </div>
+              {snapshotToDelete.label && (
+                <div className="flex justify-between items-center text-muted-foreground">
+                  <span>File / Label:</span>
+                  <span className="font-mono text-emerald-400 text-[11px] truncate max-w-[200px]">{snapshotToDelete.label}</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter className="gap-2 pt-2 border-t border-[#1e1e1e] sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isDeleting}
+              onClick={() => setSnapshotToDelete(null)}
+              className="border-[#2a2a2a] bg-[#1a1a1a] hover:bg-[#252525] text-white text-xs h-9"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isDeleting}
+              onClick={handleDeleteSnapshot}
+              className="bg-red-600 hover:bg-red-700 text-white text-xs font-semibold h-9 px-4 gap-2"
+            >
+              {isDeleting ? (
+                <>
+                  <IconLoader2 className="size-3.5 animate-spin" />
+                  <span>Deleting...</span>
+                </>
+              ) : (
+                <>
+                  <IconTrash className="size-3.5" />
+                  <span>Permanently Delete</span>
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

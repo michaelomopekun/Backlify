@@ -1,5 +1,7 @@
 import { BackupsPageClient } from "@/components/projects/backups/backups-page-client";
 import { ProjectRepository, BackupRepository } from "db";
+import { getCurrentUser } from "@/lib/current-user";
+import { getUserOrgRole, hasMinRole, OrgRole } from "@/lib/auth-guard";
 import { redirect } from "next/navigation";
 
 export const metadata = {
@@ -16,14 +18,23 @@ export default async function BackupsPage({
 
   let project: { id: string; orgId?: string | null; databaseUrl?: string } | null = null;
   let rawBackups: any[] = [];
+  let userRole: OrgRole = "member";
 
   try {
-    const [fetchedProject, fetchedBackups] = await Promise.all([
+    const [fetchedProject, fetchedBackups, user] = await Promise.all([
       ProjectRepository.getProjectById(projectId),
       BackupRepository.listBackups({ projectId }),
+      getCurrentUser(),
     ]);
     project = fetchedProject;
     rawBackups = fetchedBackups;
+
+    if (user && project?.orgId) {
+      const roleInfo = await getUserOrgRole(user.id, user.email, project.orgId);
+      if (roleInfo) {
+        userRole = roleInfo.role;
+      }
+    }
   } catch (err) {
     console.error("Failed to load project backups:", err);
   }
@@ -33,6 +44,7 @@ export default async function BackupsPage({
   }
 
   const orgId = project.orgId ?? "default-org";
+  const canDelete = hasMinRole(userRole, "admin");
 
   const initialBackups = rawBackups.map((b) => {
     const started = b.startedAt
@@ -83,6 +95,8 @@ export default async function BackupsPage({
       orgId={orgId}
       projectId={projectId}
       initialBackups={initialBackups}
+      canDelete={canDelete}
+      userRole={userRole}
     />
   );
 }

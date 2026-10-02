@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 
-import { BackupRepository, OrganizationRepository, ProjectRepository, ScheduleRepository } from "db";
+import { BackupRepository, OrganizationRepository, ProjectRepository, ScheduleRepository, BackupFileRepository } from "db";
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 import type { BackupJobStatusType } from "shared/constants/backupJobStatus";
-import { getOrganizationMaxProjects, isOrganizationPro, isCronAllowedForPlan } from "shared";
+import { getOrganizationMaxProjects, isOrganizationPro, isCronAllowedForPlan, StorageService } from "shared";
 import { validateSafeDatabaseUrl } from "shared/config/security";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserOrgRole, hasMinRole } from "@/lib/auth-guard";
@@ -159,7 +159,8 @@ export async function createProject(formData: FormData) {
 
     const projectId = `proj-${uuidv4().substring(0, 8)}`;
     await ProjectRepository.createProject({
-      id: projectId,
+      id: projectId
+,
       orgId,
       name,
       databaseUrl,
@@ -168,7 +169,7 @@ export async function createProject(formData: FormData) {
     if (cronExpression) {
       if (!isCronAllowedForPlan(cronExpression, existingOrg)) {
         return {
-          error: "Sub-daily / hourly backup frequencies require a Pro plan subscription ($3 or ₦2,000/mo). Free plans support daily backups.",
+          error: "Sub-daily / hourly backup frequencies require a Pro plan subscription. Free plans support daily backups.",
         };
       }
 
@@ -238,3 +239,54 @@ export async function updateRetention(projectId: string, retentionCount: number)
     return { error: "Could not save the retention setting." };
   }
 }
+
+/**
+ * Permanently delete a backup snapshot artifact and its database record.
+ * RBAC: Restrict to Organization Owners and Admins only.
+ */
+export async function deleteSnapshot(backupJobId: string) {
+  const user = await getCurrentUser();
+  if (!user) return { error: "Authentication required to delete snapshots." };
+
+  if (!backupJobId) return { error: "Snapshot ID is required." };
+
+  try {
+    const job = await BackupRepository.getJobById(backupJobId);
+    if (!job) return { error: "Snapshot not found or already deleted." };
+
+    const project = await ProjectRepository.getProjectById(job.projectId);
+    if (!project) return { error: "Project associated with snapshot not found." };
+
+    // RBAC: caller must be admin or owner of the organization
+    const membership = await getUserOrgRole(user.id, user.email, project.orgId);
+    if (!membership || !hasMinRole(membership.role, "admin")) {
+      return { error: "Forbidden: Only organization admins and owners can delete snapshots." };
+    }
+
+    // Attempt cloud storage file deletion if file exists
+    try {
+      const file = await BackupFileRepository.getBackupFileByJobId(backupJobId);
+      if (file && file.filePath) {
+        const storageService = new StorageService();
+        await storageService.deleteFile(file.filePath);
+      }
+    } catch (storageErr) {
+      console.warn("Storage deletion skipped or failed for snapshot:", backupJobId, storageErr);
+    }
+
+    // Delete backup job record (cascades to backupFiles & restoreJobs in database)
+    await BackupRepository.deleteBackupJob(backupJobId);
+
+    revalidatePath(`/dashboard/project/${job.projectId}/backups`);
+    revalidatePath(`/dashboard/project/${job.projectId}`);
+    if (project.orgId) {
+      revalidatePath(`/dashboard/org/${project.orgId}`);
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to delete snapshot:", error);
+    return { error: "Could not delete snapshot. Try again in a moment." };
+  }
+}
+

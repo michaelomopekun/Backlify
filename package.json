@@ -17,6 +17,7 @@
     "lint": "npm run lint --workspaces --if-present",
     "drizzle-generate": "npm run drizzle-generate --workspace=db",
     "drizzle-push": "npm run drizzle-push --workspace=db",
-    "drizzle-studio": "npm run drizzle-studio --workspace=db"
+    "drizzle-studio": "npm run drizzle-studio --workspace=db",
+    "benchmark": "npx tsx -r dotenv/config benchmark/run.ts"
   }
 }
