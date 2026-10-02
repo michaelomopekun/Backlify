@@ -10,6 +10,8 @@
  * we never compute fire times here.
  */
 
+import parser from "cron-parser";
+
 const DAY_NAMES = [
   "Sunday",
   "Monday",
@@ -116,3 +118,90 @@ export function cronToText(expression: string | null | undefined): string {
 export function isRecognisedCron(expression: string | null | undefined): boolean {
   return describeCron(expression) !== null;
 }
+
+export interface NextScheduleInfo {
+  nextRunAt: string; // ISO timestamp
+  countdown: string; // e.g. "In 26m", "In 2h 15m", "In 1d 4h"
+  label: string; // e.g. "Hourly on the hour (UTC)"
+  cronExpression: string;
+  timezone: string;
+}
+
+/**
+ * Calculates the earliest next backup trigger time across active schedules.
+ */
+export function computeNextTrigger(
+  schedules: Array<{
+    cronExpression: string;
+    timezone?: string | null;
+    isActive?: boolean | null;
+  }>
+): NextScheduleInfo | null {
+  const active = schedules.filter((s) => s.isActive !== false);
+  if (!active.length) return null;
+
+  let earliestTime = Infinity;
+  let bestSchedule: {
+    cronExpression: string;
+    timezone: string;
+    nextDate: Date;
+  } | null = null;
+
+  const now = new Date();
+
+  for (const s of active) {
+    if (!s.cronExpression) continue;
+    try {
+      const tz = s.timezone || "UTC";
+      const interval = parser.parseExpression(s.cronExpression, {
+        currentDate: now,
+        tz,
+      });
+      const nextDate = interval.next().toDate();
+      const time = nextDate.getTime();
+      if (time < earliestTime) {
+        earliestTime = time;
+        bestSchedule = {
+          cronExpression: s.cronExpression,
+          timezone: tz,
+          nextDate,
+        };
+      }
+    } catch {
+      // Ignore unparseable cron expressions
+    }
+  }
+
+  if (!bestSchedule) return null;
+
+  const countdown = formatCountdownString(bestSchedule.nextDate.getTime() - now.getTime());
+  const described = describeCron(bestSchedule.cronExpression);
+  const cadenceText = described
+    ? described.detail
+      ? `${described.cadence} ${described.detail}`
+      : described.cadence
+    : bestSchedule.cronExpression;
+
+  return {
+    nextRunAt: bestSchedule.nextDate.toISOString(),
+    countdown,
+    label: `${cadenceText} (${bestSchedule.timezone})`,
+    cronExpression: bestSchedule.cronExpression,
+    timezone: bestSchedule.timezone,
+  };
+}
+
+export function formatCountdownString(diffMs: number): string {
+  if (diffMs <= 0) return "Due now";
+  if (diffMs < 60000) return "In < 1m";
+
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+
+  if (days > 0) return `In ${days}d ${hours % 24}h`;
+  if (hours > 0) return `In ${hours}h ${minutes}m`;
+  return `In ${minutes}m`;
+}
+

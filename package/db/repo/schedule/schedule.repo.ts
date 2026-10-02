@@ -1,4 +1,5 @@
-import { db, eq, inArray } from "../../index";
+import { db } from "../../client";
+import { eq, inArray } from "drizzle-orm";
 
 import { backupSchedules } from "../../schema/backup-schedule";
 

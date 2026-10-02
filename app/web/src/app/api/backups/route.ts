@@ -4,10 +4,11 @@ import { v4 as uuidv4 } from "uuid";
 import { backupQueue } from "@/lib/queues";
 import { BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 import { BackupJobStatusType } from "shared/constants/backupJobStatus";
-import { BackupRepository, ProjectRepository, OrganizationRepository, ACTIVE_BACKUP_STATUSES } from "db";
+import { BackupRepository, ProjectRepository, OrganizationRepository, ScheduleRepository, ACTIVE_BACKUP_STATUSES } from "db";
 import { BACKUP_JOB_STATUS_VALUES } from "shared/constants/backupJobStatus";
 import { requireAuth, authorizeProject, getUserAuthorizedProjectIds } from "@/lib/auth-guard";
 import { checkRateLimit, rateLimitResponse, attachRateLimitHeaders } from "@/lib/rate-limit";
+import { computeNextTrigger } from "@/lib/cron";
 
 export const dynamic = "force-dynamic";
 
@@ -214,8 +215,10 @@ export async function GET(req: NextRequest) {
         search,
       }),
       projectId ? BackupRepository.getProjectBackupStats(projectId) : null,
+      projectId ? ScheduleRepository.getSchedulesByProjectId(projectId) : null,
     ]);
 
+    const nextSchedule = schedules ? computeNextTrigger(schedules) : null;
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
     return NextResponse.json({
@@ -228,6 +231,7 @@ export async function GET(req: NextRequest) {
         totalPages,
       },
       stats,
+      nextSchedule,
     });
   } catch (error) {
     console.error("Failed to list backup jobs:", error);

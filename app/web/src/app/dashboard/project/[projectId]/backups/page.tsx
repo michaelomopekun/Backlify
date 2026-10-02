@@ -1,7 +1,8 @@
 import { BackupsPageClient } from "@/components/projects/backups/backups-page-client";
-import { ProjectRepository, BackupRepository } from "db";
+import { ProjectRepository, BackupRepository, ScheduleRepository } from "db";
 import { getCurrentUser } from "@/lib/current-user";
 import { getUserOrgRole, hasMinRole, OrgRole } from "@/lib/auth-guard";
+import { computeNextTrigger, NextScheduleInfo } from "@/lib/cron";
 import { redirect } from "next/navigation";
 
 export const metadata = {
@@ -21,19 +22,22 @@ export default async function BackupsPage({
   let userRole: OrgRole = "member";
   let projectStats: any = null;
   let totalCount = 0;
+  let nextSchedule: NextScheduleInfo | null = null;
 
   try {
-    const [fetchedProject, fetchedStats, fetchedBackups, fetchedTotal, user] = await Promise.all([
+    const [fetchedProject, fetchedStats, fetchedBackups, fetchedTotal, fetchedSchedules, user] = await Promise.all([
       ProjectRepository.getProjectById(projectId),
       BackupRepository.getProjectBackupStats(projectId),
       BackupRepository.listBackups({ projectId, limit: 10, offset: 0 }),
       BackupRepository.countBackups({ projectId }),
+      ScheduleRepository.getSchedulesByProjectId(projectId),
       getCurrentUser(),
     ]);
     project = fetchedProject;
     projectStats = fetchedStats;
     rawBackups = fetchedBackups;
     totalCount = fetchedTotal;
+    nextSchedule = fetchedSchedules ? computeNextTrigger(fetchedSchedules) : null;
 
     if (user && project?.orgId) {
       const roleInfo = await getUserOrgRole(user.id, user.email, project.orgId);
@@ -103,6 +107,7 @@ export default async function BackupsPage({
       initialBackups={initialBackups}
       initialStats={projectStats}
       initialTotal={totalCount}
+      initialNextSchedule={nextSchedule}
       canDelete={canDelete}
       userRole={userRole}
     />

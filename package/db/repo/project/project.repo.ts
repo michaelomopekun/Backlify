@@ -1,4 +1,5 @@
-import { db, eq, inArray } from "../../index";
+import { db } from "../../client";
+import { eq, inArray } from "drizzle-orm";
 import { projects } from "../../schema/project";
 import { logger } from "shared/config/logger";
 import { encryptDatabaseUrl, decryptDatabaseUrl, maskDatabaseUrl } from "shared/config/encryption";

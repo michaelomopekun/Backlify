@@ -1,4 +1,5 @@
-import { db, eq, and } from "../../index";
+import { db } from "../../client";
+import { eq, and } from "drizzle-orm";
 import { organizations, organizationMembers } from "../../schema/organization";
 import { projects } from "../../schema/project";
 import { logger } from "shared/config/logger";

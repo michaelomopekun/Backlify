@@ -2,7 +2,8 @@ import { backupFiles } from "../../schema/backup-file";
 
 import { backupJobs } from "../../schema/backup-job";
 
-import { db, eq } from "../../index";
+import { db } from "../../client";
+import { eq } from "drizzle-orm";
 
 import { logger } from "shared/config/logger";
 

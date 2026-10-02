@@ -43,7 +43,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { formatBytes } from "@/lib/format";
+import { formatBytes, formatTimeUntil } from "@/lib/format";
+import type { NextScheduleInfo } from "@/lib/cron";
 
 /* ─────────────────────────────────────────────────────────────────
    Types & Mock Data
@@ -360,6 +361,7 @@ export function BackupsPageClient({
   initialBackups,
   initialStats,
   initialTotal = 0,
+  initialNextSchedule = null,
   canDelete = false,
   userRole = "member",
 }: {
@@ -368,16 +370,34 @@ export function BackupsPageClient({
   initialBackups?: Backup[];
   initialStats?: ProjectBackupStats;
   initialTotal?: number;
+  initialNextSchedule?: NextScheduleInfo | null;
   canDelete?: boolean;
   userRole?: string;
 }) {
   const [backupsList, setBackupsList] = useState<Backup[]>(initialBackups ?? []);
   const [stats, setStats] = useState<ProjectBackupStats | undefined>(initialStats);
+  const [nextSchedule, setNextSchedule] = useState<NextScheduleInfo | null>(initialNextSchedule ?? null);
   const [totalCount, setTotalCount] = useState<number>(initialTotal || initialBackups?.length || 0);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isLoading, setIsLoading] = useState(false);
-  const isFirstRender = useRef(true);
+  const [liveCountdown, setLiveCountdown] = useState<string | null>(initialNextSchedule?.countdown ?? null);
+
+  useEffect(() => {
+    if (!nextSchedule?.nextRunAt) {
+      setLiveCountdown(null);
+      return;
+    }
+
+    const updateCountdown = () => {
+      const until = formatTimeUntil(nextSchedule.nextRunAt);
+      setLiveCountdown(until ? `In ${until}` : "Due now");
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 15000);
+    return () => clearInterval(interval);
+  }, [nextSchedule?.nextRunAt]);
 
   const [showPanel, setShowPanel] = useState(false);
   const [search, setSearch] = useState("");
@@ -463,6 +483,9 @@ export function BackupsPageClient({
         if (data.stats) {
           setStats(data.stats);
         }
+        if (data.nextSchedule !== undefined) {
+          setNextSchedule(data.nextSchedule);
+        }
       }
     } catch (err) {
       console.error("Failed to fetch backups page:", err);
@@ -471,11 +494,20 @@ export function BackupsPageClient({
     }
   };
 
+  const prevParamsRef = useRef({ page, pageSize, search, typeFilter, statusFilter, retentionFilter });
+
   useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
+    const prev = prevParamsRef.current;
+    const hasChanged =
+      prev.page !== page ||
+      prev.pageSize !== pageSize ||
+      prev.search !== search ||
+      prev.typeFilter !== typeFilter ||
+      prev.statusFilter !== statusFilter ||
+      prev.retentionFilter !== retentionFilter;
+
+    if (!hasChanged) return;
+    prevParamsRef.current = { page, pageSize, search, typeFilter, statusFilter, retentionFilter };
     fetchPage(page, pageSize, search, typeFilter, statusFilter, retentionFilter);
   }, [page, pageSize, search, typeFilter, statusFilter, retentionFilter]);
 
@@ -509,9 +541,9 @@ export function BackupsPageClient({
   };
 
   // Aggregated metrics from database stats
-  const totalSnapshots = stats ? stats.totalSnapshots : totalCount;
   const activeCount = stats ? stats.activeCount : backupsList.filter((b) => !b.isPurged).length;
   const prunedCount = stats ? stats.prunedCount : backupsList.filter((b) => b.isPurged).length;
+  const totalSnapshots = activeCount + prunedCount;
   const totalStorageBytes = stats
     ? stats.totalStorageBytes
     : backupsList.filter((b) => b.status === "complete" && !b.isPurged).reduce((sum, b) => sum + b.fileSize, 0);
@@ -606,9 +638,9 @@ export function BackupsPageClient({
         <StatCard
           icon={IconClock}
           label="Next Scheduled"
-          value="—"
-          sub="Check schedules page"
-          accent="text-muted-foreground"
+          value={nextSchedule ? (liveCountdown || nextSchedule.countdown) : "—"}
+          sub={nextSchedule ? nextSchedule.label : "No active schedule"}
+          accent={nextSchedule ? "text-amber-400" : "text-muted-foreground"}
         />
       </div>
 

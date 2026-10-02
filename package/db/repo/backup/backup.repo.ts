@@ -1,6 +1,7 @@
 import { BackupJobStatusType, BACKUP_JOB_STATUS } from "shared/constants/backupJobStatus";
 
-import { db, and, eq, desc, lt, or, inArray, isNull, isNotNull, ilike, sql } from "../../index";
+import { db } from "../../client";
+import { and, eq, desc, lt, or, inArray, isNull, isNotNull, ilike, sql, gte } from "drizzle-orm";
 
 import { backupJobs } from "../../schema/backup-job";
 
@@ -645,7 +646,7 @@ export class BackupRepository {
                     manualCount: sql<number>`count(case when ${backupJobs.triggerType} = 'manual' then 1 end)`.mapWith(Number),
                     activeCount: sql<number>`count(case when ${backupJobs.status} = 'completed' and ${backupFiles.purgedAt} is null and ${backupFiles.id} is not null then 1 end)`.mapWith(Number),
                     prunedCount: sql<number>`count(case when ${backupJobs.status} = 'completed' and ${backupFiles.purgedAt} is not null then 1 end)`.mapWith(Number),
-                    totalStorageBytes: sql<number>`coalesce(sum(case when ${backupJobs.status} = 'completed' and ${backupFiles.purgedAt} is null then ${backupFiles.fileSize} else 0 end), 0)`.mapWith(Number),
+                    totalStorageBytes: sql<number>`coalesce(sum(case when ${backupJobs.status} = 'completed' and ${backupFiles.purgedAt} is null and ${backupFiles.id} is not null then ${backupFiles.fileSize} else 0 end), 0)`.mapWith(Number),
                 })
                 .from(backupJobs)
                 .leftJoin(backupFiles, eq(backupFiles.backupJobId, backupJobs.id))
@@ -678,7 +679,7 @@ export class BackupRepository {
                 .where(
                     and(
                         eq(backupJobs.projectId, projectId),
-                        sql`${backupJobs.createdAt} >= ${fourteenDaysAgo}`
+                        gte(backupJobs.createdAt, fourteenDaysAgo)
                     )
                 )
                 .orderBy(desc(backupJobs.createdAt));
@@ -696,7 +697,7 @@ export class BackupRepository {
             });
 
             return {
-                totalSnapshots: stat.totalSnapshots,
+                totalSnapshots: stat.activeCount + stat.prunedCount,
                 activeCount: stat.activeCount,
                 prunedCount: stat.prunedCount,
                 completedCount: stat.completedCount,

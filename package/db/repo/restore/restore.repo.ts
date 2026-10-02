@@ -1,6 +1,7 @@
 import { RestoreJobStatusType, RESTORE_JOB_STATUS } from "shared/constants/restoreJobStatus";
 
-import { db, and, eq, desc, gte, sql } from "../../index";
+import { db } from "../../client";
+import { and, eq, desc, gte, sql } from "drizzle-orm";
 
 import { restoreJobs } from "../../schema/restore-job";
 import { backupFiles } from "../../schema/backup-file";
