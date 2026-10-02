@@ -195,7 +195,7 @@ export async function GET(req: NextRequest) {
       statuses = requested as any;
     }
 
-    const [backups, total, stats] = await Promise.all([
+    const [backups, total, stats, schedules] = await Promise.all([
       BackupRepository.listBackups({
         projectId,
         projectIds: projectId ? undefined : authorizedProjectIds,
