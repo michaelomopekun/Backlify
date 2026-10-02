@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, varchar, integer, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, varchar, integer, boolean, index } from 'drizzle-orm/pg-core';
 
 import { organizations } from './organization';
 
@@ -44,5 +44,7 @@ export const projects = pgTable('projects', {
 
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 
-});
+}, (table) => ({
+  orgIdIdx: index('idx_projects_org_id').on(table.orgId),
+}));
 

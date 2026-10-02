@@ -409,6 +409,43 @@ export class BackupRepository {
         }
     }
 
+    /**
+     * Directly aggregates active (completed, unpurged) backup snapshots and total storage bytes
+     * for an organization via a single indexed SQL join across projects, backup_jobs, and backup_files.
+     */
+    static async getActiveStorageStatsForOrg(orgId: string): Promise<{ count: number; totalBytes: number }> {
+        if (!orgId) {
+            return { count: 0, totalBytes: 0 };
+        }
+
+        try {
+            const result = await db
+                .select({
+                    count: sql<number>`count(${backupFiles.id})`.mapWith(Number),
+                    totalBytes: sql<number>`coalesce(sum(${backupFiles.fileSize}), 0)`.mapWith(Number),
+                })
+                .from(projects)
+                .innerJoin(backupJobs, eq(backupJobs.projectId, projects.id))
+                .innerJoin(backupFiles, eq(backupFiles.backupJobId, backupJobs.id))
+                .where(
+                    and(
+                        eq(projects.orgId, orgId),
+                        eq(backupJobs.status, BACKUP_JOB_STATUS.COMPLETED as any),
+                        isNull(backupFiles.purgedAt)
+                    )
+                );
+
+            return {
+                count: result[0]?.count || 0,
+                totalBytes: result[0]?.totalBytes || 0,
+            };
+        } catch (error) {
+            logger.error({ orgId, error }, "Failed to calculate active org storage stats");
+            return { count: 0, totalBytes: 0 };
+        }
+    }
+
+
 
 
     /**

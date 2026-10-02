@@ -57,9 +57,7 @@ export async function triggerBackup(projectId: string) {
     let currentStorageBytes = 0;
     try {
       if (project.orgId) {
-        const orgProjects = (await ProjectRepository.getAllProjects()).filter((p) => p.orgId === project.orgId);
-        const orgProjectIds = orgProjects.map((p) => p.id);
-        const stats = await BackupRepository.getActiveStorageStatsForProjects(orgProjectIds);
+        const stats = await BackupRepository.getActiveStorageStatsForOrg(project.orgId);
         currentStorageBytes = stats.totalBytes;
       } else {
         const stats = await BackupRepository.getActiveStorageStatsForProjects([projectId]);

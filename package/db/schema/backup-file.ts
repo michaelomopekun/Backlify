@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, integer, varchar, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, varchar, boolean, index } from 'drizzle-orm/pg-core';
 
 import { backupJobs } from './backup-job';
 
@@ -32,4 +32,6 @@ export const backupFiles = pgTable('backup_files', {
 
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 
-});
+}, (table) => ({
+  backupJobIdIdx: index('idx_backup_files_backup_job_id').on(table.backupJobId),
+}));

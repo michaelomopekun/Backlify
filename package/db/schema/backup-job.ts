@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, pgEnum, varchar } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, pgEnum, varchar, index } from 'drizzle-orm/pg-core';
 
 import { BACKUP_JOB_STATUS_VALUES } from 'shared/constants/backupJobStatus';
 
@@ -34,4 +34,7 @@ export const backupJobs = pgTable('backup_jobs', {
 
   updatedAt: timestamp('updated_at').notNull().defaultNow(),
 
-});
+}, (table) => ({
+  projectStatusIdx: index('idx_backup_jobs_project_status').on(table.projectId, table.status),
+  createdAtIdx: index('idx_backup_jobs_created_at').on(table.createdAt),
+}));

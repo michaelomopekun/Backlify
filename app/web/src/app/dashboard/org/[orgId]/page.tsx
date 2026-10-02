@@ -50,8 +50,7 @@ export default async function OrgProjectsPage({ params }: Props) {
 
   let dbProjects: Array<{ id: string; orgId: string; name: string; databaseUrl: string; createdAt: Date }> = [];
   try {
-    const all = await ProjectRepository.getAllProjects();
-    dbProjects = all.filter((p) => p.orgId === orgId);
+    dbProjects = await ProjectRepository.getProjectsByOrgIds([orgId]);
   } catch {}
 
   const orgProjectIds = dbProjects.map((p) => p.id);
@@ -59,7 +58,7 @@ export default async function OrgProjectsPage({ params }: Props) {
   let activeSnapshotsCount = 0;
   let totalStorageBytes = 0;
   try {
-    const stats = await BackupRepository.getActiveStorageStatsForProjects(orgProjectIds);
+    const stats = await BackupRepository.getActiveStorageStatsForOrg(orgId);
     activeSnapshotsCount = stats.count;
     totalStorageBytes = stats.totalBytes;
   } catch {}
