@@ -9,9 +9,15 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "backlify-production-secret-token-key-32chars-min",
   trustHost: true,
-  session: {
-    strategy: "jwt",
-  },
+session: {
+  strategy: "jwt",
+  maxAge: 60 * 60, // 60 minutes (in seconds)
+  updateAge: 15 * 60, // token is refreshed/extended (every 15 mins)
+},
+jwt: {
+  maxAge: 60 * 60, // 60 minutes
+},
+
   providers: [
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID || process.env.GITHUB_ID,
