@@ -18,6 +18,7 @@ import {
   IconSparkles,
 } from "@tabler/icons-react";
 import Link from "next/link";
+import { useLocalizedPricing } from "@/hooks/use-localized-pricing";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/shared/stat-card";
 import {
@@ -491,6 +492,7 @@ function RestoreWizardDrawer({
   drillQuotaReached?: boolean;
   onDrillCompleted?: (drill: any) => void;
 }) {
+  const { priceFormatted } = useLocalizedPricing();
   const [mode, setMode] = useState<"drill" | "restore">(defaultMode);
   const [targetUrl, setTargetUrl] = useState("");
   const [confirmWord, setConfirmWord] = useState("");
@@ -738,7 +740,7 @@ function RestoreWizardDrawer({
                       className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-black font-semibold text-xs hover:bg-amber-400 transition-colors w-fit mt-1"
                     >
                       <IconSparkles className="size-3.5" />
-                      Upgrade to Pro ($3 / ₦2,000)
+                      Upgrade to Pro ({priceFormatted})
                     </Link>
                   )}
                 </div>
@@ -978,6 +980,7 @@ export function RestoresPageClient({
   isPro?: boolean;
   monthlyDrillsUsed?: number;
 }) {
+  const { priceFormatted } = useLocalizedPricing();
   const [drills, setDrills] = useState<RestoreDrill[]>(initialDrills);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<"drill" | "restore">("drill");
@@ -1036,7 +1039,7 @@ export function RestoresPageClient({
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-black font-semibold text-xs hover:bg-amber-400 transition-colors shrink-0"
           >
             <IconSparkles className="size-3.5" />
-            Upgrade to Pro ($3 / ₦2,000)
+            Upgrade to Pro ({priceFormatted})
           </Link>
         </div>
       )}

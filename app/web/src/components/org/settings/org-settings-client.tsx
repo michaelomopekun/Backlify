@@ -21,6 +21,7 @@ import {
   IconShieldCheck,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
+import { useLocalizedPricing } from "@/hooks/use-localized-pricing";
 import { UpgradeDialog } from "@/components/shared/upgrade-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -77,6 +78,7 @@ export function OrgSettingsClient({
 }: OrgSettingsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { priceFormatted, priceShort, priceWithPeriod } = useLocalizedPricing();
   const isPro = organization.plan === "pro";
 
   // General settings state
@@ -541,7 +543,7 @@ export function OrgSettingsClient({
                   <div className="text-xs font-medium text-white flex items-center gap-2">
                     <span>Upgrade to Backlify Pro</span>
                     <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
-                      $3 / mo (or ₦2,000 / mo)
+                      {priceShort}
                     </span>
                   </div>
                   <div className="text-[11px] text-[#888888] mt-0.5">
@@ -621,7 +623,7 @@ export function OrgSettingsClient({
                       <span>Free Plan is Limited to 1 Seat (Solo Owner)</span>
                     </div>
                     <p className="text-muted-foreground text-[11.5px] leading-relaxed">
-                      Upgrade to Backlify Pro for <strong>$3 / month</strong> (or <strong>₦2,000 / month</strong> via Paystack) to invite unlimited engineers, assign Admin/Member roles, and collaborate seamlessly.
+                      Upgrade to Backlify Pro for <strong>{priceWithPeriod}</strong> to invite unlimited engineers, assign Admin/Member roles, and collaborate seamlessly.
                     </p>
                   </div>
 
@@ -643,7 +645,7 @@ export function OrgSettingsClient({
                       className="h-8.5 px-4 text-xs font-semibold bg-amber-500 text-black hover:bg-amber-400 gap-1.5 transition-colors"
                     >
                       <IconSparkles className="size-3.5" />
-                      Upgrade to Pro ($3 / ₦2,000)
+                      Upgrade to Pro ({priceFormatted})
                     </Button>
                   </DialogFooter>
                 </div>

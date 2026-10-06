@@ -11,11 +11,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
 session: {
   strategy: "jwt",
-  maxAge: 60 * 60, // 60 minutes (in seconds)
+  maxAge: 30 * 60, // 30 minutes (in seconds)
   updateAge: 15 * 60, // token is refreshed/extended (every 15 mins)
 },
 jwt: {
-  maxAge: 60 * 60, // 60 minutes
+  maxAge: 30 * 60, // 30 minutes
 },
 
   providers: [

@@ -14,6 +14,7 @@ import {
   IconExternalLink,
   IconSparkles,
 } from "@tabler/icons-react";
+import { useLocalizedPricing } from "@/hooks/use-localized-pricing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -49,6 +50,7 @@ export function NewProjectForm({
   maxProjects = 2,
 }: Props) {
   const router = useRouter();
+  const { priceFormatted } = useLocalizedPricing();
   const quotaReached = !isPro && projectCount >= maxProjects;
   const [name, setName] = useState("");
   const [databaseUrl, setDatabaseUrl] = useState("");
@@ -180,7 +182,7 @@ export function NewProjectForm({
               className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-black font-semibold text-xs hover:bg-amber-400 transition-colors shrink-0"
             >
               <IconSparkles className="size-3.5" />
-              Upgrade to Pro ($3 / ₦2,000)
+              Upgrade to Pro ({priceFormatted})
             </Link>
           </div>
         )}

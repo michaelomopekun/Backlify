@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useLocalizedPricing } from "@/hooks/use-localized-pricing";
 
 export interface UpgradeDialogProps {
   open: boolean;
@@ -31,37 +32,9 @@ export function UpgradeDialog({
   orgId,
   defaultCurrency,
 }: UpgradeDialogProps) {
-  const [selectedCurrency, setSelectedCurrency] = useState<"USD" | "NGN">(
-    defaultCurrency || "USD"
-  );
+  const localized = useLocalizedPricing();
+  const selectedCurrency = defaultCurrency || localized.currency;
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
-
-  // Auto-detect currency anonymously on mount (no currency toggle UI needed)
-  useEffect(() => {
-    if (defaultCurrency) {
-      setSelectedCurrency(defaultCurrency);
-      return;
-    }
-
-    try {
-      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-      if (tz.toLowerCase().includes("lagos") || tz.toLowerCase().includes("africa/lagos")) {
-        setSelectedCurrency("NGN");
-      }
-      fetch(`/api/billing/detect-currency?tz=${encodeURIComponent(tz)}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.currency === "NGN") {
-            setSelectedCurrency("NGN");
-          } else {
-            setSelectedCurrency("USD");
-          }
-        })
-        .catch(() => {});
-    } catch {
-      // fallback
-    }
-  }, [defaultCurrency]);
 
   const handleCheckout = async () => {
     if (!orgId) {

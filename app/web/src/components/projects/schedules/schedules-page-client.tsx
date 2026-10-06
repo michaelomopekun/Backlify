@@ -21,6 +21,7 @@ import {
 } from "@tabler/icons-react";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useLocalizedPricing } from "@/hooks/use-localized-pricing";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -421,6 +422,7 @@ function CronEditorDrawer({
   onClose: () => void;
   onSave: (data: Partial<Schedule>) => void;
 }) {
+  const { priceFormatted } = useLocalizedPricing();
   const [name, setName] = useState(editing?.name ?? "");
   const [preset, setPreset] = useState<FrequencyPreset>("daily");
   const [cronStr, setCronStr] = useState(editing?.cron ?? "0 14 * * *");
@@ -523,7 +525,7 @@ function CronEditorDrawer({
                     type="button"
                     onClick={() => {
                       if (isLocked) {
-                        toast.error("Hourly automated backups require a Pro plan subscription ($3 or ₦2,000/mo).");
+                        toast.error(`Hourly automated backups require a Pro plan subscription (${priceFormatted}/mo).`);
                         return;
                       }
                       handlePreset(p);
@@ -687,6 +689,7 @@ export function SchedulesPageClient({
   initialSchedules?: any[];
   isPro?: boolean;
 }) {
+  const { priceFormatted } = useLocalizedPricing();
   const [schedules, setSchedules] = useState<Schedule[]>(() => {
     if (initialSchedules && initialSchedules.length > 0) {
       return initialSchedules.map((s) => ({
@@ -808,7 +811,7 @@ export function SchedulesPageClient({
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-black font-semibold text-xs hover:bg-amber-400 transition-colors shrink-0"
           >
             <IconSparkles className="size-3.5" />
-            Upgrade to Pro ($3 / ₦2,000)
+            Upgrade to Pro ({priceFormatted})
           </Link>
         </div>
       )}
