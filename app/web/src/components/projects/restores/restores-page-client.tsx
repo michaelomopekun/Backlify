@@ -734,7 +734,7 @@ function RestoreWizardDrawer({
                   </p>
                   {orgId && (
                     <Link
-                      href={`/dashboard/org/${orgId}/billing`}
+                      href={`/dashboard/org/${orgId}/billing?upgrade=true`}
                       className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-black font-semibold text-xs hover:bg-amber-400 transition-colors w-fit mt-1"
                     >
                       <IconSparkles className="size-3.5" />
@@ -1032,7 +1032,7 @@ export function RestoresPageClient({
             </span>
           </div>
           <Link
-            href={`/dashboard/org/${orgId}/billing`}
+            href={`/dashboard/org/${orgId}/billing?upgrade=true`}
             className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md bg-amber-500 text-black font-semibold text-xs hover:bg-amber-400 transition-colors shrink-0"
           >
             <IconSparkles className="size-3.5" />

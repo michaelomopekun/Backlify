@@ -210,7 +210,7 @@ export default async function OrgProjectsPage({ params }: Props) {
                       <p className="text-[11px] text-[#666666] mt-0.5">Current billing cycle</p>
                     </div>
                     <Link
-                      href={`/dashboard/org/${orgId}/billing`}
+                      href={isPro ? `/dashboard/org/${orgId}/billing` : `/dashboard/org/${orgId}/billing?upgrade=true`}
                       className="flex items-center h-7 px-2.5 rounded-md border border-[#2a2a2a] bg-transparent hover:bg-[#1c1c1c] text-white font-normal text-[11px] transition-colors"
                     >
                       {isPro ? "Manage Plan" : "Upgrade to Pro"}

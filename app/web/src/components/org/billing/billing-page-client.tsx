@@ -15,7 +15,6 @@ import {
   IconServer,
   IconClock,
   IconCalendar,
-  IconWorld,
   IconMail,
   IconReceipt,
 } from "@tabler/icons-react";
@@ -31,14 +30,7 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { UpgradeDialog } from "@/components/shared/upgrade-dialog";
 import { BILLING_CONFIG } from "shared";
 
 export interface InvoiceItem {
@@ -79,10 +71,8 @@ export function BillingPageClient({ organization, user }: BillingPageProps) {
 
   const isPro = organization.plan === "pro";
 
-  // Currency selection state
-  const [selectedCurrency, setSelectedCurrency] = useState<"USD" | "NGN">("USD");
+  // Upgrade modal & Portal state
   const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
-  const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
   const [isPortalLoading, setIsPortalLoading] = useState(false);
 
   // Invoices state
@@ -99,21 +89,7 @@ export function BillingPageClient({ organization, user }: BillingPageProps) {
 
   const hasEmailChanges = billingEmail.trim().toLowerCase() !== initialEmailState.trim().toLowerCase();
 
-  // Auto-detect currency preference
-  useEffect(() => {
-    fetch("/api/billing/detect-currency")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.currency === "NGN") {
-          setSelectedCurrency("NGN");
-        } else {
-          setSelectedCurrency("USD");
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  // Check URL query parameters for checkout return
+  // Check URL query parameters for checkout return & upgrade intent
   useEffect(() => {
     const billingParam = searchParams.get("billing");
     if (billingParam === "success") {
@@ -122,6 +98,10 @@ export function BillingPageClient({ organization, user }: BillingPageProps) {
     } else if (billingParam === "canceled") {
       toast.info("Checkout was canceled.");
       router.replace(window.location.pathname);
+    }
+
+    if (searchParams.get("upgrade") === "true") {
+      setIsUpgradeModalOpen(true);
     }
   }, [searchParams, router]);
 
@@ -142,45 +122,6 @@ export function BillingPageClient({ organization, user }: BillingPageProps) {
         setIsLoadingInvoices(false);
       });
   }, [organization.id]);
-
-  // Handle Checkout (Stripe or Paystack)
-  const handleCheckout = async () => {
-    setIsCheckoutLoading(true);
-    try {
-      if (selectedCurrency === "NGN") {
-        // Paystack (₦2,000 / month)
-        const res = await fetch("/api/billing/paystack/initialize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orgId: organization.id }),
-        });
-        const data = await res.json();
-        if (data.success && data.authorization_url) {
-          window.location.href = data.authorization_url;
-        } else {
-          toast.error(data.error || "Failed to initialize Paystack checkout.");
-          setIsCheckoutLoading(false);
-        }
-      } else {
-        // Stripe ($3 / month)
-        const res = await fetch("/api/billing/stripe/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orgId: organization.id }),
-        });
-        const data = await res.json();
-        if (data.success && data.url) {
-          window.location.href = data.url;
-        } else {
-          toast.error(data.error || "Failed to initialize Stripe checkout.");
-          setIsCheckoutLoading(false);
-        }
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to initiate payment gateway.");
-      setIsCheckoutLoading(false);
-    }
-  };
 
   // Handle Stripe Customer Portal
   const handleOpenPortal = async () => {
@@ -562,109 +503,11 @@ export function BillingPageClient({ organization, user }: BillingPageProps) {
       </div>
 
       {/* ── Upgrade Dialog Modal ── */}
-      <Dialog open={isUpgradeModalOpen} onOpenChange={setIsUpgradeModalOpen}>
-        <DialogContent className="sm:max-w-[480px] bg-[#111111] border-[#262626] text-white p-6">
-          <DialogHeader className="space-y-2">
-            <div className="size-10 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-              <IconSparkles className="size-5" />
-            </div>
-            <DialogTitle className="text-lg font-semibold tracking-tight text-white font-sans">
-              Upgrade to Backlify Pro
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
-              Unlock enterprise PostgreSQL backup power for <strong>{organization.name}</strong>.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 my-2">
-            {/* Currency Selector */}
-            <div className="p-3.5 rounded-lg bg-[#161616] border border-[#2a2a2a] space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-white flex items-center gap-1.5">
-                  <IconWorld className="size-3.5 text-muted-foreground" /> Select Billing Currency
-                </span>
-                <span className="text-[11px] text-muted-foreground font-mono">
-                  {selectedCurrency === "NGN" ? "Paystack" : "Stripe"}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCurrency("USD")}
-                  className={`p-2.5 rounded-md border text-left transition-all ${
-                    selectedCurrency === "USD"
-                      ? "border-white bg-white/10 text-white shadow-xs"
-                      : "border-[#2a2a2a] bg-[#111111] text-[#888888] hover:text-white"
-                  }`}
-                >
-                  <div className="text-xs font-semibold text-white">USD ($3 / mo)</div>
-                  <div className="text-[10px] text-muted-foreground">International Cards via Stripe</div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setSelectedCurrency("NGN")}
-                  className={`p-2.5 rounded-md border text-left transition-all ${
-                    selectedCurrency === "NGN"
-                      ? "border-white bg-white/10 text-white shadow-xs"
-                      : "border-[#2a2a2a] bg-[#111111] text-[#888888] hover:text-white"
-                  }`}
-                >
-                  <div className="text-xs font-semibold text-white">NGN (₦2,000 / mo)</div>
-                  <div className="text-[10px] text-muted-foreground">Local Cards via Paystack</div>
-                </button>
-              </div>
-            </div>
-
-            {/* Pro Features Included List */}
-            <div className="space-y-2 text-xs text-[#cccccc]">
-              <div className="flex items-center gap-2">
-                <IconCheck className="size-4 text-emerald-400 shrink-0" />
-                <span>Up to 50 active PostgreSQL databases</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <IconCheck className="size-4 text-emerald-400 shrink-0" />
-                <span>Hourly automated schedules & custom cron</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <IconCheck className="size-4 text-emerald-400 shrink-0" />
-                <span>50 GB Cloud Storage included</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <IconCheck className="size-4 text-emerald-400 shrink-0" />
-                <span>30+ Days Retention & Disaster Recovery Drills</span>
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0 pt-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsUpgradeModalOpen(false)}
-              className="border-border text-xs"
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleCheckout}
-              disabled={isCheckoutLoading}
-              className="h-8.5 px-4 text-xs font-medium bg-white text-black hover:bg-neutral-200 transition-colors"
-            >
-              {isCheckoutLoading ? (
-                <>
-                  <IconLoader2 className="size-3.5 mr-1.5 animate-spin text-black" />
-                  Redirecting…
-                </>
-              ) : (
-                `Subscribe (${selectedCurrency === "NGN" ? "₦2,000" : "$3"}/mo)`
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <UpgradeDialog
+        open={isUpgradeModalOpen}
+        onOpenChange={setIsUpgradeModalOpen}
+        orgId={organization.id}
+      />
     </div>
   );
 }
