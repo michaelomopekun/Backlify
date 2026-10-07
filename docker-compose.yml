@@ -38,7 +38,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgrespassword@postgres:5432/backlify_db}
-      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      REDIS_URL: ${DOCKER_REDIS_URL:-redis://redis:6379}
       DATABASE_ENCRYPTION_KEY: ${DATABASE_ENCRYPTION_KEY}
       BACKUP_ENCRYPTION_KEY: ${BACKUP_ENCRYPTION_KEY:-}
       STORAGE_ENDPOINT: ${STORAGE_ENDPOINT}
