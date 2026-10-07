@@ -56,6 +56,8 @@ export interface ProjectBackupStats {
     inProgressCount: number;
     scheduledCount: number;
     manualCount: number;
+    scheduledErrors: number;
+    manualErrors: number;
     totalStorageBytes: number;
     successRate: number;
     recentEvents: Array<{
@@ -629,6 +631,8 @@ export class BackupRepository {
                 inProgressCount: 0,
                 scheduledCount: 0,
                 manualCount: 0,
+                scheduledErrors: 0,
+                manualErrors: 0,
                 totalStorageBytes: 0,
                 successRate: 100,
                 recentEvents: [],
@@ -642,8 +646,10 @@ export class BackupRepository {
                     completedCount: sql<number>`count(case when ${backupJobs.status} = 'completed' then 1 end)`.mapWith(Number),
                     failedCount: sql<number>`count(case when ${backupJobs.status} = 'failed' then 1 end)`.mapWith(Number),
                     inProgressCount: sql<number>`count(case when ${backupJobs.status} in ('pending', 'queued', 'in_progress', 'uploading') then 1 end)`.mapWith(Number),
-                    scheduledCount: sql<number>`count(case when ${backupJobs.triggerType} = 'scheduled' then 1 end)`.mapWith(Number),
-                    manualCount: sql<number>`count(case when ${backupJobs.triggerType} = 'manual' then 1 end)`.mapWith(Number),
+                    scheduledCount: sql<number>`count(case when (${backupJobs.triggerType} = 'scheduled' or ${backupJobs.id} like '%scheduled%') then 1 end)`.mapWith(Number),
+                    manualCount: sql<number>`count(case when (${backupJobs.triggerType} = 'manual' or ${backupJobs.id} not like '%scheduled%') then 1 end)`.mapWith(Number),
+                    scheduledErrors: sql<number>`count(case when (${backupJobs.triggerType} = 'scheduled' or ${backupJobs.id} like '%scheduled%') and ${backupJobs.status} = 'failed' then 1 end)`.mapWith(Number),
+                    manualErrors: sql<number>`count(case when (${backupJobs.triggerType} = 'manual' or ${backupJobs.id} not like '%scheduled%') and ${backupJobs.status} = 'failed' then 1 end)`.mapWith(Number),
                     activeCount: sql<number>`count(case when ${backupJobs.status} = 'completed' and ${backupFiles.purgedAt} is null and ${backupFiles.id} is not null then 1 end)`.mapWith(Number),
                     prunedCount: sql<number>`count(case when ${backupJobs.status} = 'completed' and ${backupFiles.purgedAt} is not null then 1 end)`.mapWith(Number),
                     totalStorageBytes: sql<number>`coalesce(sum(case when ${backupJobs.status} = 'completed' and ${backupFiles.purgedAt} is null and ${backupFiles.id} is not null then ${backupFiles.fileSize} else 0 end), 0)`.mapWith(Number),
@@ -659,6 +665,8 @@ export class BackupRepository {
                 inProgressCount: 0,
                 scheduledCount: 0,
                 manualCount: 0,
+                scheduledErrors: 0,
+                manualErrors: 0,
                 activeCount: 0,
                 prunedCount: 0,
                 totalStorageBytes: 0,
@@ -705,6 +713,8 @@ export class BackupRepository {
                 inProgressCount: stat.inProgressCount,
                 scheduledCount: stat.scheduledCount,
                 manualCount: stat.manualCount,
+                scheduledErrors: stat.scheduledErrors,
+                manualErrors: stat.manualErrors,
                 totalStorageBytes: stat.totalStorageBytes,
                 successRate,
                 recentEvents,
@@ -720,6 +730,8 @@ export class BackupRepository {
                 inProgressCount: 0,
                 scheduledCount: 0,
                 manualCount: 0,
+                scheduledErrors: 0,
+                manualErrors: 0,
                 totalStorageBytes: 0,
                 successRate: 100,
                 recentEvents: [],

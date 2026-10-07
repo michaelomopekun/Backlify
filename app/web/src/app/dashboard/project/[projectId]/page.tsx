@@ -15,14 +15,16 @@ export default async function ProjectOverviewPage({ params }: Props) {
   let schedules: any[] = [];
   let backupJobs: any[] = [];
   let restoreJobs: any[] = [];
+  let backupStats: any = null;
 
   try {
     project = await ProjectRepository.getProjectById(projectId);
     if (project) {
-      [schedules, backupJobs, restoreJobs] = await Promise.all([
+      [schedules, backupJobs, restoreJobs, backupStats] = await Promise.all([
         ScheduleRepository.getSchedulesByProjectId(projectId),
-        BackupRepository.listBackups({ projectId }),
+        BackupRepository.listBackups({ projectId, limit: 100 }),
         RestoreRepository.listRestoreJobsByProjectId(projectId),
+        BackupRepository.getProjectBackupStats(projectId),
       ]);
     }
   } catch (err) {
@@ -42,6 +44,7 @@ export default async function ProjectOverviewPage({ params }: Props) {
         schedules={schedules}
         backupJobs={backupJobs}
         restoreJobs={restoreJobs}
+        backupStats={backupStats}
         orgId={orgId}
         projectId={projectId}
       />

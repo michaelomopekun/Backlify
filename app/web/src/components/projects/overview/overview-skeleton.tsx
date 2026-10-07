@@ -161,10 +161,7 @@ export function ProjectOverviewSkeleton() {
                 <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
                   SCHEDULED BACKUPS
                 </p>
-                <Badge variant="outline" className="text-[10px] font-mono gap-1 text-muted-foreground">
-                  <span className="size-1.5 rounded-full bg-zinc-600" />
-                  ERRORS 0
-                </Badge>
+                <Skeleton className="h-5 w-16 rounded bg-white/[0.08]" />
               </div>
             </CardHeader>
             <CardContent className="-mt-2">
@@ -178,7 +175,7 @@ export function ProjectOverviewSkeleton() {
               </div>
               <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
                 <span>Status</span>
-                <span>Operational</span>
+                <Skeleton className="h-3 w-16 bg-white/[0.06]" />
               </div>
             </CardFooter>
           </Card>
@@ -190,10 +187,7 @@ export function ProjectOverviewSkeleton() {
                 <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
                   MANUAL TRIGGERS
                 </p>
-                <Badge variant="outline" className="text-[10px] font-mono gap-1 text-muted-foreground">
-                  <span className="size-1.5 rounded-full bg-zinc-600" />
-                  ERRORS 0
-                </Badge>
+                <Skeleton className="h-5 w-16 rounded bg-white/[0.08]" />
               </div>
             </CardHeader>
             <CardContent className="-mt-2">
@@ -207,7 +201,7 @@ export function ProjectOverviewSkeleton() {
               </div>
               <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
                 <span>Activity</span>
-                <span>Standby</span>
+                <Skeleton className="h-3 w-16 bg-white/[0.06]" />
               </div>
             </CardFooter>
           </Card>
@@ -219,10 +213,7 @@ export function ProjectOverviewSkeleton() {
                 <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
                   RESTORE DRILLS
                 </p>
-                <Badge variant="outline" className="text-[10px] font-mono gap-1 text-muted-foreground">
-                  <span className="size-1.5 rounded-full bg-zinc-600" />
-                  ERRORS 0
-                </Badge>
+                <Skeleton className="h-5 w-16 rounded bg-white/[0.08]" />
               </div>
             </CardHeader>
             <CardContent className="-mt-2">
@@ -236,7 +227,7 @@ export function ProjectOverviewSkeleton() {
               </div>
               <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
                 <span>State</span>
-                <span>Standby</span>
+                <Skeleton className="h-3 w-16 bg-white/[0.06]" />
               </div>
             </CardFooter>
           </Card>
@@ -248,9 +239,7 @@ export function ProjectOverviewSkeleton() {
                 <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
                   TOTAL STORAGE
                 </p>
-                <Badge variant="outline" className="text-[10px] font-mono text-muted-foreground">
-                  Active Files
-                </Badge>
+                <Skeleton className="h-5 w-20 rounded bg-white/[0.08]" />
               </div>
             </CardHeader>
             <CardContent className="-mt-2">
@@ -264,7 +253,7 @@ export function ProjectOverviewSkeleton() {
               </div>
               <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
                 <span>Vault</span>
-                <span>Encrypted</span>
+                <Skeleton className="h-3 w-16 bg-white/[0.06]" />
               </div>
             </CardFooter>
           </Card>

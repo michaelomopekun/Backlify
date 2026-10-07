@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useState } from "react";
 import {
   DndContext,
@@ -31,6 +32,8 @@ import {
   IconNetwork,
   IconWorld,
   IconGripVertical,
+  IconAlertTriangle,
+  IconArrowRight,
 } from "@tabler/icons-react";
 import {
   DropdownMenu,
@@ -38,6 +41,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +75,7 @@ export interface ProjectOverviewProps {
   schedules?: any[];
   backupJobs?: any[];
   restoreJobs?: any[];
+  backupStats?: any;
   orgId: string;
   projectId: string;
 }
@@ -633,6 +643,107 @@ function TopPanelContent({
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
+   Telemetry Error Badge (Interactive & Dynamic)
+───────────────────────────────────────────────────────────────────────────── */
+
+function TelemetryErrorBadge({
+  count,
+  failedJobs = [],
+  viewAllHref,
+  label,
+}: {
+  count: number;
+  failedJobs?: Array<{ id: string; errorMessage?: string | null; createdAt?: string | Date; [key: string]: any }>;
+  viewAllHref?: string;
+  label: string;
+}) {
+  if (count === 0) {
+    return (
+      <TooltipProvider delayDuration={150}>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge
+              variant="outline"
+              className="text-[10px] font-mono gap-1 text-muted-foreground border-white/10 hover:border-emerald-500/30 hover:text-emerald-400 transition-colors cursor-default select-none"
+            >
+              <span className="size-1.5 rounded-full bg-emerald-500/80" />
+              ERRORS 0
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent side="top" className="text-xs bg-[#121212] border-white/10 text-zinc-300">
+            0 failures recorded. All {label.toLowerCase()} operational.
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    );
+  }
+
+  const recentFailures = failedJobs.slice(0, 3);
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Badge
+          variant="outline"
+          className="text-[10px] font-mono gap-1 text-red-400 border-red-500/40 bg-red-500/10 hover:bg-red-500/20 hover:border-red-500/60 transition-all cursor-pointer shadow-[0_0_12px_rgba(239,68,68,0.15)] focus:outline-none"
+        >
+          <span className="size-1.5 rounded-full bg-red-400 animate-pulse" />
+          ERRORS {count}
+          <IconChevronDown className="size-2.5 opacity-60 ml-0.5" />
+        </Badge>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        side="bottom"
+        className="w-80 p-3 bg-[#121212] border-white/10 text-zinc-200 shadow-2xl rounded-lg space-y-2.5 z-50"
+      >
+        <div className="flex items-center justify-between border-b border-white/[0.08] pb-2">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-red-400">
+            <IconAlertTriangle className="size-3.5" />
+            <span>{count} Failed Operation{count === 1 ? "" : "s"}</span>
+          </div>
+          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
+            {label}
+          </span>
+        </div>
+
+        {recentFailures.length > 0 ? (
+          <div className="space-y-2">
+            {recentFailures.map((job) => (
+              <div key={job.id} className="rounded-md bg-white/[0.03] p-2 border border-white/[0.05] text-left">
+                <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+                  <span className="truncate max-w-[140px]">ID: {job.id.slice(0, 8)}...</span>
+                  <span>{job.createdAt ? formatRelativeTime(job.createdAt) : "Recent"}</span>
+                </div>
+                <p className="text-xs text-red-300 font-mono mt-1 break-words line-clamp-2">
+                  {job.errorMessage || "Operation failed during execution"}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-zinc-400">
+            Failures recorded in historical stats.
+          </p>
+        )}
+
+        {viewAllHref && (
+          <div className="pt-1 border-t border-white/[0.08]">
+            <Link
+              href={viewAllHref}
+              className="flex items-center justify-between w-full text-xs font-medium text-zinc-300 hover:text-white transition-colors py-1 group"
+            >
+              <span>View all in logs</span>
+              <IconArrowRight className="size-3 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </div>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
    TelemetryPanel widget content
 ───────────────────────────────────────────────────────────────────────────── */
 
@@ -640,10 +751,14 @@ function TelemetryPanelContent({
   backupJobs = [],
   schedules = [],
   restoreJobs = [],
+  backupStats,
+  projectId,
 }: {
   backupJobs?: any[];
   schedules?: any[];
   restoreJobs?: any[];
+  backupStats?: any;
+  projectId?: string;
 }) {
   const { activatorRef, listeners } = React.useContext(WidgetDragContext);
 
@@ -655,17 +770,30 @@ function TelemetryPanelContent({
   const completedBackups = backupJobs.filter((j) => j.status === "completed");
   const manualBackups = backupJobs.filter(isManualJob);
   const scheduledBackups = backupJobs.filter((j) => !isManualJob(j));
-  const scheduledErrors = scheduledBackups.filter((j) => j.status === "failed");
-  const manualErrors = manualBackups.filter((j) => j.status === "failed");
+  const failedScheduledJobs = scheduledBackups.filter((j) => j.status === "failed");
+  const failedManualJobs = manualBackups.filter((j) => j.status === "failed");
 
   const completedRestores = restoreJobs.filter((j) => j.status === "completed");
   const failedRestores = restoreJobs.filter((j) => j.status === "failed");
 
-  const activeCompletedBackups = completedBackups.filter((b) => !b.purgedAt);
-  const totalBytes = activeCompletedBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
-  const successRate = backupJobs.length > 0
+  // Use DB aggregation stats if available, fall back to loaded jobs array length
+  const scheduledTotalCount = backupStats?.scheduledCount ?? scheduledBackups.length;
+  const manualTotalCount = backupStats?.manualCount ?? manualBackups.length;
+  const scheduledErrorCount = backupStats?.scheduledErrors ?? failedScheduledJobs.length;
+  const manualErrorCount = backupStats?.manualErrors ?? failedManualJobs.length;
+  const restoreErrorCount = failedRestores.length;
+
+  const totalOps = backupStats?.totalSnapshots ?? backupJobs.length;
+  const successRate = backupStats?.successRate != null
+    ? `${backupStats.successRate}%`
+    : backupJobs.length > 0
     ? `${((completedBackups.length / backupJobs.length) * 100).toFixed(1)}%`
     : "—";
+
+  const activeCompletedBackups = completedBackups.filter((b) => !b.purgedAt);
+  const totalStorageBytes = backupStats?.totalStorageBytes ??
+    activeCompletedBackups.reduce((sum, b) => sum + (b.fileSize || 0), 0);
+  const activeFilesCount = backupStats?.activeCount ?? activeCompletedBackups.length;
 
   // Build sparklines from real data
   const scheduledSparkline = buildSparkline(scheduledBackups);
@@ -687,7 +815,7 @@ function TelemetryPanelContent({
             <GripHandle />
           </div>
           <div className="flex items-center gap-3.5 text-[15px] text-white">
-            <span className="font-normal">{backupJobs.length} Total Backup Operation{backupJobs.length === 1 ? "" : "s"}</span>
+            <span className="font-normal">{totalOps} Total Backup Operation{totalOps === 1 ? "" : "s"}</span>
             <span className="font-normal">{successRate} Success Rate</span>
           </div>
         </div>
@@ -701,17 +829,25 @@ function TelemetryPanelContent({
             <div className="flex items-start justify-between">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">SCHEDULED BACKUPS</p>
               <div className="flex items-center gap-2.5 text-[10.5px] font-mono text-muted-foreground">
-                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-red-400" />ERRORS {scheduledErrors.length}</Badge>
+                <TelemetryErrorBadge
+                  count={scheduledErrorCount}
+                  failedJobs={failedScheduledJobs}
+                  label="Scheduled Backups"
+                  viewAllHref={projectId ? `/dashboard/project/${projectId}/backups` : undefined}
+                />
               </div>
             </div>
           </CardHeader>
           <CardContent className="-mt-2">
-            <p className="text-2xl font-normal text-foreground tracking-tight">{scheduledBackups.length}</p>
+            <p className="text-2xl font-normal text-foreground tracking-tight">{scheduledTotalCount}</p>
           </CardContent>
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
             <SparklineChart data={scheduledSparkline} color="bg-emerald-400" formatValue={(v) => `${v} job${v !== 1 ? "s" : ""}`} />
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
-              <span>Status</span><span>{scheduledErrors.length > 0 ? "Errors detected" : "Operational"}</span>
+              <span>Status</span>
+              <span className={scheduledErrorCount > 0 ? "text-red-400 font-medium" : "text-muted-foreground"}>
+                {scheduledErrorCount > 0 ? `${scheduledErrorCount} error${scheduledErrorCount > 1 ? "s" : ""} detected` : "Operational"}
+              </span>
             </div>
           </CardFooter>
         </Card>
@@ -722,17 +858,25 @@ function TelemetryPanelContent({
             <div className="flex items-start justify-between">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">MANUAL TRIGGERS</p>
               <div className="flex items-center gap-2.5 text-[10.5px] font-mono text-muted-foreground">
-                <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className="size-1.5 rounded-full bg-red-400" />ERRORS {manualErrors.length}</Badge>
+                <TelemetryErrorBadge
+                  count={manualErrorCount}
+                  failedJobs={failedManualJobs}
+                  label="Manual Triggers"
+                  viewAllHref={projectId ? `/dashboard/project/${projectId}/backups` : undefined}
+                />
               </div>
             </div>
           </CardHeader>
           <CardContent className="-mt-2">
-            <p className="text-2xl font-normal text-foreground tracking-tight">{manualBackups.length}</p>
+            <p className="text-2xl font-normal text-foreground tracking-tight">{manualTotalCount}</p>
           </CardContent>
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
             <SparklineChart data={manualSparkline} color="bg-primary" formatValue={(v) => `${v} trigger${v !== 1 ? "s" : ""}`} />
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
-              <span>Activity</span><span>{manualBackups.length > 0 ? "Active" : "None"}</span>
+              <span>Activity</span>
+              <span className={manualErrorCount > 0 ? "text-red-400 font-medium" : "text-muted-foreground"}>
+                {manualErrorCount > 0 ? `${manualErrorCount} failed` : manualTotalCount > 0 ? "Active" : "None"}
+              </span>
             </div>
           </CardFooter>
         </Card>
@@ -742,7 +886,12 @@ function TelemetryPanelContent({
           <CardHeader className="pb-0">
             <div className="flex items-start justify-between">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">RESTORE DRILLS</p>
-              <Badge variant="outline" className="text-[10px] font-mono gap-1"><span className={`size-1.5 rounded-full ${failedRestores.length > 0 ? "bg-red-400" : "bg-emerald-400"}`} />ERRORS {failedRestores.length}</Badge>
+              <TelemetryErrorBadge
+                count={restoreErrorCount}
+                failedJobs={failedRestores}
+                label="Restore Drills"
+                viewAllHref={projectId ? `/dashboard/project/${projectId}/restores` : undefined}
+              />
             </div>
           </CardHeader>
           <CardContent className="-mt-2">
@@ -751,7 +900,10 @@ function TelemetryPanelContent({
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
             <SparklineChart data={restoreSparkline} color="bg-blue-400" formatValue={(v) => `${v} drill${v !== 1 ? "s" : ""}`} />
             <div className="flex items-center justify-between text-[10px] font-mono text-muted-foreground pt-2">
-              <span>{restoreJobs.length > 0 ? "Active" : "Standby"}</span><span>{completedRestores.length} completed</span>
+              <span>{restoreJobs.length > 0 ? "Active" : "Standby"}</span>
+              <span className={restoreErrorCount > 0 ? "text-red-400 font-medium" : "text-muted-foreground"}>
+                {restoreErrorCount > 0 ? `${restoreErrorCount} failed` : `${completedRestores.length} completed`}
+              </span>
             </div>
           </CardFooter>
         </Card>
@@ -761,11 +913,13 @@ function TelemetryPanelContent({
           <CardHeader className="pb-0">
             <div className="flex items-start justify-between">
               <p className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground">TOTAL STORAGE</p>
-              <Badge variant="outline" className="text-[10px] font-mono text-emerald-400">{activeCompletedBackups.length} Active Files</Badge>
+              <Badge variant="outline" className="text-[10px] font-mono text-emerald-400 border-emerald-500/20 bg-emerald-500/5">
+                {activeFilesCount} Active File{activeFilesCount === 1 ? "" : "s"}
+              </Badge>
             </div>
           </CardHeader>
           <CardContent className="-mt-2">
-            <p className="text-2xl font-normal text-foreground tracking-tight">{formatBytes(totalBytes)}</p>
+            <p className="text-2xl font-normal text-foreground tracking-tight">{formatBytes(totalStorageBytes)}</p>
           </CardContent>
           <CardFooter className="flex-col items-stretch border-0 bg-transparent pb-4 px-4 overflow-visible">
             <SparklineChart data={storageSparkline} color="bg-emerald-400" formatValue={(v) => formatBytes(v)} />
@@ -800,9 +954,6 @@ function DragOverlaySnapshot({ id }: { id: string }) {
   );
 }
 
-/* Need React import for context */
-import React from "react";
-
 /* ─────────────────────────────────────────────────────────────────────────────
    Main export
 ───────────────────────────────────────────────────────────────────────────── */
@@ -812,6 +963,7 @@ export function ProjectOverviewHeader({
   schedules = [],
   backupJobs = [],
   restoreJobs = [],
+  backupStats,
   orgId,
   projectId,
 }: ProjectOverviewProps) {
@@ -872,6 +1024,8 @@ export function ProjectOverviewHeader({
         backupJobs={backupJobs}
         schedules={schedules}
         restoreJobs={restoreJobs}
+        backupStats={backupStats}
+        projectId={projectId}
       />
     ),
   };
