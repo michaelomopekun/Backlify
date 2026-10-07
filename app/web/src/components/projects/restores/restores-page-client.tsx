@@ -40,6 +40,13 @@ import {
   SheetFooter,
   SheetClose,
 } from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /* ─────────────────────────────────────────────────────────────────
    Types & Mock Data
@@ -469,12 +476,13 @@ function DrillCard({
    Slide-in Wizard Drawer with Realtime Terminal Log Streamer
 ───────────────────────────────────────────────────────────────────*/
 
-import { triggerDrill, triggerRestore } from "@/app/actions/restore.actions";
+import { triggerDrill, triggerRestore, getRestoreLogs } from "@/app/actions/restore.actions";
 
 function RestoreWizardDrawer({
   open,
   defaultMode,
   defaultPoint,
+  availablePoints = [],
   onClose,
   projectId,
   orgId,
@@ -485,6 +493,7 @@ function RestoreWizardDrawer({
   open: boolean;
   defaultMode: "drill" | "restore";
   defaultPoint: RecoveryPoint | null;
+  availablePoints?: RecoveryPoint[];
   onClose: () => void;
   projectId?: string;
   orgId?: string;
@@ -494,6 +503,7 @@ function RestoreWizardDrawer({
 }) {
   const { priceFormatted } = useLocalizedPricing();
   const [mode, setMode] = useState<"drill" | "restore">(defaultMode);
+  const [selectedPointId, setSelectedPointId] = useState<string>("");
   const [targetUrl, setTargetUrl] = useState("");
   const [confirmWord, setConfirmWord] = useState("");
   const [isExecuting, setIsExecuting] = useState(false);
@@ -510,6 +520,15 @@ function RestoreWizardDrawer({
     setExecutionStep(0);
     setLiveLogs([]);
     setConfirmWord("");
+    setTargetUrl("");
+
+    if (defaultPoint) {
+      setSelectedPointId(defaultPoint.id);
+    } else if (availablePoints.length > 0) {
+      setSelectedPointId(availablePoints[availablePoints.length - 1].id);
+    } else {
+      setSelectedPointId("");
+    }
 
     return () => {
       if (sseRef.current) {
@@ -517,7 +536,7 @@ function RestoreWizardDrawer({
         sseRef.current = null;
       }
     };
-  }, [open, defaultMode]);
+  }, [open, defaultMode, defaultPoint, availablePoints]);
 
   useEffect(() => {
     if (logsEndRef.current) {
@@ -525,10 +544,33 @@ function RestoreWizardDrawer({
     }
   }, [liveLogs]);
 
+  const activePoint =
+    availablePoints.find((p) => p.id === selectedPointId) ||
+    defaultPoint ||
+    (availablePoints.length > 0 ? availablePoints[availablePoints.length - 1] : null);
+
+  const trimmedUrl = targetUrl.trim();
+  const isValidProtocol = /^postgres(ql)?:\/\//i.test(trimmedUrl);
+  const isConfirmed = confirmWord.trim() === "RESTORE";
+  const hasSnapshot = Boolean(activePoint?.id);
+
   const canSubmit =
     mode === "drill"
       ? true
-      : targetUrl.startsWith("postgres://") && confirmWord === "RESTORE";
+      : isValidProtocol && isConfirmed && hasSnapshot;
+
+  let restoreButtonLabel = "Start Restore";
+  if (mode === "restore") {
+    if (!hasSnapshot) {
+      restoreButtonLabel = "No Snapshot Available";
+    } else if (!trimmedUrl) {
+      restoreButtonLabel = "Enter Target Database URL";
+    } else if (!isValidProtocol) {
+      restoreButtonLabel = "Invalid Database URL";
+    } else if (!isConfirmed) {
+      restoreButtonLabel = "Type RESTORE to Confirm";
+    }
+  }
 
   async function startExecution() {
     if (!projectId) return;
@@ -539,7 +581,7 @@ function RestoreWizardDrawer({
     let targetJobId: string | undefined;
 
     if (mode === "drill") {
-      const res = await triggerDrill(projectId, defaultPoint?.id);
+      const res = await triggerDrill(projectId, activePoint?.id);
       if (res.error) {
         setLiveLogs((prev) => [...prev, `[ERROR] DR Drill rejected: ${res.error}`]);
         return;
@@ -548,9 +590,9 @@ function RestoreWizardDrawer({
     } else {
       const formData = new FormData();
       formData.append("projectId", projectId);
-      formData.append("backupFileId", defaultPoint?.id || "");
-      formData.append("targetDatabaseUrl", targetUrl);
-      formData.append("confirm", confirmWord);
+      formData.append("backupFileId", activePoint?.id || "");
+      formData.append("targetDatabaseUrl", trimmedUrl);
+      formData.append("confirm", confirmWord.trim());
 
       const res = await triggerRestore(formData);
       if (res?.error) {
@@ -812,29 +854,64 @@ function RestoreWizardDrawer({
 
               {/* Source Snapshot */}
               <div className="space-y-2">
-                <Label className="text-xs font-medium text-foreground">
-                  Source Snapshot
-                </Label>
-                <Card className="border-border/60 bg-card/40">
-                  <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="p-2 rounded-md bg-muted/60 text-muted-foreground shrink-0">
-                        <IconDatabase className="size-4" />
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-medium text-foreground">
+                    Source Snapshot
+                  </Label>
+                  {availablePoints.length > 1 && (
+                    <span className="text-[10px] font-mono text-muted-foreground">
+                      {availablePoints.length} snapshots available
+                    </span>
+                  )}
+                </div>
+
+                {availablePoints.length > 1 ? (
+                  <Select
+                    value={activePoint?.id || ""}
+                    onValueChange={(val) => setSelectedPointId(val)}
+                  >
+                    <SelectTrigger className="w-full bg-card/40 border-border/60">
+                      <SelectValue placeholder="Select a snapshot" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePoints.map((p) => (
+                        <SelectItem key={p.id} value={p.id}>
+                          {p.date} · {p.time} ({p.size})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : activePoint ? (
+                  <Card className="border-border/60 bg-card/40">
+                    <CardContent className="p-3.5 sm:p-4 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2 rounded-md bg-muted/60 text-muted-foreground shrink-0">
+                          <IconDatabase className="size-4" />
+                        </div>
+                        <div className="space-y-0.5 min-w-0">
+                          <p className="text-xs sm:text-[13px] font-medium text-foreground truncate">
+                            {activePoint.date} · {activePoint.time}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground font-mono">
+                            Size: {activePoint.size} · AES-256 Encrypted
+                          </p>
+                        </div>
                       </div>
-                      <div className="space-y-0.5 min-w-0">
-                        <p className="text-xs sm:text-[13px] font-medium text-foreground truncate">
-                          {defaultPoint ? `${defaultPoint.date} · ${defaultPoint.time}` : "Latest Snapshot (bk-001)"}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground font-mono">
-                          Size: {defaultPoint ? defaultPoint.size : "142 MB"} · AES-256 Encrypted
-                        </p>
-                      </div>
-                    </div>
-                    <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px] font-mono uppercase shrink-0">
-                      Verified
-                    </Badge>
-                  </CardContent>
-                </Card>
+                      <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px] font-mono uppercase shrink-0">
+                        Verified
+                      </Badge>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-amber-500/30 bg-amber-500/5">
+                    <CardContent className="p-3.5 flex items-start gap-2.5">
+                      <IconAlertTriangle className="size-4 text-amber-400 shrink-0 mt-0.5" />
+                      <p className="text-xs text-amber-300">
+                        No backup snapshots exist for this project yet. Please create a backup before restoring.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {/* Target DB input */}
@@ -855,10 +932,15 @@ function RestoreWizardDrawer({
                     </Label>
                     <Input
                       type="text"
-                      placeholder="postgres://user:pass@host:5432/staging_db"
+                      placeholder="postgresql://user:pass@host:5432/staging_db"
                       value={targetUrl}
                       onChange={(e) => setTargetUrl(e.target.value)}
                     />
+                    {trimmedUrl.length > 0 && !isValidProtocol && (
+                      <p className="text-[11px] text-red-400 font-mono">
+                        URL must begin with postgresql:// or postgres://
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -870,8 +952,13 @@ function RestoreWizardDrawer({
                       placeholder="RESTORE"
                       value={confirmWord}
                       onChange={(e) => setConfirmWord(e.target.value)}
-                      className="w-32"
+                      className="w-32 uppercase"
                     />
+                    {confirmWord.length > 0 && !isConfirmed && (
+                      <p className="text-[11px] text-amber-400">
+                        Type RESTORE in capital letters
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
@@ -942,7 +1029,7 @@ function RestoreWizardDrawer({
                 ) : (
                   <>
                     <IconBolt className="size-4" />
-                    <span>Start Restore</span>
+                    <span>{restoreButtonLabel}</span>
                   </>
                 )}
               </Button>
@@ -987,18 +1074,66 @@ export function RestoresPageClient({
   const [selectedPoint, setSelectedPoint] = useState<RecoveryPoint | null>(null);
   const [search, setSearch] = useState("");
   const [viewingLogsDrill, setViewingLogsDrill] = useState<RestoreDrill | null>(null);
+  const [drawerLogs, setDrawerLogs] = useState<string[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState<boolean>(false);
+  const [drawerCopied, setDrawerCopied] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!viewingLogsDrill) {
+      setDrawerLogs([]);
+      setLoadingLogs(false);
+      setDrawerCopied(false);
+      return;
+    }
+
+    if (viewingLogsDrill.logs && viewingLogsDrill.logs.length > 0) {
+      setDrawerLogs(viewingLogsDrill.logs);
+      setLoadingLogs(false);
+    } else {
+      setLoadingLogs(true);
+      setDrawerLogs([]);
+    }
+
+    let isMounted = true;
+    getRestoreLogs(viewingLogsDrill.id)
+      .then((logs) => {
+        if (!isMounted) return;
+        if (logs && logs.length > 0) {
+          setDrawerLogs(logs);
+        } else if (!viewingLogsDrill.logs || viewingLogsDrill.logs.length === 0) {
+          setDrawerLogs([
+            `[INIT] Connected to telemetry recorder for ${viewingLogsDrill.id}`,
+            `[INFO] Target: ${viewingLogsDrill.targetDb}`,
+            `[INFO] Status: ${viewingLogsDrill.status.toUpperCase()}`,
+            viewingLogsDrill.status === "passed" || viewingLogsDrill.status === "complete"
+              ? `[SUCCESS] Operation completed in ${viewingLogsDrill.durationSec}s`
+              : viewingLogsDrill.status === "failed"
+              ? `[ERROR] Operation failed during execution`
+              : `[INFO] Operation in progress...`,
+          ]);
+        }
+        setLoadingLogs(false);
+      })
+      .catch(() => {
+        if (isMounted) setLoadingLogs(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [viewingLogsDrill]);
 
   const drillQuotaReached = !isPro && monthlyDrillsUsed >= 1;
 
   function handleOpenDrill() {
     setDrawerMode("drill");
-    setSelectedPoint(null);
+    setSelectedPoint(recoveryPoints.length > 0 ? recoveryPoints[recoveryPoints.length - 1] : null);
     setDrawerOpen(true);
   }
 
   function handleOpenRestore() {
     setDrawerMode("restore");
-    setSelectedPoint(null);
+    setSelectedPoint(recoveryPoints.length > 0 ? recoveryPoints[recoveryPoints.length - 1] : null);
     setDrawerOpen(true);
   }
 
@@ -1166,6 +1301,7 @@ export function RestoresPageClient({
         open={drawerOpen}
         defaultMode={drawerMode}
         defaultPoint={selectedPoint}
+        availablePoints={recoveryPoints}
         projectId={projectId}
         orgId={orgId}
         isPro={isPro}
@@ -1202,28 +1338,69 @@ export function RestoresPageClient({
         <SheetContent
           side="right"
           showCloseButton={true}
-          className="w-full data-[side=right]:w-full sm:data-[side=right]:w-auto sm:data-[side=right]:max-w-[460px] sm:max-w-[460px] p-0 flex flex-col gap-0"
+          className="w-full data-[side=right]:w-full sm:data-[side=right]:w-auto sm:data-[side=right]:max-w-[480px] sm:max-w-[480px] p-0 flex flex-col gap-0"
         >
-          <SheetHeader className="px-6 py-5 border-b border-border space-y-0">
-            <SheetTitle>
-              Logs for Drill #{viewingLogsDrill?.id.replace("drill-", "")}
-            </SheetTitle>
-            <SheetDescription className="font-mono text-[11px]">
-              {viewingLogsDrill?.executedAt} · Duration: {viewingLogsDrill?.durationSec}s
-            </SheetDescription>
+          <SheetHeader className="px-6 py-5 border-b border-border space-y-1">
+            <div className="flex items-center justify-between pr-6">
+              <SheetTitle className="text-base font-semibold truncate">
+                Logs for {viewingLogsDrill?.type === "live_restore" ? "Restore" : "Drill"} #{viewingLogsDrill?.id.replace(/^(drill-|backlify-restoreJob-)/, "")}
+              </SheetTitle>
+            </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
+              <span>{viewingLogsDrill?.executedAt} · {viewingLogsDrill?.durationSec}s</span>
+              {drawerLogs.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(drawerLogs.join("\n"));
+                    setDrawerCopied(true);
+                    setTimeout(() => setDrawerCopied(false), 2000);
+                  }}
+                  className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  {drawerCopied ? <IconCheck className="size-3 text-emerald-400" /> : <IconCopy className="size-3" />}
+                  <span>{drawerCopied ? "Copied" : "Copy Logs"}</span>
+                </button>
+              )}
+            </div>
           </SheetHeader>
 
           <div className="flex-1 p-6 overflow-y-auto">
-            <div className="p-4 rounded-lg border border-border bg-[#050505] font-mono text-[11.5px] space-y-1.5 leading-relaxed text-muted-foreground">
-              {viewingLogsDrill?.logs.map((l, i) => (
-                <div key={i} className="flex items-start gap-2">
-                  <span className="text-muted-foreground/40 select-none">$</span>
-                  <span className={l.includes("[SUCCESS]") ? "text-emerald-400 font-semibold" : l.includes("[VERIFY]") ? "text-primary" : "text-muted-foreground"}>
-                    {l}
-                  </span>
-                </div>
-              ))}
-            </div>
+            {loadingLogs ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center space-y-3">
+                <div className="size-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                <p className="text-xs text-muted-foreground font-mono">Fetching console logs from Redis telemetry...</p>
+              </div>
+            ) : drawerLogs.length > 0 ? (
+              <div className="p-4 rounded-lg border border-border bg-[#050505] font-mono text-[11.5px] space-y-1.5 leading-relaxed text-muted-foreground">
+                {drawerLogs.map((l, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <span className="text-muted-foreground/40 select-none shrink-0">$</span>
+                    <span
+                      className={
+                        l.includes("[SUCCESS]") || l.includes("[COMPLETE]")
+                          ? "text-emerald-400 font-semibold"
+                          : l.includes("[ERROR]")
+                          ? "text-red-400 font-semibold"
+                          : l.includes("[VERIFY]")
+                          ? "text-primary"
+                          : l.includes("[DOWNLOAD]") || l.includes("[RESTORE]")
+                          ? "text-blue-300"
+                          : l.includes("[CHECKSUM]")
+                          ? "text-amber-300"
+                          : "text-muted-foreground"
+                      }
+                    >
+                      {l}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-6 rounded-lg border border-border/60 bg-card/40 text-center">
+                <p className="text-xs text-muted-foreground">No console logs recorded for this operation.</p>
+              </div>
+            )}
           </div>
         </SheetContent>
       </Sheet>

@@ -250,15 +250,12 @@ export class PgDumpService {
 
             const args = [
                 '-h', conn.host,
-
                 '-p', conn.port,
-                
                 '-U', conn.user,
-                
                 '-Fc',
-                
+                '--no-owner',
+                '--no-privileges',
                 '-f', outputFile,
-                
                 conn.database,
             ];
                 

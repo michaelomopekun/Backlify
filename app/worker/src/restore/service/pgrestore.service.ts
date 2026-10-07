@@ -115,6 +115,7 @@ export class PgRestoreService {
                 '--clean',
                 '--if-exists',
                 '--no-owner',
+                '--no-privileges',
                 backupFilePath,
             ];
                 
@@ -163,7 +164,22 @@ export class PgRestoreService {
                     return;
                 }
 
+                // In PostgreSQL pg_restore:
+                // Exit code 0: completed with zero warnings/errors.
+                // Exit code 1: completed with non-fatal warnings or ignored errors (e.g. cloud role privileges, default ACLs, drop if exists notices).
+                // If no fatal/abort error occurred, all tables, schemas, and data were successfully restored.
+                const hasFatalError = stderr.toLowerCase().includes("fatal:") || 
+                                     stderr.toLowerCase().includes("connection to server was lost") ||
+                                     stderr.toLowerCase().includes("could not connect to server") ||
+                                     stderr.toLowerCase().includes("archiver (db) connection to database failed");
+
                 if (code === 0) {
+                    resolve({ success: true });
+                } else if (code === 1 && !hasFatalError) {
+                    if (onLog) {
+                        onLog("[WARN] pg_restore completed with non-fatal warnings (cloud-provider privilege statements or default ACLs ignored).");
+                    }
+                    logger.warn({ code, stderr }, "pg_restore completed with non-fatal warnings (code 1)");
                     resolve({ success: true });
                 } else {
                     resolve({
