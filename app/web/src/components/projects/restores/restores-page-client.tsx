@@ -513,30 +513,40 @@ function RestoreWizardDrawer({
 
   const logsEndRef = useRef<HTMLDivElement>(null);
   const sseRef = useRef<EventSource | null>(null);
+  const prevOpenRef = useRef(open);
 
   useEffect(() => {
-    setMode(defaultMode);
-    setIsExecuting(false);
-    setExecutionStep(0);
-    setLiveLogs([]);
-    setConfirmWord("");
-    setTargetUrl("");
+    const wasOpen = prevOpenRef.current;
+    prevOpenRef.current = open;
 
-    if (defaultPoint) {
-      setSelectedPointId(defaultPoint.id);
-    } else if (availablePoints.length > 0) {
-      setSelectedPointId(availablePoints[availablePoints.length - 1].id);
-    } else {
-      setSelectedPointId("");
+    // Only initialize form fields when opening the drawer afresh (not during live execution)
+    if (open && !wasOpen && !isExecuting) {
+      setMode(defaultMode);
+      setExecutionStep(0);
+      setLiveLogs([]);
+      setConfirmWord("");
+      setTargetUrl("");
+
+      if (defaultPoint) {
+        setSelectedPointId(defaultPoint.id);
+      } else if (availablePoints.length > 0) {
+        setSelectedPointId(availablePoints[availablePoints.length - 1].id);
+      } else {
+        setSelectedPointId("");
+      }
     }
 
-    return () => {
+    // Only cleanup when drawer is closed
+    if (!open) {
       if (sseRef.current) {
         sseRef.current.close();
         sseRef.current = null;
       }
-    };
-  }, [open, defaultMode, defaultPoint, availablePoints]);
+      setIsExecuting(false);
+      setExecutionStep(0);
+      setLiveLogs([]);
+    }
+  }, [open, defaultMode]);
 
   useEffect(() => {
     if (logsEndRef.current) {
@@ -630,18 +640,18 @@ function RestoreWizardDrawer({
               setExecutionStep(5);
               es.close();
 
-              if (mode === "drill" && onDrillCompleted) {
+              if (onDrillCompleted) {
                 const durationSec = Math.max(1, Math.round((Date.now() - startTime) / 1000));
                 onDrillCompleted({
                   id: targetJobId!,
-                  type: "automated_drill",
+                  type: mode === "drill" ? "automated_drill" : "live_restore",
                   status: "passed",
-                  targetDb: "headless-sandbox (verified in memory)",
-                  sourceSnapshot: defaultPoint?.snapshotId || "latest-verified",
+                  targetDb: mode === "drill" ? "headless-sandbox (verified in memory)" : trimmedUrl.replace(/:[^@]+@/, ":••••••••@"),
+                  sourceSnapshot: activePoint?.snapshotId || "latest-verified",
                   sourceTimestamp: new Date().toISOString(),
                   executedAt: "Just now",
                   durationSec,
-                  sizeMb: defaultPoint?.size ? parseInt(defaultPoint.size) || 12 : 12,
+                  sizeMb: activePoint?.size ? parseInt(activePoint.size) || 12 : 12,
                   integrityChecks: [
                     { name: "Bit-rot Checksum (SHA-256)", passed: true, details: "Zero corruption" },
                     { name: "AES-256 Envelope Decryption", passed: true, details: "Valid KMS key" },
@@ -1052,6 +1062,24 @@ function RestoreWizardDrawer({
    Main Page Client
 ───────────────────────────────────────────────────────────────────*/
 
+function deriveExecutionStep(logs: string[]): number {
+  if (!logs || logs.length === 0) return 1;
+  const text = logs.join(" ");
+  if (text.includes("[COMPLETE]") || text.includes("Database successfully restored") || text.includes("completed in")) {
+    return 5;
+  }
+  if (text.includes("[RESTORE]") || text.includes("pg_restore:") || text.includes("[VERIFY]")) {
+    return 4;
+  }
+  if (text.includes("[CHECKSUM]") || text.includes("Decrypting snapshot")) {
+    return 3;
+  }
+  if (text.includes("[DOWNLOAD]")) {
+    return 2;
+  }
+  return 1;
+}
+
 export function RestoresPageClient({
   orgId,
   projectId,
@@ -1077,17 +1105,43 @@ export function RestoresPageClient({
   const [drawerLogs, setDrawerLogs] = useState<string[]>([]);
   const [loadingLogs, setLoadingLogs] = useState<boolean>(false);
   const [drawerCopied, setDrawerCopied] = useState<boolean>(false);
+  const [drawerExecutionStep, setDrawerExecutionStep] = useState<number>(1);
+  const [drawerIsLive, setDrawerIsLive] = useState<boolean>(false);
+  const drawerLogsEndRef = useRef<HTMLDivElement>(null);
+  const drawerSseRef = useRef<EventSource | null>(null);
+
+  useEffect(() => {
+    setDrills(initialDrills);
+  }, [initialDrills]);
+
+  useEffect(() => {
+    if (drawerLogsEndRef.current) {
+      drawerLogsEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [drawerLogs]);
 
   useEffect(() => {
     if (!viewingLogsDrill) {
+      if (drawerSseRef.current) {
+        drawerSseRef.current.close();
+        drawerSseRef.current = null;
+      }
       setDrawerLogs([]);
       setLoadingLogs(false);
       setDrawerCopied(false);
+      setDrawerExecutionStep(1);
+      setDrawerIsLive(false);
       return;
+    }
+
+    if (drawerSseRef.current) {
+      drawerSseRef.current.close();
+      drawerSseRef.current = null;
     }
 
     if (viewingLogsDrill.logs && viewingLogsDrill.logs.length > 0) {
       setDrawerLogs(viewingLogsDrill.logs);
+      setDrawerExecutionStep(deriveExecutionStep(viewingLogsDrill.logs));
       setLoadingLogs(false);
     } else {
       setLoadingLogs(true);
@@ -1098,9 +1152,11 @@ export function RestoresPageClient({
     getRestoreLogs(viewingLogsDrill.id)
       .then((logs) => {
         if (!isMounted) return;
-        if (logs && logs.length > 0) {
-          setDrawerLogs(logs);
-        } else if (!viewingLogsDrill.logs || viewingLogsDrill.logs.length === 0) {
+        const finalLogs = logs && logs.length > 0 ? logs : viewingLogsDrill.logs || [];
+        if (finalLogs.length > 0) {
+          setDrawerLogs(finalLogs);
+          setDrawerExecutionStep(deriveExecutionStep(finalLogs));
+        } else {
           setDrawerLogs([
             `[INIT] Connected to telemetry recorder for ${viewingLogsDrill.id}`,
             `[INFO] Target: ${viewingLogsDrill.targetDb}`,
@@ -1113,6 +1169,51 @@ export function RestoresPageClient({
           ]);
         }
         setLoadingLogs(false);
+
+        const isFinished =
+          viewingLogsDrill.status === "passed" ||
+          viewingLogsDrill.status === "complete" ||
+          viewingLogsDrill.status === "failed" ||
+          finalLogs.some((l) => l.includes("[COMPLETE]") || l.includes("Database successfully restored"));
+
+        if (!isFinished && isMounted) {
+          setDrawerIsLive(true);
+          const es = new EventSource(`/api/jobs/${viewingLogsDrill.id}/telemetry`);
+          drawerSseRef.current = es;
+
+          es.onmessage = (ev) => {
+            if (!isMounted) return;
+            try {
+              const telemetry = JSON.parse(ev.data);
+              if (telemetry && telemetry.message) {
+                const logLine = `[${telemetry.phase || "INFO"}] ${telemetry.message}`;
+                setDrawerLogs((prev) => {
+                  if (prev.length > 0 && prev[prev.length - 1] === logLine) return prev;
+                  return [...prev, logLine];
+                });
+
+                if (telemetry.phase === "DOWNLOAD") setDrawerExecutionStep(2);
+                else if (telemetry.phase === "CHECKSUM") setDrawerExecutionStep(3);
+                else if (telemetry.phase === "RESTORE" || telemetry.phase === "INDEX") setDrawerExecutionStep(4);
+                else if (telemetry.phase === "COMPLETE") {
+                  setDrawerExecutionStep(5);
+                  setDrawerIsLive(false);
+                  es.close();
+                } else if (telemetry.phase === "ERROR") {
+                  setDrawerIsLive(false);
+                  es.close();
+                }
+              }
+            } catch {}
+          };
+
+          es.addEventListener("done", () => {
+            if (!isMounted) return;
+            setDrawerExecutionStep(5);
+            setDrawerIsLive(false);
+            es.close();
+          });
+        }
       })
       .catch(() => {
         if (isMounted) setLoadingLogs(false);
@@ -1120,6 +1221,10 @@ export function RestoresPageClient({
 
     return () => {
       isMounted = false;
+      if (drawerSseRef.current) {
+        drawerSseRef.current.close();
+        drawerSseRef.current = null;
+      }
     };
   }, [viewingLogsDrill]);
 
@@ -1347,7 +1452,19 @@ export function RestoresPageClient({
               </SheetTitle>
             </div>
             <div className="flex items-center justify-between text-xs text-muted-foreground font-mono">
-              <span>{viewingLogsDrill?.executedAt} · {viewingLogsDrill?.durationSec}s</span>
+              <div className="flex items-center gap-2">
+                <span>{viewingLogsDrill?.executedAt} · {viewingLogsDrill?.durationSec}s</span>
+                {drawerIsLive ? (
+                  <span className="flex items-center gap-1.5 text-emerald-400">
+                    <span className="size-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                    <span>Live streaming</span>
+                  </span>
+                ) : viewingLogsDrill?.status === "passed" || viewingLogsDrill?.status === "complete" || drawerExecutionStep === 5 ? (
+                  <span className="text-emerald-400 font-semibold">Completed</span>
+                ) : viewingLogsDrill?.status === "failed" ? (
+                  <span className="text-red-400 font-semibold">Failed</span>
+                ) : null}
+              </div>
               {drawerLogs.length > 0 && (
                 <button
                   type="button"
@@ -1365,14 +1482,42 @@ export function RestoresPageClient({
             </div>
           </SheetHeader>
 
-          <div className="flex-1 p-6 overflow-y-auto">
-            {loadingLogs ? (
+          <div className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-4">
+            {/* Recovery Stepper Card */}
+            <Card className="border-border/60 bg-card/60">
+              <CardContent className="py-3 px-3.5 space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
+                  <span>Recovery Stepper</span>
+                  <span className="text-primary font-semibold">
+                    {drawerExecutionStep === 5 ? "Completed" : `Phase ${drawerExecutionStep} of 5`}
+                  </span>
+                </div>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {["Sandbox", "Download", "pg_restore", "Verify", "Teardown"].map((st, i) => {
+                    const isDone = drawerExecutionStep > i + 1 || (drawerExecutionStep === 5 && i === 4);
+                    const isCurrent = drawerExecutionStep === i + 1 && drawerExecutionStep !== 5;
+                    return (
+                      <div key={st} className="space-y-1">
+                        <div
+                          className={`h-1.5 rounded-full transition-colors ${
+                            isDone ? "bg-emerald-400" : isCurrent ? "bg-primary animate-pulse" : "bg-muted"
+                          }`}
+                        />
+                        <p className="text-[9px] font-mono text-muted-foreground text-center truncate">{st}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            {loadingLogs && drawerLogs.length === 0 ? (
               <div className="flex flex-col items-center justify-center p-8 text-center space-y-3">
                 <div className="size-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 <p className="text-xs text-muted-foreground font-mono">Fetching console logs from Redis telemetry...</p>
               </div>
             ) : drawerLogs.length > 0 ? (
-              <div className="p-4 rounded-lg border border-border bg-[#050505] font-mono text-[11.5px] space-y-1.5 leading-relaxed text-muted-foreground">
+              <div className="p-4 rounded-lg border border-border bg-[#050505] font-mono text-[11.5px] space-y-1.5 leading-relaxed text-muted-foreground max-h-[460px] overflow-y-auto">
                 {drawerLogs.map((l, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="text-muted-foreground/40 select-none shrink-0">$</span>
@@ -1395,6 +1540,7 @@ export function RestoresPageClient({
                     </span>
                   </div>
                 ))}
+                <div ref={drawerLogsEndRef} />
               </div>
             ) : (
               <div className="p-6 rounded-lg border border-border/60 bg-card/40 text-center">
