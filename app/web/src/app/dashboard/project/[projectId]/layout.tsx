@@ -105,6 +105,8 @@ export default async function ProjectLayout({ children, params }: Props) {
         projectId={projectId}
         projectName={projectName}
         userInitials={user.initials}
+        userEmail={user.email}
+        userName={user.name}
         environment={project.environment}
         databaseUrl={project.databaseUrl}
         projects={allProjectsList}

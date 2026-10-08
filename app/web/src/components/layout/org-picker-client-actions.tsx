@@ -90,7 +90,9 @@ export function OrgPickerClientActions({ userInitials, userEmail, userName }: Pr
           <DropdownMenuLabel className="font-normal px-2 py-1.5">
             <div className="flex flex-col space-y-1">
               <p className="text-xs font-semibold leading-none text-white">{userName || "Account"}</p>
-              <p className="text-[11px] leading-none text-neutral-400 truncate">{userEmail || "user@backlify.dev"}</p>
+              {userEmail ? (
+                <p className="text-[11px] leading-none text-neutral-400 truncate">{userEmail}</p>
+              ) : null}
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="bg-[#262626]" />

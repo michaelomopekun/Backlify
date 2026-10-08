@@ -49,6 +49,8 @@ interface Props {
   projectId: string;
   projectName: string;
   userInitials: string;
+  userEmail?: string;
+  userName?: string;
   environment?: string | null;
   databaseUrl?: string | null;
   projects?: ProjectItem[];
@@ -61,6 +63,8 @@ export function ProjectHeader({
   projectId,
   projectName,
   userInitials,
+  userEmail,
+  userName,
   environment,
   databaseUrl,
   projects = [],
@@ -550,7 +554,11 @@ export function ProjectHeader({
 
         {/* Right Desktop actions */}
         <div className="ml-auto">
-          <OrgPickerClientActions userInitials={userInitials} />
+          <OrgPickerClientActions
+            userInitials={userInitials}
+            userEmail={userEmail}
+            userName={userName}
+          />
         </div>
       </div>
 

@@ -69,7 +69,11 @@ export default async function OrgWorkspaceRootLayout({
 
         {/* Right Topbar actions */}
         <div className="ml-auto">
-          <OrgPickerClientActions userInitials={user.initials} />
+          <OrgPickerClientActions
+            userInitials={user.initials}
+            userEmail={user.email}
+            userName={user.name}
+          />
         </div>
       </header>
 
