@@ -1512,7 +1512,7 @@ export function RestoresPageClient({
             </Card>
 
             {loadingLogs && drawerLogs.length === 0 ? (
-              <div className="flex flex-col items-center justify-center p-8 text-center space-y-3">
+              <div className="flex flex-col items-center justify-center p-8 text-center space-y-5">
                 <div className="size-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 <p className="text-xs text-muted-foreground font-mono">Fetching console logs from Redis telemetry...</p>
               </div>
