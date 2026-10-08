@@ -687,7 +687,11 @@ function RestoreWizardDrawer({
       <SheetContent
         side="right"
         showCloseButton={false}
-        className="w-full data-[side=right]:w-full sm:data-[side=right]:w-auto sm:data-[side=right]:max-w-[460px] sm:max-w-[460px] p-0 flex flex-col gap-0"
+        className={`w-full data-[side=right]:w-full sm:data-[side=right]:w-auto p-0 flex flex-col gap-0 h-full transition-all duration-200 ${
+          isExecuting
+            ? "sm:data-[side=right]:max-w-[620px] sm:max-w-[620px]"
+            : "sm:data-[side=right]:max-w-[480px] sm:max-w-[480px]"
+        }`}
       >
         {/* Header */}
         <SheetHeader className="px-5 sm:px-6 py-4 sm:py-5 border-b border-border space-y-1">
@@ -700,13 +704,19 @@ function RestoreWizardDrawer({
         </SheetHeader>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 sm:py-5 space-y-5 sm:space-y-6">
+        <div
+          className={`flex-1 min-h-0 ${
+            isExecuting
+              ? "p-5 sm:p-6 flex flex-col gap-3.5 overflow-hidden"
+              : "overflow-y-auto px-5 sm:px-6 py-4 sm:py-5 space-y-5 sm:space-y-6"
+          }`}
+        >
           {isExecuting ? (
             /* ── REALTIME TERMINAL & STEPPER ── */
-            <div className="space-y-4">
+            <>
               {/* Stepper */}
-              <Card>
-                <CardContent className="py-3.5 space-y-2">
+              <Card className="shrink-0 border-border/60 bg-card/60">
+                <CardContent className="py-3 px-3.5 space-y-2">
                   <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
                     <span>Recovery Stepper</span>
                     <span className="text-primary font-semibold">
@@ -733,9 +743,9 @@ function RestoreWizardDrawer({
               </Card>
 
               {/* Terminal View */}
-              <div className="rounded-lg border border-border bg-[#050505] overflow-hidden flex flex-col font-mono text-[11.5px]">
+              <div className="flex-1 min-h-[420px] rounded-lg border border-border bg-[#050505] overflow-hidden flex flex-col font-mono text-[11.5px]">
                 {/* Terminal Header */}
-                <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border">
+                <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border shrink-0">
                   <div className="flex items-center gap-2">
                     <div className="size-2 rounded-full bg-emerald-400 animate-ping" />
                     <span className="text-muted-foreground text-[11px]">live-stream · stdout</span>
@@ -743,7 +753,7 @@ function RestoreWizardDrawer({
                   <button
                     type="button"
                     onClick={handleCopyLogs}
-                    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                    className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   >
                     {copied ? <IconCheck className="size-3 text-emerald-400" /> : <IconCopy className="size-3" />}
                     <span>{copied ? "Copied" : "Copy Logs"}</span>
@@ -751,20 +761,24 @@ function RestoreWizardDrawer({
                 </div>
 
                 {/* Terminal Output */}
-                <div className="p-4 space-y-1.5 max-h-[380px] overflow-y-auto leading-relaxed text-muted-foreground">
+                <div className="flex-1 min-h-0 p-4 space-y-1.5 overflow-y-auto leading-relaxed text-muted-foreground">
                   {liveLogs.map((l, i) => (
                     <div key={i} className="flex items-start gap-2">
                       <span className="text-muted-foreground/40 select-none">$</span>
                       <span
-                        className={
-                          l.includes("[SUCCESS]")
+                        className={`break-all ${
+                          l.includes("[SUCCESS]") || l.includes("[COMPLETE]")
                             ? "text-emerald-400 font-semibold"
+                            : l.includes("[ERROR]")
+                            ? "text-red-400 font-semibold"
                             : l.includes("[VERIFY]")
                             ? "text-primary"
-                            : l.includes("[SANDBOX]")
-                            ? "text-blue-400"
+                            : l.includes("[DOWNLOAD]") || l.includes("[RESTORE]")
+                            ? "text-blue-300"
+                            : l.includes("[CHECKSUM]")
+                            ? "text-amber-300"
                             : "text-muted-foreground"
-                        }
+                        }`}
                       >
                         {l}
                       </span>
@@ -773,7 +787,7 @@ function RestoreWizardDrawer({
                   <div ref={logsEndRef} />
                 </div>
               </div>
-            </div>
+            </>
           ) : (
             /* ── CONFIGURATION FORM ── */
             <>
@@ -1443,7 +1457,7 @@ export function RestoresPageClient({
         <SheetContent
           side="right"
           showCloseButton={true}
-          className="w-full data-[side=right]:w-full sm:data-[side=right]:w-auto sm:data-[side=right]:max-w-[480px] sm:max-w-[480px] p-0 flex flex-col gap-0"
+          className="w-full data-[side=right]:w-full sm:data-[side=right]:w-auto sm:data-[side=right]:max-w-[620px] sm:max-w-[620px] p-0 flex flex-col gap-0 h-full"
         >
           <SheetHeader className="px-6 py-5 border-b border-border space-y-1">
             <div className="flex items-center justify-between pr-6">
@@ -1482,9 +1496,9 @@ export function RestoresPageClient({
             </div>
           </SheetHeader>
 
-          <div className="flex-1 p-5 sm:p-6 overflow-y-auto space-y-4">
+          <div className="flex-1 min-h-0 p-5 sm:p-6 flex flex-col gap-3.5 overflow-hidden">
             {/* Recovery Stepper Card */}
-            <Card className="border-border/60 bg-card/60">
+            <Card className="border-border/60 bg-card/60 shrink-0">
               <CardContent className="py-3 px-3.5 space-y-2">
                 <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground">
                   <span>Recovery Stepper</span>
@@ -1517,12 +1531,12 @@ export function RestoresPageClient({
                 <p className="text-xs text-muted-foreground font-mono">Fetching console logs from Redis telemetry...</p>
               </div>
             ) : drawerLogs.length > 0 ? (
-              <div className="p-4 rounded-lg border border-border bg-[#050505] font-mono text-[11.5px] space-y-1.5 leading-relaxed text-muted-foreground max-h-[460px] overflow-y-auto">
+              <div className="flex-1 min-h-0 p-4 rounded-lg border border-border bg-[#050505] font-mono text-[11.5px] space-y-1.5 leading-relaxed text-muted-foreground overflow-y-auto">
                 {drawerLogs.map((l, i) => (
                   <div key={i} className="flex items-start gap-2">
                     <span className="text-muted-foreground/40 select-none shrink-0">$</span>
                     <span
-                      className={
+                      className={`break-all ${
                         l.includes("[SUCCESS]") || l.includes("[COMPLETE]")
                           ? "text-emerald-400 font-semibold"
                           : l.includes("[ERROR]")
@@ -1534,7 +1548,7 @@ export function RestoresPageClient({
                           : l.includes("[CHECKSUM]")
                           ? "text-amber-300"
                           : "text-muted-foreground"
-                      }
+                      }`}
                     >
                       {l}
                     </span>
