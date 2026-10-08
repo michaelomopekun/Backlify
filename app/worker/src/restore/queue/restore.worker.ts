@@ -406,11 +406,11 @@ restoreWorker.on("failed", async (job, err) => {
     logger.error({ jobId: job.id, err: err.message }, "Restore job failed after retries");
 
     try {
-        await RestoreRepository.updateJobStatus(
-            job.data.jobId,
-            job.data.jobStatus,
-            RESTORE_JOB_STATUS.FAILED
-        );
+        await RestoreRepository.updateJobDetails(job.data.jobId, {
+            status: RESTORE_JOB_STATUS.FAILED,
+            completedAt: new Date(),
+            errorMessage: err.message || "Restore operation failed",
+        });
 
         // Resolve project and dispatch incident alert
         let projectId: string | null = (job.data as any).projectId || null;

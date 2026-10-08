@@ -76,10 +76,10 @@ export class RestoreRepository {
             const result = await db.update(restoreJobs)
 
                 .set({
-
                     status: newJobStatus as any,
-                
-                })
+                    ...(newJobStatus === RESTORE_JOB_STATUS.IN_PROGRESS ? { startedAt: new Date() } : {}),
+                    ...(newJobStatus === RESTORE_JOB_STATUS.COMPLETED || newJobStatus === RESTORE_JOB_STATUS.FAILED ? { completedAt: new Date() } : {}),
+                } as any)
                 
                 .where(
                 
