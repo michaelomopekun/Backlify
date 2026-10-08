@@ -34,4 +34,5 @@ export const backupFiles = pgTable('backup_files', {
 
 }, (table) => ({
   backupJobIdIdx: index('idx_backup_files_backup_job_id').on(table.backupJobId),
+  jobPurgedIdx: index('idx_backup_files_job_purged').on(table.backupJobId, table.purgedAt),
 }));
