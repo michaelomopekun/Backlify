@@ -50,8 +50,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const orgNav = [
   { label: "Projects", href: "", icon: IconFolder },
   { label: "Team", href: "/team", icon: IconUsers },
-  { label: "Integrations", href: "/integrations", icon: IconLayoutDashboard },
-  { label: "Usage", href: "/usage", icon: IconChartBar },
+  // { label: "Integrations", href: "/integrations", icon: IconLayoutDashboard },
+  // { label: "Usage", href: "/usage", icon: IconChartBar },
   { label: "Billing", href: "/billing", icon: IconCreditCard },
   { label: "Organization Settings", href: "/settings", icon: IconSettings },
 ];

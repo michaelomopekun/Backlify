@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -69,12 +70,12 @@ export interface OrgSettingsProps {
     projectsCount: number;
     totalStorageBytes: number;
   };
-  initialMembers: OrgMember[];
+  initialMembers?: OrgMember[];
 }
 
 export function OrgSettingsClient({
   organization,
-  initialMembers,
+  initialMembers = [],
 }: OrgSettingsProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -91,14 +92,7 @@ export function OrgSettingsClient({
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [isPortalLoading, setIsPortalLoading] = useState(false);
 
-  // Members state
-  const [members, setMembers] = useState<OrgMember[]>(initialMembers);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviteName, setInviteName] = useState("");
-  const [inviteRole, setInviteRole] = useState("member");
-  const [isInviting, setIsInviting] = useState(false);
-  const [isInviteOpen, setIsInviteOpen] = useState(false);
-  const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
+
 
   // Danger zone state
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
@@ -184,70 +178,7 @@ export function OrgSettingsClient({
     }
   };
 
-  // 2. Invite Member
-  const handleInviteMember = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inviteEmail.trim()) {
-      toast.error("Email address is required");
-      return;
-    }
 
-    setIsInviting(true);
-    try {
-      const res = await fetch(`/api/organizations/${organization.id}/members`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: inviteEmail.trim(),
-          name: inviteName.trim() || undefined,
-          role: inviteRole,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to invite member");
-      }
-
-      toast.success(`Invitation sent to ${inviteEmail}`);
-      setMembers((prev) => [...prev, data.member]);
-      setInviteEmail("");
-      setInviteName("");
-      setInviteRole("member");
-      setIsInviteOpen(false);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to invite member");
-    } finally {
-      setIsInviting(false);
-    }
-  };
-
-  // 3. Remove Member
-  const handleRemoveMember = async (memberId: string, email: string) => {
-    if (!confirm(`Are you sure you want to remove ${email} from this organization?`)) {
-      return;
-    }
-
-    setRemovingMemberId(memberId);
-    try {
-      const res = await fetch(
-        `/api/organizations/${organization.id}/members?memberId=${memberId}`,
-        { method: "DELETE" }
-      );
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || "Failed to remove member");
-      }
-
-      toast.success("Member removed successfully");
-      setMembers((prev) => prev.filter((m) => m.id !== memberId));
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to remove member");
-    } finally {
-      setRemovingMemberId(null);
-    }
-  };
 
   // 4. Delete Organization
   const handleDeleteOrganization = async () => {
@@ -491,7 +422,10 @@ export function OrgSettingsClient({
             <div className="p-3.5 rounded-md bg-[#161616] border border-[#262626]">
               <div className="text-[11px] text-[#777777]">Team Seats</div>
               <div className="text-lg font-semibold text-white mt-1">
-                {members.length} <span className="text-xs text-[#555555] font-normal">/ Unlimited</span>
+                {initialMembers.length || 1}{" "}
+                <span className="text-xs text-[#555555] font-normal">
+                  / {isPro ? "Unlimited" : "1 max"}
+                </span>
               </div>
             </div>
           </div>
@@ -572,252 +506,32 @@ export function OrgSettingsClient({
         orgId={organization.id}
       />
 
-      {/* ─── 3. Team & Member Management ─── */}
+      {/* ─── 3. Team & Member Management Callout (Matches Supabase Org Settings) ─── */}
       <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-hidden">
-        <div className="p-5 border-b border-[#222222] flex items-center justify-between">
+        <div className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-md bg-[#181818] border border-[#2a2a2a] text-[#888888]">
               <IconUsers className="size-4" />
             </div>
             <div>
-              <h2 className="text-sm font-medium text-white">Team Members</h2>
-              <p className="text-xs text-muted-foreground">
-                Manage access and collaborator roles for this organization
+              <h2 className="text-sm font-medium text-white">Team Members & Collaborators</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Manage member seats, invitations, and role-based access control on the dedicated Team page.
               </p>
             </div>
           </div>
 
-          <Dialog open={isInviteOpen} onOpenChange={setIsInviteOpen}>
-            <DialogTrigger asChild>
-              <Button
-                type="button"
-                size="sm"
-                className="h-8 px-3 text-xs font-medium bg-white text-black hover:bg-neutral-200 transition-colors"
-              >
-                <IconUserPlus className="size-3.5 mr-1.5" />
-                Invite Member {!isPro && "(Pro)"}
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="bg-[#121212] border-[#252525] text-white max-w-md">
-              <DialogHeader>
-                <div className="flex items-center gap-2 mb-1">
-                  <DialogTitle className="text-base text-white">Invite Team Member</DialogTitle>
-                  {!isPro && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-bold">
-                      PRO FEATURE
-                    </span>
-                  )}
-                </div>
-                <DialogDescription className="text-xs text-muted-foreground">
-                  {!isPro
-                    ? "Team collaboration and role-based access control (RBAC) are exclusively available on the Pro plan."
-                    : `Send an invitation to join ${organization.name}. They will receive access based on their assigned role.`}
-                </DialogDescription>
-              </DialogHeader>
-
-              {!isPro ? (
-                <div className="space-y-4 py-3">
-                  <div className="p-4 rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-200 text-xs space-y-2">
-                    <div className="flex items-center gap-2 font-medium">
-                      <IconSparkles className="size-4 text-amber-400 shrink-0" />
-                      <span>Free Plan is Limited to 1 Seat (Solo Owner)</span>
-                    </div>
-                    <p className="text-muted-foreground text-[11.5px] leading-relaxed">
-                      Upgrade to Backlify Pro for <strong>{priceWithPeriod}</strong> to invite unlimited engineers, assign Admin/Member roles, and collaborate seamlessly.
-                    </p>
-                  </div>
-
-                  <DialogFooter className="pt-2 flex flex-col sm:flex-row gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsInviteOpen(false)}
-                      className="h-8.5 px-3 text-xs border-[#333333] text-muted-foreground hover:text-white"
-                    >
-                      Close
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        setIsInviteOpen(false);
-                        setIsUpgradeOpen(true);
-                      }}
-                      className="h-8.5 px-4 text-xs font-semibold bg-amber-500 text-black hover:bg-amber-400 gap-1.5 transition-colors"
-                    >
-                      <IconSparkles className="size-3.5" />
-                      Upgrade to Pro ({priceFormatted})
-                    </Button>
-                  </DialogFooter>
-                </div>
-              ) : (
-                <form onSubmit={handleInviteMember} className="space-y-4 py-2">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="invite-email" className="text-xs text-[#aaaaaa]">
-                      Email Address <span className="text-red-400">*</span>
-                    </Label>
-                    <Input
-                      id="invite-email"
-                      type="email"
-                      required
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      placeholder="teammate@company.com"
-                      className="bg-[#181818] border-[#2c2c2c] text-white text-sm h-9"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="invite-name" className="text-xs text-[#aaaaaa]">
-                      Full Name (Optional)
-                    </Label>
-                    <Input
-                      id="invite-name"
-                      value={inviteName}
-                      onChange={(e) => setInviteName(e.target.value)}
-                      placeholder="Jane Doe"
-                      className="bg-[#181818] border-[#2c2c2c] text-white text-sm h-9"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-[#aaaaaa]">Role</Label>
-                    <Select value={inviteRole} onValueChange={setInviteRole}>
-                      <SelectTrigger className="bg-[#181818] border-[#2c2c2c] text-white text-sm h-9">
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-[#161616] border-[#2c2c2c] text-white">
-                        <SelectItem value="member">
-                          <div className="text-xs">
-                            <span className="font-medium text-white">Member</span> — View and trigger backup jobs
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="admin">
-                          <div className="text-xs">
-                            <span className="font-medium text-white">Admin</span> — Manage projects, storage vaults, and settings
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <DialogFooter className="pt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsInviteOpen(false)}
-                      className="h-8 px-3 text-xs border-[#333333] text-muted-foreground hover:text-white"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      disabled={isInviting || !inviteEmail.trim()}
-                      className="h-8 px-3 text-xs font-medium bg-white text-black hover:bg-neutral-200"
-                    >
-                      {isInviting ? (
-                        <>
-                          <IconLoader2 className="size-3.5 mr-1.5 animate-spin" />
-                          Sending...
-                        </>
-                      ) : (
-                        "Send Invitation"
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </form>
-              )}
-            </DialogContent>
-          </Dialog>
-        </div>
-
-        {/* Members Roster Table */}
-        <div className="divide-y divide-[#1e1e1e]">
-          {members.length === 0 ? (
-            <div className="p-8 text-center text-xs text-muted-foreground">
-              No members found for this organization.
-            </div>
-          ) : (
-            members.map((member) => {
-              const isOwner = member.role === "owner";
-              const initials = (member.name || member.email)
-                .substring(0, 2)
-                .toUpperCase();
-
-              return (
-                <div
-                  key={member.id}
-                  className="p-4 flex items-center justify-between gap-4 hover:bg-[#151515] transition-colors"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <Avatar className="size-8 border border-[#2a2a2a] shrink-0">
-                      <AvatarFallback className="bg-[#1c1c1c] text-[11px] font-medium text-neutral-300">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-white truncate">
-                          {member.name || member.email.split("@")[0]}
-                        </span>
-                        {isOwner && (
-                          <span className="text-[10px] px-1.5 py-0.2 rounded border border-[#333333] bg-[#1a1a1a] text-neutral-300 font-medium">
-                            Owner
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground truncate font-mono">
-                        {member.email}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-3 shrink-0">
-                    <span className="text-[11px] text-[#666666] hidden sm:inline">
-                      {member.joinedAt ? "Joined" : "Invited"}{" "}
-                      {new Date(member.invitedAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </span>
-
-                    <Badge
-                      variant="outline"
-                      className={`text-[10px] uppercase font-mono tracking-wider ${
-                        isOwner
-                          ? "border-neutral-700 bg-neutral-900/60 text-white"
-                          : member.role === "admin"
-                          ? "border-neutral-700 bg-neutral-900/40 text-neutral-300"
-                          : "border-neutral-800 bg-neutral-900/20 text-neutral-400"
-                      }`}
-                    >
-                      {member.role}
-                    </Badge>
-
-                    {isOwner ? (
-                      <div className="w-7 flex justify-center text-[#444444]" title="Owner cannot be removed">
-                        <IconShield className="size-3.5" />
-                      </div>
-                    ) : (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        disabled={removingMemberId === member.id}
-                        onClick={() => handleRemoveMember(member.id, member.email)}
-                        className="size-7 text-[#777777] hover:text-red-400 hover:bg-red-950/20 transition-colors"
-                      >
-                        {removingMemberId === member.id ? (
-                          <IconLoader2 className="size-3.5 animate-spin" />
-                        ) : (
-                          <IconTrash className="size-3.5" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              );
-            })
-          )}
+          <Button
+            asChild
+            variant="outline"
+            size="sm"
+            className="h-8.5 px-3.5 text-xs bg-[#161616] border-[#2c2c2c] text-white hover:bg-[#202020] transition-colors shrink-0"
+          >
+            <Link href={`/dashboard/org/${organization.id}/team`}>
+              <span>Manage Team</span>
+              <IconArrowUpRight className="size-3.5 ml-1.5 text-[#888888]" />
+            </Link>
+          </Button>
         </div>
       </div>
 

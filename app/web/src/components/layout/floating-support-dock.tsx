@@ -185,8 +185,8 @@ export function FloatingSupportDock() {
   const orgNavItems = [
     { label: "Projects", href: orgId ? `/dashboard/org/${orgId}` : "/dashboard/org", icon: IconFolder, exact: true },
     { label: "Team", href: orgId ? `/dashboard/org/${orgId}/team` : "/dashboard/org", icon: IconUsers },
-    { label: "Integrations", href: orgId ? `/dashboard/org/${orgId}/integrations` : "/dashboard/org", icon: IconLayoutDashboard },
-    { label: "Usage", href: orgId ? `/dashboard/org/${orgId}/usage` : "/dashboard/org", icon: IconChartBar },
+    // { label: "Integrations", href: orgId ? `/dashboard/org/${orgId}/integrations` : "/dashboard/org", icon: IconLayoutDashboard },
+    // { label: "Usage", href: orgId ? `/dashboard/org/${orgId}/usage` : "/dashboard/org", icon: IconChartBar },
     { label: "Billing", href: orgId ? `/dashboard/org/${orgId}/billing` : "/dashboard/org", icon: IconCreditCard },
     { label: "Organization settings", href: orgId ? `/dashboard/org/${orgId}/settings` : "/dashboard/org", icon: IconSettings },
   ];
