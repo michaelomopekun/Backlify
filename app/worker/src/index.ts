@@ -10,122 +10,79 @@ import {redis} from 'shared/config/redis';
 
 // import { RestoreService } from './restore/service/restore.service';
 
-import './backup/queue/backup.worker';
-
-import './restore/queue/restore.worker';
-
+import { backupWorker } from './backup/queue/backup.worker';
+import { restoreWorker } from './restore/queue/restore.worker';
 import { loadSchedules } from './schedule/schedule.loader';
-
 import { RecoveryLoader } from './schedule/recovery.loader';
 
+// Top-level crash protection against unexpected network / socket drops
+process.on('unhandledRejection', (reason: unknown, promise: Promise<unknown>) => {
+  logger.error({ reason, promise }, 'Unhandled Rejection caught in worker process');
+});
 
+process.on('uncaughtException', (error: Error) => {
+  logger.error({ error: error.message, stack: error.stack }, 'Uncaught Exception caught in worker process');
+});
 
+const port = Number(process.env.PORT) || 8080;
+const server = http.createServer((_, res) => res.end("Backlify Worker is running!")).listen(port, () => {
+  logger.info(`Internal health check server listening on port ${port}`);
+});
 
 async function main() {
-
   try {
-
     logger.info('Worker starting...');
 
     // Test Redis connection
     await redis.ping();
-    
     logger.info('Redis connection verified');
-
 
     // Load active backup schedules
     await loadSchedules();
 
-
     // Start recovery loader for stalled jobs
     const recoveryLoader = new RecoveryLoader();
-
     recoveryLoader.start();
-
-
-    // // backup test
-
-    // logger.info('backup Worker listening...');
-
-
-    // // Create and queue test job
-    // const databaseUrl1 = "postgresql://postgres:Galaxias2005%25%25@localhost:5002/roadrescuedb";
-
-    // logger.info('Creating test backup job...');
-
-    // const backupService = new BackupService();
-    
-    // const testJob1 = await backupService.createBackup({
-    
-    //   databaseUrl: databaseUrl1!,
-    
-    // });
-
-    // logger.info({ testJob1 }, 'Backup job result');
-
-
-
-    // // restore test
-
-    // logger.info("restore Worker Listening...");
-
-    // // Create and queue test job
-
-    // const databaseUrl = "postgresql://postgres:Galaxias2005%25%25@localhost:5002/roadrescuedb_restored";
-
-    // logger.info("Creating test restore job...");
-
-    // const restoreService = new RestoreService();
-
-    // const testJob = await restoreService.createRestore({
-
-    //   targetDatabaseUrl: databaseUrl,
-    //   backupFileId: "bkf-c4bd03c1-d41" 
-
-    // });
-
-    // logger.info({ testJob }, "Restore job result");
-    
 
     logger.info('Worker is now listening for backup and restore jobs...');
 
+    // Graceful shutdown handler for SIGINT and SIGTERM (sent by Fly.io and Docker)
+    let isShuttingDown = false;
+    const shutdown = async (signal: string) => {
+      if (isShuttingDown) return;
+      isShuttingDown = true;
 
-    // shutdown
-    process.on('SIGINT', async () => {
-    
-      logger.info('Shutting down worker...');
-    
+      logger.info(`Received ${signal}. Gracefully shutting down worker...`);
 
-      recoveryLoader.stop();
+      try {
+        recoveryLoader.stop();
 
+        logger.info('Closing BullMQ workers to finish active jobs...');
+        await Promise.allSettled([
+          backupWorker.close(),
+          restoreWorker.close(),
+        ]);
 
-      await redis.quit();
-    
-      logger.info('Bye!');
-    
-      process.exit(0);
-    
-    });
-  
+        await redis.quit();
+
+        server.close();
+
+        logger.info('Graceful shutdown completed. Exiting.');
+        process.exit(0);
+      } catch (shutdownErr) {
+        logger.error({ error: shutdownErr }, 'Error during graceful shutdown');
+        process.exit(1);
+      }
+    };
+
+    process.on('SIGINT', () => shutdown('SIGINT'));
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+
   } catch (error) {
-  
     logger.error(error, 'Failed to start worker');
-  
     process.exit(1);
-  
   }
-  
 }
 
-
 main();
-
-
-const port = Number(process.env.PORT) || 8080;
-
-http.createServer((_, res) => res.end("Backlify Worker is running!")).listen(port, () => {
-
-  logger.info(`Health check server listening on port ${port}`);
-
-});
 
