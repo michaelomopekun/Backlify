@@ -344,7 +344,7 @@ export const backupWorker = new Worker<any>(
 
         connection: redis as any,
 
-        concurrency: 5,
+        concurrency: Number(process.env.BACKUP_CONCURRENCY) || 2,
 
     }
 

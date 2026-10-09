@@ -1,22 +1,14 @@
 import {
-
     S3Client,
-
     PutObjectCommand,
-
     GetObjectCommand,
-
     DeleteObjectCommand,
-
 } from "@aws-sdk/client-s3";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
 
 import { Readable } from "stream";
-
 import { promises as fs } from "fs";
-
 import { createReadStream, createWriteStream } from "fs";
-
-
 
 /**
  * S3-compatible storage client for Cloudflare R2.
@@ -29,56 +21,39 @@ import { createReadStream, createWriteStream } from "fs";
  *   STORAGE_BUCKET        — bucket name
  */
 
-
 // HMR-safe global singleton (same pattern as redis.ts)
 const globalForStorage = globalThis as unknown as {
-
     __storageClient?: S3Client;
-
 };
 
-
 function getStorageClient(): S3Client {
-
     if (!globalForStorage.__storageClient) {
-
         const endpoint = process.env.STORAGE_ENDPOINT;
-
         const region = process.env.STORAGE_REGION || "auto";
-
         const accessKeyId = process.env.STORAGE_ACCESS_KEY_ID;
-
         const secretAccessKey = process.env.STORAGE_SECRET_ACCESS_KEY;
 
-
         if (!endpoint || !accessKeyId || !secretAccessKey) {
-
             throw new Error(
                 "Missing storage config. Set STORAGE_ENDPOINT, STORAGE_ACCESS_KEY_ID, and STORAGE_SECRET_ACCESS_KEY."
             );
-
         }
 
         globalForStorage.__storageClient = new S3Client({
-
             endpoint,
-
             region,
-
             credentials: {
-
                 accessKeyId,
-
                 secretAccessKey,
-
             },
-
+            requestHandler: new NodeHttpHandler({
+                connectionTimeout: 15000, // 15 seconds connection timeout
+                requestTimeout: 300000,    // 5 minutes request timeout to avoid hanging uploads
+            }),
         });
-
     }
 
     return globalForStorage.__storageClient;
-
 }
 
 

@@ -54,7 +54,7 @@ export class PgRestoreService {
             await fs.access(backupFilePath);
             logger.info({ jobId, backupFilePath }, "Starting pg_restore process");
 
-            const result = await this.spawnPgRestore(targetDatabaseUrl, backupFilePath, timeout, onLog);
+            const result = await this.spawnPgRestore(targetDatabaseUrl, backupFilePath, timeout, onLog, jobId);
             if (!result.success) {
                 logger.error({ jobId, error: result.error }, "pg_restore process failed");
                 return {
@@ -100,7 +100,7 @@ export class PgRestoreService {
         };
     }
 
-    private spawnPgRestore( targetDatabaseUrl: string, backupFilePath: string, timeout: number, onLog?: (line: string) => void ): Promise<{ success: boolean; error?: string }> {
+    private spawnPgRestore( targetDatabaseUrl: string, backupFilePath: string, timeout: number, onLog?: (line: string) => void, jobId?: string ): Promise<{ success: boolean; error?: string }> {
         return new Promise((resolve) => {
             const pgRestorePath = process.env.PG_RESTORE_PATH || 
                 (process.platform === 'win32' ? 'C:\\Program Files\\PostgreSQL\\16\\bin\\pg_restore.exe' : 'pg_restore');
@@ -122,6 +122,7 @@ export class PgRestoreService {
             const spawnEnv: NodeJS.ProcessEnv = {
                 ...process.env,
                 PGPASSWORD: conn.password,
+                PGCONNECT_TIMEOUT: "15", // 15-second connection timeout to prevent hanging on unreachable hosts
             };
 
             if (conn.sslmode) {
@@ -136,6 +137,7 @@ export class PgRestoreService {
 
             let stderr = "";
             let timedOut = false;
+            let forceKillHandle: NodeJS.Timeout | undefined;
 
             restoreProcess.stderr.on("data", (data: Buffer) => {
                 const text = data.toString();
@@ -150,11 +152,25 @@ export class PgRestoreService {
 
             const timeoutHandle = setTimeout(() => {
                 timedOut = true;
+                logger.warn({ jobId, timeout }, "pg_restore exceeded timeout window; terminating process");
                 restoreProcess.kill("SIGTERM");
+
+                // If pg_restore does not exit within 4 seconds of SIGTERM, force SIGKILL and settle immediately
+                forceKillHandle = setTimeout(() => {
+                    try {
+                        restoreProcess.kill("SIGKILL");
+                    } catch {}
+                    const timeoutMinutes = Math.round(timeout / 60000);
+                    resolve({
+                        success: false,
+                        error: `pg_restore process exceeded allocated dynamic timeout of ${timeoutMinutes} minutes (${timeout}ms) and was terminated with SIGKILL.`,
+                    });
+                }, 4000);
             }, timeout);
 
             restoreProcess.on('close', (code: number | null) => {
                 clearTimeout(timeoutHandle);
+                if (forceKillHandle) clearTimeout(forceKillHandle);
                 if (timedOut) {
                     const timeoutMinutes = Math.round(timeout / 60000);
                     resolve({

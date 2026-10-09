@@ -123,71 +123,42 @@ export class PgDumpService {
 
             logger.info({ jobId, databaseUrl }, "Starting pg_dump process");
 
-            const result = await this.spawnPgDump(databaseUrl, backUpPath, timeout, onLog);
+            const result = await this.spawnPgDump(databaseUrl, backUpPath, timeout, onLog, jobId);
 
             if (!result.success) {
-
                 logger.error({ jobId, error: result.error }, "pg_dump process failed");
-
                 return {
-
                     success: false,
-
                     error: result.error,
-
                     duration: Date.now() - startTime,
-
                 };
-
             }
 
             // fetch file size
             const stats = await fs.stat(backUpPath);
-
             const duration = Date.now() - startTime;
 
             logger.info({ jobId, filePath: backUpPath, fileSize: stats.size, duration }, "pg_dump process completed successfully");
-
             return {
-
                 success: true,
-
                 filePath: backUpPath,
-
                 fileSize: stats.size,
-
                 duration,
-
             };
-
         } catch (error) {
-
             logger.error({ jobId, error }, "pg_dump execution failed");
-
             try {
-
                 await fs.unlink(backUpPath);
-
                 logger.info({ jobId, filePath: backUpPath }, "Cleaned up backup file after failure");
-
             } catch (error) {
-
                 logger.error("failed to cleanup backup file after failed execution")
-
             }
-
             return {
-
                 success: false,
-
                 error: error instanceof Error ? error.message : String(error),
-
                 duration: Date.now() - startTime,
-
-            }
-
+            };
         }
-
     }
 
     private parseConnectionString(dbUrl: string): { 
@@ -198,49 +169,39 @@ export class PgDumpService {
         password: string;
         sslmode?: string;
     } {
-
         const url = new URL(dbUrl);
-
         const sslmode = url.searchParams.get("sslmode") || undefined;
         
         return {
-        
             host: url.hostname,
-        
             port: url.port || "5432",
-        
             database: decodeURIComponent(url.pathname.slice(1)),
-        
             user: decodeURIComponent(url.username),
-        
             password: decodeURIComponent(url.password),
-
             sslmode,
-        
         };
-    
     }
 
-    private spawnPgDump( databaseUrl: string, outputFile: string, timeout: number, onLog?: (line: string) => void ): Promise<{ success: boolean; error?: string }> {
+    private spawnPgDump( databaseUrl: string, outputFile: string, timeout: number, onLog?: (line: string) => void, jobId?: string ): Promise<{ success: boolean; error?: string }> {
 
         return new Promise((resolve) => {
 
             let settled = false;
 
+            let forceKillHandle: NodeJS.Timeout | undefined;
+
             const settle = (result: { success: boolean; error?: string }) => {
-
                 if (settled) {
-
                     return;
-
                 }
-
                 settled = true;
 
                 clearTimeout(timeoutHandle);
+                if (forceKillHandle) {
+                    clearTimeout(forceKillHandle);
+                }
 
                 resolve(result);
-
             };
 
             const pgDumpPath = process.env.PG_DUMP_PATH || 
@@ -255,42 +216,33 @@ export class PgDumpService {
                 '-Fc',
                 '--no-owner',
                 '--no-privileges',
+                '--lock-wait-timeout=30000', // Fail after 30s instead of hanging forever on locked tables
                 '-f', outputFile,
                 conn.database,
             ];
                 
             const spawnEnv: NodeJS.ProcessEnv = {
-
                 ...process.env,
-                
                 PGPASSWORD: conn.password,
-            
+                PGCONNECT_TIMEOUT: "15", // 15-second connection timeout to avoid hanging on unreachable DB
             };
 
             if (conn.sslmode) {
-                
                 spawnEnv.PGSSLMODE = conn.sslmode;
-            
             }
 
             // spawn pg_dump process
             const backupProcess = spawn( pgDumpPath, args, {
-
                 stdio: ["ignore", "pipe", "pipe"],
-
                 timeout,
-
                 env: spawnEnv,
-
             });
 
             let stderr = "";
-
             let timedOut = false;
 
             // capture stderr
             backupProcess.stderr.on("data", (data: Buffer) => {
-
                 const text = data.toString();
                 stderr += text;
                 if (onLog) {
@@ -299,33 +251,36 @@ export class PgDumpService {
                         if (trimmed) onLog(trimmed);
                     });
                 }
-
             });
 
             // handle timeout
             const timeoutHandle = setTimeout(() => {
-
                 timedOut = true;
-
+                logger.warn({ jobId, timeout }, "pg_dump exceeded timeout window; terminating process");
                 backupProcess.kill("SIGTERM");
 
+                // If process doesn't terminate within 4 seconds of SIGTERM, send SIGKILL and settle immediately
+                forceKillHandle = setTimeout(() => {
+                    try {
+                        backupProcess.kill("SIGKILL");
+                    } catch {}
+                    const timeoutMinutes = Math.round(timeout / 60000);
+                    settle({
+                        success: false,
+                        error: `pg_dump process exceeded allocated dynamic timeout of ${timeoutMinutes} minutes (${timeout}ms) and was terminated with SIGKILL.`,
+                    });
+                }, 4000);
             }, timeout);
 
             backupProcess.on("error", (error) => {
-
                 settle({
-
                     success: false,
-
                     error: `failed to start pg_dump: ${error.message}`,
-
                 });
-
             });
 
             // handle process close
             backupProcess.on('close', (code: number | null) => {
-
                 if (timedOut) {
                     const timeoutMinutes = Math.round(timeout / 60000);
                     settle({
@@ -335,38 +290,26 @@ export class PgDumpService {
                     return;
                 }
 
-                
                 if (code === 0) {
-
                     settle({ success: true });
-                
                 } else {
-
                     settle({
-                
                         success: false,
-                
                         error: `pg_dump failed with code ${code}: ${stderr}`,
-                
                     });
-                
                 }
-                
             });
-            
-            
         });
-
     }
-
 }
 
 export function parsePgDumpError(rawError: string): string {
+    if (/lock wait timeout/i.test(rawError) || /could not obtain lock/i.test(rawError)) {
+        return "Database table lock timeout. A concurrent transaction or migration held an exclusive lock.";
+    }
 
     if (/could not translate host name/i.test(rawError) || /getaddrinfo/i.test(rawError)) {
-    
         return "Database host not found (DNS error). Please verify your host in Project Settings.";
-    
     }
     
     if (/password authentication failed/i.test(rawError)) {
