@@ -107,7 +107,7 @@ export async function generateAndSendOtp(email: string): Promise<{
               <table class="email-table" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; margin: 40px auto; padding: 20px 24px;">
                 <tr>
                   <td align="left" style="padding-bottom: 28px;">
-                    <img src="https://backlify-web-qoo9-git-alineui2backend-michaelomopekuns-projects.vercel.app/backlify_wrapped_logo.png" width="30" height="30" alt="Backlify" style="display: block; border: 0;" />
+                    <img src="https://backlify-web-qoo9-git-alineui2backend-michaelomopekuns-projects.vercel.app/backlify_wrapped_logo.png" width="68" height="68" alt="Backlify" style="display: block; border: 0;" />
                   </td>
                 </tr>
                 <tr>
