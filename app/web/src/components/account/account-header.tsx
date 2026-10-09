@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { IconChevronLeft } from "@tabler/icons-react";
 import { OrgPickerClientActions } from "@/components/layout/org-picker-client-actions";
 
@@ -13,18 +16,29 @@ export function AccountHeader({
   userEmail,
   userName,
 }: AccountHeaderProps) {
+  const router = useRouter();
+
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/dashboard/org");
+    }
+  };
+
   return (
     <header className="h-12 flex items-center justify-between px-3 sm:px-4 border-b border-border/80 shrink-0 bg-[#0e0e0e] text-xs w-full">
       {/* Left: Brand Logo / Account Breadcrumb */}
       <div className="flex items-center gap-2.5">
-        <Link
-          href="/dashboard/org"
-          className="flex items-center justify-center size-7 rounded-lg border border-[#262626] bg-[#141414] hover:bg-[#1e1e1e] hover:border-[#383838] text-neutral-300 hover:text-white transition-all md:hidden shrink-0 shadow-xs"
-          title="Back to dashboard"
-          aria-label="Back to dashboard"
+        <button
+          type="button"
+          onClick={handleBack}
+          className="flex items-center justify-center size-7 rounded-lg border border-[#262626] bg-[#141414] hover:bg-[#1e1e1e] hover:border-[#383838] text-neutral-300 hover:text-white transition-all md:hidden shrink-0 shadow-xs cursor-pointer"
+          title="Go back"
+          aria-label="Go back"
         >
           <IconChevronLeft className="size-3.5 stroke-[2.2]" />
-        </Link>
+        </button>
 
         <Link href="/dashboard/org" className="flex items-center hover:opacity-85 transition-opacity">
           <img

@@ -1,25 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { IconArrowLeft, IconAdjustments, IconUser } from "@tabler/icons-react";
 import { cn } from "@/lib/utils";
 
 export function AccountSidebar() {
+  const router = useRouter();
   const pathname = usePathname();
   const isPreferences = pathname === "/account" || pathname === "/account/preferences";
+
+  const handleBack = () => {
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push("/dashboard/org");
+    }
+  };
 
   return (
     <aside className="hidden md:flex w-60 xl:w-64 border-r border-border/60 bg-[#0c0c0c] flex-col shrink-0 min-h-0 text-xs">
       {/* Back to dashboard */}
       <div className="p-3 border-b border-border/40">
-        <Link
-          href="/dashboard/org"
-          className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-white hover:bg-white/[0.04] transition-colors font-medium text-xs group"
+        <button
+          type="button"
+          onClick={handleBack}
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-md text-muted-foreground hover:text-white hover:bg-white/[0.04] transition-colors font-medium text-xs group w-full text-left cursor-pointer"
         >
           <IconArrowLeft className="size-3.5 text-muted-foreground group-hover:text-white transition-colors" />
           <span>Back to dashboard</span>
-        </Link>
+        </button>
       </div>
 
       {/* Navigation Group */}
