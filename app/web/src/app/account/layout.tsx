@@ -30,7 +30,7 @@ export default async function AccountLayout({
         <AccountSidebar />
 
         {/* Scrollable Content Container */}
-        <main className="flex-1 min-w-0 h-full overflow-y-auto px-6 sm:px-10 lg:px-12 py-8 sm:py-10">
+        <main className="flex-1 min-w-0 h-full overflow-y-auto px-4 sm:px-8 lg:px-12 py-6 sm:py-10">
           {children}
         </main>
       </div>

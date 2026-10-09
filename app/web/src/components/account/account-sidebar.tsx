@@ -10,7 +10,7 @@ export function AccountSidebar() {
   const isPreferences = pathname === "/account" || pathname === "/account/preferences";
 
   return (
-    <aside className="w-60 xl:w-64 border-r border-border/60 bg-[#0c0c0c] flex flex-col shrink-0 min-h-0 text-xs">
+    <aside className="hidden md:flex w-60 xl:w-64 border-r border-border/60 bg-[#0c0c0c] flex-col shrink-0 min-h-0 text-xs">
       {/* Back to dashboard */}
       <div className="p-3 border-b border-border/40">
         <Link

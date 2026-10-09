@@ -19,8 +19,8 @@ export default function AccountLoading() {
         <h2 className="text-base font-semibold text-foreground font-sans">Profile information</h2>
 
         <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
-          <CardContent className="p-5 sm:p-6 space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               <div className="space-y-2">
                 <Label className="text-xs font-medium text-foreground">First name</Label>
                 <div className="h-9.5 px-3 bg-[#080808] border border-input rounded-md flex items-center">
@@ -60,8 +60,8 @@ export default function AccountLoading() {
             </div>
           </CardContent>
 
-          <CardFooter className="px-5 sm:px-6 py-3.5 bg-muted/20 border-t border-border/50 flex items-center justify-end">
-            <Button disabled className="h-8.5 px-4 text-xs font-medium bg-white text-black opacity-50 cursor-not-allowed">
+          <CardFooter className="px-4 sm:px-6 py-3 bg-muted/20 border-t border-border/50 flex items-center justify-end">
+            <Button disabled className="h-8.5 px-4 text-xs font-medium bg-[#FFB31F] text-black opacity-50 cursor-not-allowed">
               Save Changes
             </Button>
           </CardFooter>
