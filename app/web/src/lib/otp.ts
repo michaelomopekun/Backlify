@@ -79,7 +79,6 @@ export async function generateAndSendOtp(email: string): Promise<{
       const resend = new Resend(apiKey);
       const fromEmail = process.env.EMAIL_FROM || "Backlify <onboarding@resend.dev>";
       const username = normalizedEmail.split("@")[0] || "there";
-      const formattedCode = code.split("").join(" ");
 
       const emailHtml = `
           <!DOCTYPE html>
@@ -87,9 +86,25 @@ export async function generateAndSendOtp(email: string): Promise<{
             <head>
               <meta charset="utf-8" />
               <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+              <style>
+                @media only screen and (max-width: 480px) {
+                  .email-table {
+                    padding: 20px 16px !important;
+                    margin: 20px auto !important;
+                  }
+                  .otp-code {
+                    font-size: 24px !important;
+                    letter-spacing: 6px !important;
+                    padding-left: 6px !important;
+                  }
+                  .otp-cell {
+                    padding: 16px 12px !important;
+                  }
+                }
+              </style>
             </head>
             <body style="background-color: #ffffff; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #000000;">
-              <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; margin: 40px auto; padding: 20px 24px;">
+              <table class="email-table" align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; margin: 40px auto; padding: 20px 24px;">
                 <tr>
                   <td align="left" style="padding-bottom: 28px;">
                     <img src="https://backlify.space/backlify_wrapped_logo.png" width="30" height="30" alt="Backlify" style="display: block; border: 0;" />
@@ -109,9 +124,9 @@ export async function generateAndSendOtp(email: string): Promise<{
                   </td>
                 </tr>
                 <tr>
-                  <td align="center" style="background-color: #f4f4f5; border-radius: 8px; padding: 22px 16px;">
-                    <span style="font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 34px; font-weight: 700; letter-spacing: 12px; color: #000000; display: inline-block; padding-left: 12px;">
-                      ${formattedCode}
+                  <td class="otp-cell" align="center" style="background-color: #f4f4f5; border-radius: 8px; padding: 20px 16px; text-align: center;">
+                    <span class="otp-code" style="font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; font-size: 26px; font-weight: 700; letter-spacing: 8px; color: #000000; text-align: center; white-space: nowrap !important; word-break: keep-all !important; display: inline-block; padding-left: 8px; line-height: 1.2;">
+                      ${code}
                     </span>
                   </td>
                 </tr>

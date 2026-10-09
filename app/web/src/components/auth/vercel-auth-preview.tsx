@@ -196,7 +196,7 @@ function OtpInputBoxes({ digits, onChange, onComplete, disabled }: OtpInputBoxes
   };
 
   return (
-    <div className="flex items-center justify-center gap-2 sm:gap-2.5 my-6">
+    <div className="flex items-center justify-center gap-1.5 xs:gap-2 sm:gap-2.5 my-6 max-w-full">
       {Array.from({ length: 6 }).map((_, i) => (
         <input
           key={i}
@@ -212,7 +212,7 @@ function OtpInputBoxes({ digits, onChange, onComplete, disabled }: OtpInputBoxes
           onChange={(e) => handleChange(i, e.target.value)}
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={handlePaste}
-          className="w-10 sm:w-12 h-12 sm:h-14 rounded-lg bg-[#0e0e0e] border border-[#282828] text-center font-mono text-lg sm:text-xl font-bold text-white focus:border-[#0070f3] focus:ring-1 focus:ring-[#0070f3] focus:bg-[#121212] outline-none transition-all disabled:opacity-50"
+          className="w-9 h-11 xs:w-10 xs:h-12 sm:w-12 sm:h-14 rounded-lg bg-[#0e0e0e] border border-[#282828] text-center font-mono text-base xs:text-lg sm:text-xl font-bold text-white focus:border-[#0070f3] focus:ring-1 focus:ring-[#0070f3] focus:bg-[#121212] outline-none transition-all disabled:opacity-50"
         />
       ))}
     </div>
