@@ -77,7 +77,7 @@ export async function generateAndSendOtp(email: string): Promise<{
   if (apiKey) {
     try {
       const resend = new Resend(apiKey);
-      const fromEmail = process.env.EMAIL_FROM || "Backlify <auth@mail.backlify.space>";
+      const fromEmail = process.env.EMAIL_FROM || "Backlify <onboarding@resend.dev>";
       const username = normalizedEmail.split("@")[0] || "there";
       const formattedCode = code.split("").join(" ");
 
@@ -92,7 +92,7 @@ export async function generateAndSendOtp(email: string): Promise<{
               <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 520px; margin: 40px auto; padding: 20px 24px;">
                 <tr>
                   <td align="left" style="padding-bottom: 28px;">
-                    <img src="https://backlify.space/backlify_logo.png" width="30" height="30" alt="Backlify" style="display: block; border: 0;" />
+                    <img src="https://backlify.space/backlify_wrapped_logo.png" width="30" height="30" alt="Backlify" style="display: block; border: 0;" />
                   </td>
                 </tr>
                 <tr>
