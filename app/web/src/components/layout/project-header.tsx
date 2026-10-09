@@ -12,12 +12,19 @@ import {
   IconCheck,
   IconPlus,
   IconSettings,
+  IconUser,
+  IconLogout,
 } from "@tabler/icons-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
   DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { signOut } from "next-auth/react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { OrgPickerClientActions } from "./org-picker-client-actions";
 import { ConnectDialog } from "@/components/projects/connect-dialog";
@@ -294,9 +301,51 @@ export function ProjectHeader({
             <IconPlugConnected className="size-4" />
           </button>
 
-          <div className="size-7 rounded-full bg-[#1f1f1f] border border-[#2a2a2a] text-foreground text-xs font-medium flex items-center justify-center shrink-0">
-            {userInitials}
-          </div>
+          {/* User profile picture with Dropdown Menu on mobile */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label="Open user menu"
+                className="outline-none focus-visible:ring-1 focus-visible:ring-ring rounded-full cursor-pointer shrink-0"
+              >
+                <Avatar className="size-7 border border-[#2a2a2a] hover:border-neutral-500 transition-colors">
+                  <AvatarFallback className="bg-[#1f1f1f] text-foreground text-[11px] font-medium">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              sideOffset={8}
+              className="w-56 bg-[#111111] border border-[#262626] text-neutral-200 z-50"
+            >
+              <DropdownMenuLabel className="font-normal px-2 py-1.5">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-xs font-semibold leading-none text-white">{userName || "Account"}</p>
+                  {userEmail ? (
+                    <p className="text-[11px] leading-none text-neutral-400 truncate">{userEmail}</p>
+                  ) : null}
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-[#262626]" />
+              <DropdownMenuItem asChild className="text-xs text-neutral-300 hover:text-white hover:bg-white/[0.06] cursor-pointer gap-2">
+                <Link href="/account">
+                  <IconUser className="size-3.5" />
+                  <span>Account Preferences</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-[#262626]" />
+              <DropdownMenuItem
+                onClick={() => signOut({ redirectTo: "/login" })}
+                className="text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30 cursor-pointer focus:text-red-300 focus:bg-red-950/30 gap-2"
+              >
+                <IconLogout className="size-3.5" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <button
             type="button"
