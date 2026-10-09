@@ -4,6 +4,8 @@ import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { UserRepository } from "db";
 import { authConfig } from "./auth.config";
+import { verifyOtp } from "@/lib/otp";
+import { verifyPassword } from "@/lib/password";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
@@ -32,6 +34,8 @@ jwt: {
       name: "Work Email",
       credentials: {
         email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+        code: { label: "OTP Code", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email || typeof credentials.email !== "string") {
@@ -43,18 +47,48 @@ jwt: {
           return null;
         }
 
-        // Find or auto-provision the user and their initial organization in PostgreSQL
-        const user = await UserRepository.findOrCreateUser({
-          email: normalizedEmail,
-          name: normalizedEmail.split("@")[0],
-        });
+        // 1. Verification via OTP code (Vercel style 6-digit code)
+        if (credentials.code && typeof credentials.code === "string") {
+          const otpResult = await verifyOtp(normalizedEmail, credentials.code);
+          if (!otpResult.success) {
+            throw new Error(otpResult.error || "Invalid verification code");
+          }
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-        };
+          const user = await UserRepository.findOrCreateUser({
+            email: normalizedEmail,
+            name: normalizedEmail.split("@")[0],
+            emailVerified: new Date(),
+          });
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          };
+        }
+
+        // 2. Verification via Password
+        if (credentials.password && typeof credentials.password === "string") {
+          const user = await UserRepository.getUserByEmail(normalizedEmail);
+          if (!user || !user.passwordHash) {
+            throw new Error("No password set for this account. Please use code or Google/GitHub.");
+          }
+
+          const isValid = verifyPassword(credentials.password, user.passwordHash);
+          if (!isValid) {
+            throw new Error("Incorrect password. Please try again.");
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          };
+        }
+
+        return null;
       },
     }),
   ],

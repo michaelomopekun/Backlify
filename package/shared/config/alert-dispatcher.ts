@@ -208,7 +208,7 @@ export async function dispatchIncidentAlert(
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "Backlify Incident Alerts <onboarding@resend.dev>",
+            from: process.env.EMAIL_FROM || "Backlify Incident Alerts <alerts@mail.backlify.space>",
             to: recipients,
             subject,
             html,
