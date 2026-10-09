@@ -90,9 +90,9 @@ export function OrgSidebar({ user, orgId, orgName }: OrgSidebarProps) {
   const base = `/dashboard/org/${orgId}`;
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border bg-[#0d0d0d] top-12 h-[calc(100svh-3rem)]">
+    <Sidebar collapsible="icon" className="border-r border-border bg-[#0d0d0d] top-12 h-[calc(100svh-3rem)] overflow-x-hidden">
       {/* Nav */}
-      <SidebarContent className="pt-2.5 px-2 group-data-[collapsible=icon]:px-1.5">
+      <SidebarContent className="pt-2.5 px-2 group-data-[collapsible=icon]:px-1.5 overflow-x-hidden">
         <SidebarGroup className="p-0">
           <SidebarMenu className="gap-1">
             {orgNav.map((item) => {
@@ -115,7 +115,7 @@ export function OrgSidebar({ user, orgId, orgName }: OrgSidebarProps) {
                   >
                     <Link href={href}>
                       <item.icon className="size-4 shrink-0" />
-                      <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                      <span className="truncate group-data-[collapsible=icon]:hidden">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -126,8 +126,8 @@ export function OrgSidebar({ user, orgId, orgName }: OrgSidebarProps) {
       </SidebarContent>
 
       {/* Footer */}
-      <SidebarFooter className="border-t border-border p-2.5 group-data-[collapsible=icon]:p-1.5">
-        <div className="flex items-center gap-3 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+      <SidebarFooter className="border-t border-border p-2.5 group-data-[collapsible=icon]:p-1.5 overflow-x-hidden">
+        <div className="flex items-center gap-3 px-1 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 min-w-0 overflow-hidden">
           <Avatar className="size-7 shrink-0 border border-[#2a2a2a]">
             <AvatarFallback className="bg-[#1f1f1f] text-foreground text-[11px] font-medium">
               {user.initials}
@@ -169,9 +169,9 @@ export function ProjectSidebar({
   const base = `/dashboard/project/${projectId}`;
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border bg-[#0d0d0d] top-12 h-[calc(100svh-3rem)]">
+    <Sidebar collapsible="icon" className="border-r border-border bg-[#0d0d0d] top-12 h-[calc(100svh-3rem)] overflow-x-hidden">
       {/* Nav */}
-      <SidebarContent className="pt-2.5 px-2 group-data-[collapsible=icon]:px-1.5">
+      <SidebarContent className="pt-2.5 px-2 group-data-[collapsible=icon]:px-1.5 overflow-x-hidden">
         <SidebarGroup className="p-0">
           <SidebarMenu className="gap-1">
             {projectNav.map((item) => {
@@ -194,7 +194,7 @@ export function ProjectSidebar({
                   >
                     <Link href={href}>
                       <item.icon className="size-4 shrink-0" />
-                      <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
+                      <span className="truncate group-data-[collapsible=icon]:hidden">{item.label}</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -203,7 +203,7 @@ export function ProjectSidebar({
           </SidebarMenu>
         </SidebarGroup>
 
-        <SidebarSeparator className="my-2" />
+        <SidebarSeparator className="my-2 mx-0 w-full" />
 
         <SidebarGroup className="p-0">
           <SidebarMenu className="gap-1">
@@ -221,7 +221,7 @@ export function ProjectSidebar({
               >
                 <Link href={`${base}/settings`}>
                   <IconSettings className="size-4 shrink-0" />
-                  <span className="group-data-[collapsible=icon]:hidden">Project Settings</span>
+                  <span className="truncate group-data-[collapsible=icon]:hidden">Project Settings</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -230,12 +230,12 @@ export function ProjectSidebar({
       </SidebarContent>
 
       {/* Footer with Account Preferences Dropdown */}
-      <SidebarFooter className="border-t border-border p-2 group-data-[collapsible=icon]:p-1.5">
+      <SidebarFooter className="border-t border-border p-2 group-data-[collapsible=icon]:p-1.5 overflow-x-hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-white/[0.05] transition-colors w-full text-left outline-none cursor-pointer group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0"
+              className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-white/[0.05] transition-colors w-full text-left outline-none cursor-pointer group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0 min-w-0 overflow-hidden"
             >
               <Avatar className="size-7 shrink-0 border border-[#2a2a2a]">
                 <AvatarFallback className="bg-[#1f1f1f] text-foreground text-[11px] font-medium">
