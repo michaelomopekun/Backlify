@@ -1,5 +1,8 @@
 import { ProjectRepository, OrganizationRepository } from "db";
 import { logger } from "./logger";
+import { buildIncidentAlertEmailHtml } from "./email-templates";
+export { buildIncidentAlertEmailHtml, buildBackupSuccessEmailHtml, buildDrillVerifiedEmailHtml } from "./email-templates";
+
 
 export interface IncidentAlertPayload {
   event: "backlify.backup_failed" | "backlify.restore_failed" | "backlify.drill_drift";
@@ -38,6 +41,120 @@ export interface AlertDispatchResult {
 }
 
 /**
+ * Formats webhook body based on target webhook service (Discord, Slack, or generic).
+ */
+function buildWebhookPayload(
+  url: string,
+  payload: IncidentAlertPayload
+): { body: string; contentType: string } {
+  // Discord Webhook
+  if (url.includes("discord.com/api/webhooks") || url.includes("discordapp.com/api/webhooks")) {
+    const typeLabel =
+      payload.incident.type === "drill"
+        ? "Recovery Drill"
+        : payload.incident.type === "restore"
+        ? "Restore Operation"
+        : "Backup Snapshot";
+
+    return {
+      contentType: "application/json",
+      body: JSON.stringify({
+        username: "Backlify",
+        avatar_url: "https://backlify.space/backlify-logo-wrapped.png",
+        embeds: [
+          {
+            title: `🚨 ${typeLabel} Failed`,
+            description: `A critical incident occurred for **${payload.project.name}** (${payload.project.environment}).`,
+            color: 15548997, // #ed4245 (red)
+            url: payload.incident.dashboardUrl,
+            fields: [
+              { name: "Project", value: payload.project.name, inline: true },
+              { name: "Environment", value: payload.project.environment.toUpperCase(), inline: true },
+              { name: "Job ID", value: `\`${payload.incident.jobId.slice(0, 16)}...\``, inline: true },
+              {
+                name: "Error",
+                value: `\`\`\`${payload.incident.error.slice(0, 900)}\`\`\``,
+                inline: false,
+              },
+            ],
+            footer: { text: "Backlify Database Reliability · Automated Alert" },
+            timestamp: payload.timestamp,
+          },
+        ],
+      }),
+    };
+  }
+
+  // Slack Webhook
+  if (url.includes("hooks.slack.com/services") || url.includes("slack.com/api/chat.postMessage")) {
+    const typeLabel =
+      payload.incident.type === "drill"
+        ? "Recovery Drill"
+        : payload.incident.type === "restore"
+        ? "Restore"
+        : "Backup";
+
+    return {
+      contentType: "application/json",
+      body: JSON.stringify({
+        text: `🚨 Backlify Incident: ${typeLabel} failed for ${payload.project.name}`,
+        blocks: [
+          {
+            type: "header",
+            text: {
+              type: "plain_text",
+              text: `🚨 ${typeLabel} Failed: ${payload.project.name}`,
+              emoji: true,
+            },
+          },
+          {
+            type: "section",
+            fields: [
+              {
+                type: "mrkdwn",
+                text: `*Environment:*\n\`${payload.project.environment.toUpperCase()}\``,
+              },
+              {
+                type: "mrkdwn",
+                text: `*Job ID:*\n\`${payload.incident.jobId.slice(0, 16)}...\``,
+              },
+            ],
+          },
+          {
+            type: "section",
+            text: {
+              type: "mrkdwn",
+              text: `*Error:*\n\`\`\`${payload.incident.error.slice(0, 800)}\`\`\``,
+            },
+          },
+          {
+            type: "actions",
+            elements: [
+              {
+                type: "button",
+                text: {
+                  type: "plain_text",
+                  text: "View Failed Job in Backlify →",
+                  emoji: true,
+                },
+                url: payload.incident.dashboardUrl,
+                style: "danger",
+              },
+            ],
+          },
+        ],
+      }),
+    };
+  }
+
+  // Generic JSON Webhook
+  return {
+    contentType: "application/json",
+    body: JSON.stringify(payload),
+  };
+}
+
+/**
  * Dispatches automated failure and incident alerts across Webhook and Resend Email channels.
  */
 export async function dispatchIncidentAlert(
@@ -67,7 +184,7 @@ export async function dispatchIncidentAlert(
       return result;
     }
 
-    const appUrl = process.env.APP_URL || "http://localhost:3000";
+    const appUrl = process.env.APP_URL || "https://backlify.space";
     const dashboardUrl = `${appUrl}/dashboard/project/${project.id}/${
       opts.type === "restore" || opts.type === "drill" ? "restores" : "backups"
     }`;
@@ -97,17 +214,22 @@ export async function dispatchIncidentAlert(
       },
     };
 
-    // ─── 1. Dispatch Webhook ───
-    if (project.webhookUrl && (project.webhookUrl.startsWith("http://") || project.webhookUrl.startsWith("https://"))) {
+    // ─── 1. Dispatch Webhook (Generic, Discord, or Slack) ───
+    if (
+      project.webhookUrl &&
+      (project.webhookUrl.startsWith("http://") || project.webhookUrl.startsWith("https://"))
+    ) {
       try {
         const start = Date.now();
+        const formatted = buildWebhookPayload(project.webhookUrl, payload);
+
         const res = await fetch(project.webhookUrl, {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
+            "Content-Type": formatted.contentType,
             "User-Agent": "Backlify-Alert-Dispatcher/1.0",
           },
-          body: JSON.stringify(payload),
+          body: formatted.body,
           signal: AbortSignal.timeout(5000),
         });
 
@@ -132,7 +254,7 @@ export async function dispatchIncidentAlert(
       }
     }
 
-    // ─── 2. Dispatch Email via Resend ───
+    // ─── 2. Dispatch Email via Resend with Vercel Layout ───
     const resendApiKey = process.env.RESEND_API_KEY;
     if (resendApiKey) {
       try {
@@ -152,55 +274,19 @@ export async function dispatchIncidentAlert(
 
         result.recipientsCount = recipients.length;
 
-        const subject = `🚨 [ALERT] ${opts.type.toUpperCase()} Failed — ${project.name} (${project.environment})`;
-        const html = `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background-color: #0c0c0c; color: #f9fafb; padding: 24px; border-radius: 8px; border: 1px solid #222;">
-            <div style="display: flex; align-items: center; margin-bottom: 20px;">
-              <h2 style="margin: 0; color: #ffffff; font-size: 20px; font-weight: 600;">Backlify Incident Alert</h2>
-            </div>
-            
-            <div style="background-color: #1a0808; border: 1px solid #4a1515; border-radius: 6px; padding: 16px; margin-bottom: 20px;">
-              <div style="color: #f87171; font-weight: 600; font-size: 14px; margin-bottom: 6px;">
-                ${opts.type.toUpperCase()} EXECUTION FAILURE
-              </div>
-              <div style="color: #fca5a5; font-size: 13px; font-family: monospace; word-break: break-all;">
-                ${opts.errorMessage}
-              </div>
-            </div>
+        const typeLabel = opts.type === "drill" ? "Recovery Drill" : opts.type === "restore" ? "Restore" : "Backup";
+        const subject = `🚨 [ALERT] ${typeLabel} Failed — ${project.name} (${project.environment})`;
 
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; font-size: 13px;">
-              <tr style="border-bottom: 1px solid #1f1f1f;">
-                <td style="padding: 8px 0; color: #888;">Project</td>
-                <td style="padding: 8px 0; font-weight: 500; text-align: right; color: #fff;">${project.name}</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #1f1f1f;">
-                <td style="padding: 8px 0; color: #888;">Environment</td>
-                <td style="padding: 8px 0; font-weight: 500; text-align: right; color: #fff; text-transform: uppercase;">${project.environment}</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #1f1f1f;">
-                <td style="padding: 8px 0; color: #888;">Job ID</td>
-                <td style="padding: 8px 0; font-family: monospace; text-align: right; color: #fff;">${opts.jobId}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; color: #888;">Timestamp</td>
-                <td style="padding: 8px 0; text-align: right; color: #fff;">${new Date().toUTCString()}</td>
-              </tr>
-            </table>
+        const html = buildIncidentAlertEmailHtml({
+          projectName: project.name,
+          environment: project.environment || "production",
+          type: opts.type,
+          jobId: opts.jobId,
+          errorMessage: opts.errorMessage,
+          attemptsMade: opts.attemptsMade,
+          dashboardUrl,
+        });
 
-            <div style="text-align: center; margin-top: 24px;">
-              <a href="${dashboardUrl}" style="background-color: #ffffff; color: #000000; text-decoration: none; padding: 10px 20px; font-size: 13px; font-weight: 600; border-radius: 6px; display: inline-block;">
-                View Failure in Dashboard →
-              </a>
-            </div>
-
-            <div style="margin-top: 32px; font-size: 11px; color: #555; text-align: center; border-top: 1px solid #1c1c1c; padding-top: 16px;">
-              Automated alert sent by Backlify Disaster Recovery Engine. Manage notification settings in Project Settings.
-            </div>
-          </div>
-        `;
-
-        // Send via Resend REST endpoint
-        // For testing/sandbox with unverified domains, Resend allows sending to the account email or onboarding@resend.dev
         const emailRes = await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: {
@@ -226,7 +312,7 @@ export async function dispatchIncidentAlert(
             ok: emailRes.ok,
             resendId: emailData?.id,
           },
-          "Incident alert email dispatched via Resend"
+          "Incident alert email dispatched via Resend (Vercel layout)"
         );
       } catch (emailErr) {
         logger.error(
@@ -242,6 +328,100 @@ export async function dispatchIncidentAlert(
   } catch (err) {
     logger.error({ error: err, jobId: opts.jobId }, "Error in dispatchIncidentAlert");
     result.error = err instanceof Error ? err.message : String(err);
+    return result;
+  }
+}
+
+export interface DispatchSuccessAlertOptions {
+  jobId: string;
+  projectId: string;
+  fileSize: number;
+  durationSeconds: number;
+  storageProvider?: string;
+}
+
+/**
+ * Dispatches notification when a backup snapshot completes successfully.
+ */
+export async function dispatchBackupSuccessAlert(
+  opts: DispatchSuccessAlertOptions
+): Promise<AlertDispatchResult> {
+  const result: AlertDispatchResult = {
+    webhookDelivered: false,
+    emailDelivered: false,
+  };
+
+  try {
+    const project = await ProjectRepository.getProjectById(opts.projectId);
+    if (!project) return result;
+
+    const appUrl = process.env.APP_URL || "https://backlify.space";
+    const dashboardUrl = `${appUrl}/dashboard/project/${project.id}/backups`;
+
+    // Format size
+    const formatBytes = (bytes: number) => {
+      if (bytes === 0) return "0 Bytes";
+      const k = 1024;
+      const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+    };
+
+    const sizeFormatted = formatBytes(opts.fileSize);
+    const durationFormatted = `${opts.durationSeconds}s`;
+
+    // Webhook dispatch
+    if (project.webhookUrl) {
+      try {
+        const isDiscord =
+          project.webhookUrl.includes("discord.com/api/webhooks") ||
+          project.webhookUrl.includes("discordapp.com/api/webhooks");
+
+        let bodyPayload: string;
+        if (isDiscord) {
+          bodyPayload = JSON.stringify({
+            username: "Backlify",
+            avatar_url: "https://backlify.space/backlify-logo-wrapped.png",
+            embeds: [
+              {
+                title: "✅ Backup Snapshot Completed",
+                description: `Successfully dumped and stored backup for **${project.name}**.`,
+                color: 5763719, // #57F287 (green)
+                url: dashboardUrl,
+                fields: [
+                  { name: "Snapshot Size", value: sizeFormatted, inline: true },
+                  { name: "Duration", value: durationFormatted, inline: true },
+                  { name: "Vault", value: (opts.storageProvider || "Encrypted Vault").toUpperCase(), inline: true },
+                ],
+                footer: { text: "Backlify Database Reliability" },
+                timestamp: new Date().toISOString(),
+              },
+            ],
+          });
+        } else {
+          bodyPayload = JSON.stringify({
+            event: "backlify.backup_succeeded",
+            timestamp: new Date().toISOString(),
+            project: { id: project.id, name: project.name, environment: project.environment },
+            backup: { jobId: opts.jobId, size: opts.fileSize, durationSeconds: opts.durationSeconds },
+          });
+        }
+
+        await fetch(project.webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: bodyPayload,
+          signal: AbortSignal.timeout(5000),
+        });
+        result.webhookDelivered = true;
+      } catch (err) {
+        logger.warn({ error: err }, "Failed to send backup success webhook");
+      }
+    }
+
+    return result;
+  } catch (err) {
+    logger.error({ error: err }, "Error in dispatchBackupSuccessAlert");
     return result;
   }
 }
