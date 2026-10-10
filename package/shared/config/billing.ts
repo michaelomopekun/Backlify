@@ -23,6 +23,8 @@ export const BILLING_CONFIG = {
       MAX_DAILY_BACKUPS: 1,
       RETENTION_DAYS: 7,
       CUSTOM_VAULT_ENABLED: false,
+      MAX_MONTHLY_DRILLS: 1, // 1 manual drill per calendar month for Free
+      AUTO_DRILL_ON_BACKUP: false,
     },
     PRO: {
       STORAGE_LIMIT_BYTES: 50 * 1024 * 1024 * 1024, // 50 GB
@@ -31,6 +33,8 @@ export const BILLING_CONFIG = {
       MAX_DAILY_BACKUPS: 24, // Hourly backups allowed
       RETENTION_DAYS: 30,
       CUSTOM_VAULT_ENABLED: true,
+      MAX_MONTHLY_DRILLS: Infinity, // Unlimited manual drills
+      AUTO_DRILL_ON_BACKUP: true, // Automatic verification drill on every successful backup
     },
   },
 } as const;
@@ -80,9 +84,18 @@ export function getOrganizationMaxProjects(org?: SubscriptionOwner | null): numb
 
 /**
  * Returns the maximum allowed disaster recovery drills per month for an organization.
+ * Free tier includes 1 drill per calendar month; Pro is unlimited.
  */
 export function getOrganizationMaxMonthlyDrills(org?: SubscriptionOwner | null): number {
   return isOrganizationPro(org) ? Infinity : 1;
+}
+
+/**
+ * Checks whether an organization is entitled to automatic post-backup verification drills.
+ * Exclusively available for Pro subscribers.
+ */
+export function canOrganizationAutoDrill(org?: SubscriptionOwner | null): boolean {
+  return isOrganizationPro(org);
 }
 
 /**
@@ -110,7 +123,7 @@ export function isCronAllowedForPlan(cronExpression: string, org?: SubscriptionO
   const parts = trimmed.split(/\s+/);
   if (parts.length !== 5) return false;
 
-  const [min, hour] = parts;
+  const [, hour] = parts;
   // If hour field is "*" or has a step (like "*/2", "*/6"), it runs more than once a day -> requires Pro!
   if (hour === "*" || hour.includes("/") || hour.includes(",")) {
     return false;

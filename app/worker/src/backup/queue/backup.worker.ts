@@ -6,7 +6,10 @@ import { logger } from "shared/config/logger";
 
 import { backupQueue } from "./backup.queue";
 
-import { BackupRepository, ProjectRepository, ScheduleRepository } from "db";
+import { BackupRepository, ProjectRepository, ScheduleRepository, BackupFileRepository, OrganizationRepository, RestoreRepository } from "db";
+import { isOrganizationPro } from "shared";
+import { RESTORE_JOB_STATUS, RestoreJobStatusType } from "shared/constants/restoreJobStatus";
+import { restoreQueue } from "../../restore/queue/restore.queue";
 
 import { BACKUP_JOB_STATUS, BackupJobStatusType } from "shared/constants/backupJobStatus";
 
@@ -18,7 +21,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { CleanupService } from "../service/cleanup.service";
 import { emitJobTelemetry } from "shared/config/job-telemetry";
-import { dispatchIncidentAlert } from "shared/config/alert-dispatcher";
+import { dispatchIncidentAlert, dispatchBackupSuccessAlert } from "shared/config/alert-dispatcher";
 import { calculateDynamicBackupTimeout } from "shared/config/timeout";
 import { decryptDatabaseUrl } from "shared/config/encryption";
 
@@ -375,11 +378,61 @@ backupWorker.on("completed", async (job) => {
 
             await cleanupService.enforceRetentionPolicy(dbJob.projectId);
 
+            const project = await ProjectRepository.getProjectById(dbJob.projectId);
+            const backupFile = await BackupFileRepository.getBackupFileByJobId(dbJob.id);
+
+            // 1. Dispatch backup success alert
+            if (backupFile) {
+                const durationSeconds = dbJob.completedAt && dbJob.startedAt
+                    ? Math.max(1, Math.round((new Date(dbJob.completedAt).getTime() - new Date(dbJob.startedAt).getTime()) / 1000))
+                    : 1;
+
+                await dispatchBackupSuccessAlert({
+                    jobId: dbJob.id,
+                    projectId: dbJob.projectId,
+                    fileSize: backupFile.fileSize || 0,
+                    durationSeconds,
+                    storageProvider: backupFile.storageProvider,
+                });
+            }
+
+            // 2. Pro-Exclusive Feature: Automated Restore Verification Drill on new snapshot!
+            if (project?.orgId && project.notifyOnDrill !== false && backupFile) {
+                const org = await OrganizationRepository.getOrganizationById(project.orgId);
+                if (isOrganizationPro(org)) {
+                    const drillJobId = `drill-auto-${uuidv4().substring(0, 12)}`;
+                    await RestoreRepository.saveRestoreJob({
+                        jobId: drillJobId,
+                        backupFileId: backupFile.id,
+                        targetDatabaseUrl: "headless:drill",
+                        jobStatus: RESTORE_JOB_STATUS.PENDING as RestoreJobStatusType,
+                    });
+
+                    await restoreQueue.add(
+                        "restore",
+                        {
+                            jobId: drillJobId,
+                            backupFileId: backupFile.id,
+                            targetDatabaseUrl: "headless:drill",
+                            isDrill: true,
+                            jobStatus: RESTORE_JOB_STATUS.PENDING as RestoreJobStatusType,
+                            timestamp: Date.now(),
+                        },
+                        { jobId: drillJobId }
+                    );
+
+                    logger.info(
+                        { drillJobId, projectId: project.id, orgId: org.id },
+                        "Pro Feature: Automatically enqueued Disaster Recovery verification drill for new snapshot"
+                    );
+                }
+            }
+
         }
 
     } catch (err) {
 
-        logger.error({ jobId: job.id, error: err }, "Failed to run cleanup service after backup completion");
+        logger.error({ jobId: job.id, error: err }, "Failed to run post-backup completion tasks");
 
     }
 

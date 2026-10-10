@@ -795,10 +795,10 @@ function RestoreWizardDrawer({
                 <div className="p-3.5 rounded-lg border border-amber-500/20 bg-amber-500/10 text-amber-200 text-xs flex flex-col gap-2">
                   <div className="flex items-center gap-1.5 font-medium">
                     <IconAlertTriangle className="size-4 text-amber-400 shrink-0" />
-                    <span>Monthly Drill Quota Reached (1/1)</span>
+                    <span>Monthly Drill Limit Reached (1/1)</span>
                   </div>
                   <p className="text-muted-foreground text-[11.5px] leading-relaxed">
-                    Free tier organizations include 1 simulated Disaster Recovery drill per calendar month. Upgrade to Pro for unlimited scheduled & automated drills.
+                    Free tier includes 1 simulated Disaster Recovery drill per calendar month. Upgrade to Pro for unlimited manual drills & automated verification on every backup.
                   </p>
                   {orgId && (
                     <Link
@@ -809,6 +809,17 @@ function RestoreWizardDrawer({
                       Upgrade to Pro ({priceFormatted})
                     </Link>
                   )}
+                </div>
+              )}
+
+              {mode === "drill" && !drillQuotaReached && !isPro && (
+                <div className="p-2.5 rounded-lg border border-border/70 bg-card/40 text-xs flex items-center justify-between">
+                  <span className="text-muted-foreground text-[11.5px]">
+                    Free Plan: <strong className="text-foreground">1 of 1</strong> drill available this month
+                  </span>
+                  <span className="text-[11px] text-muted-foreground font-mono">
+                    Auto-drills on backup: <strong className="text-amber-400">Pro</strong>
+                  </span>
                 </div>
               )}
 
@@ -841,7 +852,7 @@ function RestoreWizardDrawer({
                         </div>
                       </div>
                       <p className="text-[11px] sm:text-xs text-muted-foreground leading-relaxed pl-8">
-                        Zero risk. Restores to isolated temp sandbox, checks integrity & destroys.
+                        Zero risk. Restores to isolated temp sandbox, checks integrity & destroys. (Pro unlocks auto-verification on every backup).
                       </p>
                     </CardContent>
                   </Card>

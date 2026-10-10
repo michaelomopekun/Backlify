@@ -1,7 +1,11 @@
 import { ProjectRepository, OrganizationRepository } from "db";
 import { logger } from "./logger";
-import { buildIncidentAlertEmailHtml } from "./email-templates";
-export { buildIncidentAlertEmailHtml, buildBackupSuccessEmailHtml, buildDrillVerifiedEmailHtml } from "./email-templates";
+import {
+  buildIncidentAlertEmailHtml,
+  buildBackupSuccessEmailHtml,
+  buildDrillVerifiedEmailHtml,
+} from "./email-templates";
+export { buildIncidentAlertEmailHtml, buildBackupSuccessEmailHtml, buildDrillVerifiedEmailHtml };
 
 
 export interface IncidentAlertPayload {
@@ -425,3 +429,134 @@ export async function dispatchBackupSuccessAlert(
     return result;
   }
 }
+
+export interface DispatchDrillSuccessAlertOptions {
+  jobId: string;
+  projectId: string;
+  durationMs: number;
+  tableCount?: number;
+}
+
+/**
+ * Dispatches notification when an automated disaster recovery drill passes (Pro feature).
+ */
+export async function dispatchDrillSuccessAlert(
+  opts: DispatchDrillSuccessAlertOptions
+): Promise<AlertDispatchResult> {
+  const result: AlertDispatchResult = {
+    webhookDelivered: false,
+    emailDelivered: false,
+  };
+
+  try {
+    const project = await ProjectRepository.getProjectById(opts.projectId);
+    if (!project) return result;
+
+    if (project.notifyOnDrill === false) {
+      return result;
+    }
+
+    const appUrl = process.env.APP_URL || "https://backlify.space";
+    const dashboardUrl = `${appUrl}/dashboard/project/${project.id}/restores`;
+    const durationFormatted = `${(opts.durationMs / 1000).toFixed(1)}s`;
+
+    // 1. Webhook (Discord or generic)
+    if (project.webhookUrl) {
+      try {
+        const isDiscord =
+          project.webhookUrl.includes("discord.com/api/webhooks") ||
+          project.webhookUrl.includes("discordapp.com/api/webhooks");
+
+        let bodyPayload: string;
+        if (isDiscord) {
+          bodyPayload = JSON.stringify({
+            username: "Backlify",
+            avatar_url: "https://backlify.space/backlify-logo-wrapped.png",
+            embeds: [
+              {
+                title: "🛡️ Disaster Recovery Drill Passed",
+                description: `Archive integrity & schema verification validated for **${project.name}**. Zero bit-rot detected. Safe to restore.`,
+                color: 7419530, // #7122ea (violet)
+                url: dashboardUrl,
+                fields: [
+                  { name: "Verification Time", value: durationFormatted, inline: true },
+                  { name: "Schema Tables", value: opts.tableCount !== undefined ? `${opts.tableCount} tables` : "Verified", inline: true },
+                  { name: "Status", value: "100% Disaster-Ready", inline: true },
+                ],
+                footer: { text: "Backlify Pro · Automated Recovery Engine" },
+                timestamp: new Date().toISOString(),
+              },
+            ],
+          });
+        } else {
+          bodyPayload = JSON.stringify({
+            event: "backlify.drill_passed",
+            timestamp: new Date().toISOString(),
+            project: { id: project.id, name: project.name, environment: project.environment },
+            drill: { jobId: opts.jobId, durationMs: opts.durationMs, tableCount: opts.tableCount },
+          });
+        }
+
+        await fetch(project.webhookUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: bodyPayload,
+          signal: AbortSignal.timeout(5000),
+        });
+        result.webhookDelivered = true;
+      } catch (err) {
+        logger.warn({ error: err }, "Failed to send drill success webhook");
+      }
+    }
+
+    // 2. Email via Resend with Vercel minimal layout
+    const resendApiKey = process.env.RESEND_API_KEY;
+    if (resendApiKey) {
+      try {
+        let recipients: string[] = [];
+        if (project.orgId) {
+          const members = await OrganizationRepository.getOrganizationMembers(project.orgId);
+          recipients = members
+            .filter((m) => m.role === "owner" || m.role === "admin")
+            .map((m) => m.email)
+            .filter(Boolean);
+        }
+
+        if (recipients.length > 0) {
+          const html = buildDrillVerifiedEmailHtml({
+            projectName: project.name,
+            environment: project.environment || "production",
+            jobId: opts.jobId,
+            durationFormatted,
+            tableCount: opts.tableCount,
+            dashboardUrl,
+          });
+
+          await fetch("https://api.resend.com/emails", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${resendApiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              from: process.env.EMAIL_FROM || "Backlify Drill Verification <alerts@mail.backlify.space>",
+              to: recipients,
+              subject: `🛡️ [VERIFIED] Recovery Drill Passed — ${project.name} (${project.environment})`,
+              html,
+            }),
+            signal: AbortSignal.timeout(6000),
+          });
+          result.emailDelivered = true;
+        }
+      } catch (emailErr) {
+        logger.warn({ error: emailErr }, "Failed to send drill success email");
+      }
+    }
+
+    return result;
+  } catch (err) {
+    logger.error({ error: err }, "Error in dispatchDrillSuccessAlert");
+    return result;
+  }
+}
+

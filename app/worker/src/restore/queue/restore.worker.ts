@@ -17,7 +17,7 @@ import { EncryptionService } from "../../shared/service/encryption.service";
 import { createHash } from "crypto";
 
 import { emitJobTelemetry } from "shared/config/job-telemetry";
-import { dispatchIncidentAlert } from "shared/config/alert-dispatcher";
+import { dispatchIncidentAlert, dispatchDrillSuccessAlert } from "shared/config/alert-dispatcher";
 import { calculateDynamicRestoreTimeout } from "shared/config/timeout";
 import { decryptDatabaseUrl } from "shared/config/encryption";
 
@@ -271,6 +271,22 @@ export const restoreWorker = new Worker<RestoreJobData>(
                     message: `Headless DR Drill PASSED: Archive integrity confirmed in ${drillDuration}ms. Zero bit-rot detected. Safe to restore.`,
                     progress: 100,
                 });
+
+                // Dispatch Pro drill success alert notification
+                let projectId: string | null = (job.data as any).projectId || null;
+                if (!projectId && backupFile?.backupJobId) {
+                    const dbBackup = await BackupRepository.getJobById(backupFile.backupJobId);
+                    if (dbBackup) projectId = dbBackup.projectId;
+                }
+
+                if (projectId) {
+                    await dispatchDrillSuccessAlert({
+                        jobId: job.data.jobId,
+                        projectId,
+                        durationMs: drillDuration,
+                        tableCount,
+                    });
+                }
 
                 return { success: true, drillResult: tocResult };
             } else {
