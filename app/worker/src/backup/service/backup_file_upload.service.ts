@@ -10,7 +10,7 @@ import { logger } from "shared/config/logger";
 
 import { StorageService } from "shared/config/storage";
 
-import { BackupFileRepository } from "db";
+import { BackupFileRepository, BackupRepository, ProjectRepository } from "db";
 
 import { EncryptionService } from "../../shared/service/encryption.service";
 
@@ -50,8 +50,8 @@ export class BackupFileUploadService {
     /**
      * After a successful pg_dump:
      * 1. Generate checksum
-     * 2. Upload dump file to R2 cloud storage
-     * 3. Save the cloud key as filePath in DB (storageProvider: "r2")
+     * 2. Upload dump file to cloud storage (Custom BYOS or default R2)
+     * 3. Save the cloud key as filePath in DB
      * 4. Delete the local temp file
      * 
      * Falls back to local storage if cloud upload fails.
@@ -128,18 +128,54 @@ export class BackupFileUploadService {
             let storedPath = finalFilePath;
 
             try {
+                // Dynamically resolve custom BYOS vault credentials if configured for this project
+                let customConfig = null;
+                let providerName = "r2";
 
-                logger.info({ jobId, cloudKey }, "Uploading backup file to cloud storage");
+                try {
+                    const backupJob = await BackupRepository.getJobById(jobId);
+                    if (backupJob?.projectId) {
+                        const project = await ProjectRepository.getProjectById(backupJob.projectId);
+                        if (
+                            project?.useCustomVault &&
+                            project.vaultBucket &&
+                            project.vaultAccessKeyId &&
+                            project.vaultSecretKey
+                        ) {
+                            customConfig = {
+                                provider: project.vaultProvider || "s3",
+                                endpoint: project.vaultEndpoint,
+                                region: project.vaultRegion,
+                                bucket: project.vaultBucket,
+                                accessKeyId: project.vaultAccessKeyId,
+                                secretAccessKey: project.vaultSecretKey,
+                            };
+                            providerName = project.vaultProvider || "custom-s3";
+                            logger.info(
+                                { jobId, provider: providerName, bucket: project.vaultBucket },
+                                "Using custom BYOS storage vault for backup upload"
+                            );
+                        }
+                    }
+                } catch (resolveErr) {
+                    logger.warn(
+                        { jobId, error: resolveErr },
+                        "Could not resolve project custom vault; using managed storage"
+                    );
+                }
 
-                const storageService = new StorageService();
+                logger.info({ jobId, cloudKey, provider: providerName }, "Uploading backup file to cloud storage");
+
+                const storageService = new StorageService(customConfig);
 
                 await storageService.uploadFile(cloudKey, finalFilePath);
 
-                storageProvider = "r2";
+                storageProvider = providerName;
 
                 storedPath = cloudKey;
 
-                logger.info({ jobId, cloudKey }, "Backup file uploaded to cloud storage");
+                logger.info({ jobId, cloudKey, provider: storageProvider }, "Backup file uploaded to cloud storage");
+
 
                 // 5 cleanup local temp file after successful upload
                 try {

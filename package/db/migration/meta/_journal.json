@@ -57,6 +57,13 @@
       "when": 1791552409838,
       "tag": "0007_stormy_amazoness",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1791671547784,
+      "tag": "0008_cooing_karma",
+      "breakpoints": true
     }
   ]
 }

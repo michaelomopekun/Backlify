@@ -13,19 +13,23 @@ export interface CreateProjectParams {
 
 export interface UpdateProjectParams {
   name?: string;
-  environment?: string;
+  environment?: string | null;
   databaseUrl?: string;
-  vaultProvider?: string;
-  vaultBucket?: string;
-  vaultRegion?: string;
-  kmsKeyArn?: string;
-  retentionCount?: number;
-  keepWeekly?: boolean;
-  keepMonthly?: boolean;
-  webhookUrl?: string;
-  notifyOnFailure?: boolean;
-  notifyOnDrill?: boolean;
-  notifyOnStorage?: boolean;
+  useCustomVault?: boolean | null;
+  vaultProvider?: string | null;
+  vaultBucket?: string | null;
+  vaultRegion?: string | null;
+  vaultEndpoint?: string | null;
+  vaultAccessKeyId?: string | null;
+  vaultSecretKey?: string | null;
+  kmsKeyArn?: string | null;
+  retentionCount?: number | null;
+  keepWeekly?: boolean | null;
+  keepMonthly?: boolean | null;
+  webhookUrl?: string | null;
+  notifyOnFailure?: boolean | null;
+  notifyOnDrill?: boolean | null;
+  notifyOnStorage?: boolean | null;
 }
 
 export class ProjectRepository {
@@ -71,6 +75,7 @@ export class ProjectRepository {
       return {
         ...project,
         databaseUrl: decryptDatabaseUrl(project.databaseUrl),
+        vaultSecretKey: project.vaultSecretKey ? decryptDatabaseUrl(project.vaultSecretKey) : project.vaultSecretKey,
       };
     } catch (error) {
       logger.error({ projectId: id, error }, "Failed to fetch project");
@@ -79,7 +84,7 @@ export class ProjectRepository {
   }
 
   /**
-   * Fetches project with database password masked for safe presentation to the client UI/API.
+   * Fetches project with database password and vault secret masked for safe presentation to the client UI/API.
    */
   static async getProjectWithMaskedUrl(id: string) {
     try {
@@ -91,6 +96,7 @@ export class ProjectRepository {
       return {
         ...project,
         databaseUrl: maskDatabaseUrl(project.databaseUrl),
+        vaultSecretKey: project.vaultSecretKey ? "••••••••••••••••" : null,
       };
     } catch (error) {
       logger.error({ projectId: id, error }, "Failed to fetch project with masked URL");
@@ -106,6 +112,7 @@ export class ProjectRepository {
       return result.map((project) => ({
         ...project,
         databaseUrl: decryptDatabaseUrl(project.databaseUrl),
+        vaultSecretKey: project.vaultSecretKey ? decryptDatabaseUrl(project.vaultSecretKey) : project.vaultSecretKey,
       }));
     } catch (error) {
       logger.error({ error }, "Failed to fetch projects");
@@ -126,6 +133,7 @@ export class ProjectRepository {
       return result.map((project) => ({
         ...project,
         databaseUrl: decryptDatabaseUrl(project.databaseUrl),
+        vaultSecretKey: project.vaultSecretKey ? decryptDatabaseUrl(project.vaultSecretKey) : project.vaultSecretKey,
       }));
     } catch (error) {
       logger.error({ orgIds, error }, "Failed to fetch projects by orgIds");
@@ -146,6 +154,18 @@ export class ProjectRepository {
         updateData.databaseUrl = encryptDatabaseUrl(params.databaseUrl);
       }
 
+      // Securely encrypt custom vault secret key at rest
+      if (params.vaultSecretKey !== undefined) {
+        if (params.vaultSecretKey && !params.vaultSecretKey.includes("••••")) {
+          updateData.vaultSecretKey = encryptDatabaseUrl(params.vaultSecretKey);
+        } else if (params.vaultSecretKey && params.vaultSecretKey.includes("••••")) {
+          // Placeholder masked value sent back; keep existing stored secret key unchanged
+          delete updateData.vaultSecretKey;
+        } else {
+          updateData.vaultSecretKey = null;
+        }
+      }
+
       const result = await db.update(projects)
         .set(updateData)
         .where(eq(projects.id, id))
@@ -157,6 +177,7 @@ export class ProjectRepository {
       return {
         ...updated,
         databaseUrl: decryptDatabaseUrl(updated.databaseUrl),
+        vaultSecretKey: updated.vaultSecretKey ? decryptDatabaseUrl(updated.vaultSecretKey) : updated.vaultSecretKey,
       };
     } catch (error) {
       logger.error({ projectId: id, error }, "Failed to update project");

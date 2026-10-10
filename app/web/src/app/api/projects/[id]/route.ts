@@ -6,7 +6,7 @@ import { StorageService } from "shared/config/storage";
 import { logger } from "shared/config/logger";
 import { isOrganizationPro } from "shared";
 import { maskDatabaseUrl } from "shared/config/encryption";
-import { validateSafeDatabaseUrl, validateSafeWebhookUrl } from "shared/config/security";
+import { validateSafeDatabaseUrl, validateSafeWebhookUrl, validateSafeHost } from "shared/config/security";
 import { authorizeProject } from "@/lib/auth-guard";
 
 export const dynamic = "force-dynamic";
@@ -15,9 +15,13 @@ const UpdateProjectInputSchema = z.object({
   name: z.string().min(1, "Name is required").max(255).optional(),
   environment: z.string().max(50).optional(),
   databaseUrl: z.string().url("Invalid database URL format").optional(),
+  useCustomVault: z.boolean().optional(),
   vaultProvider: z.string().max(50).optional(),
   vaultBucket: z.string().max(255).optional(),
   vaultRegion: z.string().max(50).optional(),
+  vaultEndpoint: z.string().url("Invalid endpoint URL").or(z.literal("")).nullable().optional(),
+  vaultAccessKeyId: z.string().max(255).nullable().optional(),
+  vaultSecretKey: z.string().max(500).nullable().optional(),
   kmsKeyArn: z.string().max(255).optional(),
   retentionCount: z.number().int().positive().optional(),
   keepWeekly: z.boolean().optional(),
@@ -111,6 +115,25 @@ export async function PATCH(
       }
     }
 
+    // SSRF validation if vaultEndpoint is updated
+    if (validated.data.vaultEndpoint && validated.data.vaultEndpoint.trim() !== "") {
+      try {
+        const parsed = new URL(validated.data.vaultEndpoint.trim());
+        const ssrfCheck = await validateSafeHost(parsed.hostname);
+        if (!ssrfCheck.safe) {
+          return NextResponse.json(
+            { success: false, error: ssrfCheck.error || "Restricted vault endpoint destination." },
+            { status: 400 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { success: false, error: "Invalid vault endpoint URL format." },
+          { status: 400 }
+        );
+      }
+    }
+
     // Verify Organization Plan Restrictions
     const org = auth.org;
     const isPro = isOrganizationPro(org);
@@ -118,12 +141,16 @@ export async function PATCH(
     if (!isPro) {
       if (
         (validated.data.vaultProvider && validated.data.vaultProvider !== "backlify_default") ||
-        validated.data.vaultBucket
+        validated.data.vaultBucket ||
+        validated.data.useCustomVault ||
+        validated.data.vaultEndpoint ||
+        validated.data.vaultAccessKeyId ||
+        validated.data.vaultSecretKey
       ) {
         return NextResponse.json(
           {
             success: false,
-            error: "Custom cloud storage vaults (AWS S3, Cloudflare R2, GCS) require a Pro plan subscription ($3 or ₦2,000/mo). Upgrade to Pro to connect custom vaults.",
+            error: "Custom cloud storage vaults (AWS S3, Cloudflare R2, MinIO, Wasabi) require a Pro plan subscription ($3 or ₦2,000/mo). Upgrade to Pro to connect custom vaults.",
           },
           { status: 403 }
         );
@@ -157,6 +184,7 @@ export async function PATCH(
       project: {
         ...updatedProject,
         databaseUrl: maskDatabaseUrl(updatedProject.databaseUrl),
+        vaultSecretKey: updatedProject.vaultSecretKey ? "••••••••••••••••" : null,
       },
       message: "Project updated successfully",
     });

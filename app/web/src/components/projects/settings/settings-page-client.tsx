@@ -40,6 +40,8 @@ import {
   IconExternalLink,
   IconServer,
   IconSettings,
+  IconCloud,
+  IconLock,
 } from "@tabler/icons-react";
 
 interface ProjectSettingsProps {
@@ -49,9 +51,13 @@ interface ProjectSettingsProps {
     name: string;
     environment?: string | null;
     databaseUrl: string;
+    useCustomVault?: boolean | null;
     vaultProvider?: string | null;
     vaultBucket?: string | null;
     vaultRegion?: string | null;
+    vaultEndpoint?: string | null;
+    vaultAccessKeyId?: string | null;
+    vaultSecretKey?: string | null;
     kmsKeyArn?: string | null;
     retentionCount?: number | null;
     keepWeekly?: boolean | null;
@@ -93,12 +99,25 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
     setTimeout(() => setCopiedEgressIp(false), 2000);
   };
 
-  // Storage & KMS
+  // Storage & KMS / Multi-Storage BYOS
+  const [useCustomVault, setUseCustomVault] = useState(project?.useCustomVault ?? false);
   const [vaultProvider, setVaultProvider] = useState(project?.vaultProvider ?? "s3");
   const [bucketName, setBucketName] = useState(project?.vaultBucket ?? "");
   const [vaultRegion, setVaultRegion] = useState(project?.vaultRegion ?? "");
+  const [vaultEndpoint, setVaultEndpoint] = useState(project?.vaultEndpoint ?? "");
+  const [vaultAccessKeyId, setVaultAccessKeyId] = useState(project?.vaultAccessKeyId ?? "");
+  const [vaultSecretKey, setVaultSecretKey] = useState(project?.vaultSecretKey ?? "");
+  const [showVaultSecret, setShowVaultSecret] = useState(false);
   const [kmsKeyArn, setKmsKeyArn] = useState(project?.kmsKeyArn ?? "");
   const [savedVault, setSavedVault] = useState(false);
+  const [testingVault, setTestingVault] = useState(false);
+  const [vaultTestResult, setVaultTestResult] = useState<{
+    status: "idle" | "success" | "error";
+    latency?: number;
+    error?: string;
+    bucket?: string;
+  }>({ status: "idle" });
+  const [vaultSaveError, setVaultSaveError] = useState<string | null>(null);
 
   // Retention
   const [retentionDays, setRetentionDays] = useState(project?.retentionCount ?? 7);
@@ -122,9 +141,13 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
       if (project.name !== undefined) setProjectName(project.name);
       if (project.environment) setEnvironment(project.environment);
       if (project.databaseUrl !== undefined) setDbUrl(project.databaseUrl);
+      if (project.useCustomVault != null) setUseCustomVault(project.useCustomVault);
       if (project.vaultProvider) setVaultProvider(project.vaultProvider);
       if (project.vaultBucket !== undefined && project.vaultBucket !== null) setBucketName(project.vaultBucket);
       if (project.vaultRegion !== undefined && project.vaultRegion !== null) setVaultRegion(project.vaultRegion);
+      if (project.vaultEndpoint !== undefined && project.vaultEndpoint !== null) setVaultEndpoint(project.vaultEndpoint);
+      if (project.vaultAccessKeyId !== undefined && project.vaultAccessKeyId !== null) setVaultAccessKeyId(project.vaultAccessKeyId);
+      if (project.vaultSecretKey !== undefined && project.vaultSecretKey !== null) setVaultSecretKey(project.vaultSecretKey);
       if (project.kmsKeyArn !== undefined && project.kmsKeyArn !== null) setKmsKeyArn(project.kmsKeyArn);
       if (project.retentionCount != null) setRetentionDays(project.retentionCount);
       if (project.keepWeekly != null) setKeepWeekly(project.keepWeekly);
@@ -202,24 +225,76 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
     }
   };
 
+  const handleTestVault = async () => {
+    setTestingVault(true);
+    setVaultTestResult({ status: "idle" });
+    try {
+      const res = await fetch("/api/projects/test-vault", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          projectId,
+          provider: vaultProvider,
+          endpoint: vaultEndpoint || undefined,
+          bucket: bucketName,
+          region: vaultRegion || undefined,
+          accessKeyId: vaultAccessKeyId,
+          secretAccessKey: vaultSecretKey,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setVaultTestResult({
+          status: "success",
+          latency: data.latencyMs,
+          bucket: data.bucket,
+        });
+      } else {
+        setVaultTestResult({
+          status: "error",
+          error: data.error || "Vault verification probe failed. Check bucket name and IAM credentials.",
+        });
+      }
+    } catch (err: any) {
+      setVaultTestResult({
+        status: "error",
+        error: err?.message || "Network error while connecting to vault test endpoint.",
+      });
+    } finally {
+      setTestingVault(false);
+    }
+  };
+
   const handleSaveVault = async () => {
+    setVaultSaveError(null);
     try {
       const res = await fetch(`/api/projects/${projectId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          vaultProvider,
-          vaultBucket: bucketName,
-          vaultRegion,
-          kmsKeyArn,
+          useCustomVault,
+          vaultProvider: useCustomVault ? vaultProvider : "backlify_default",
+          vaultBucket: useCustomVault ? bucketName : null,
+          vaultRegion: useCustomVault ? vaultRegion : null,
+          vaultEndpoint: useCustomVault ? vaultEndpoint : null,
+          vaultAccessKeyId: useCustomVault ? vaultAccessKeyId : null,
+          vaultSecretKey: useCustomVault ? vaultSecretKey : null,
+          kmsKeyArn: useCustomVault ? kmsKeyArn : null,
         }),
       });
-      if (res.ok) {
+      const data = await res.json();
+      if (res.ok && data.success) {
         setSavedVault(true);
+        if (data.project?.vaultSecretKey) {
+          setVaultSecretKey(data.project.vaultSecretKey);
+        }
         setTimeout(() => setSavedVault(false), 2000);
+      } else {
+        setVaultSaveError(data.error || data.message || "Failed to update storage vault settings.");
       }
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
+      setVaultSaveError(e?.message || "An unexpected error occurred while saving vault settings.");
     }
   };
 
@@ -649,94 +724,306 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
         </CardFooter>
       </Card>
 
-      {/* ── Section 3: Storage Vault & KMS Encryption ── */}
+      {/* ── Section 3: Storage Vault & Multi-Storage BYOS ── */}
       <Card id="storage" className="scroll-mt-8 border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
-        <CardHeader className="p-5 sm:p-6 border-b border-border/50">
-          <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
-            <IconShieldLock className="size-4 text-indigo-400" />
-            <span>Storage Vault & KMS Encryption</span>
-          </CardTitle>
-          <CardDescription className="text-xs text-muted-foreground font-normal">
-            S3-compatible immutable backup vault with Customer-Managed Keys (CMK)
-          </CardDescription>
+        <CardHeader className="p-5 sm:p-6 border-b border-border/50 flex flex-row items-start justify-between">
+          <div className="space-y-1">
+            <CardTitle className="text-base font-semibold text-foreground flex items-center gap-2">
+              <IconShieldLock className="size-4 text-indigo-400" />
+              <span>Storage Vault & Multi-Cloud BYOS</span>
+            </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground font-normal">
+              Store encrypted snapshots in Backlify's isolated managed vault or bring your own AWS S3, Cloudflare R2, MinIO, or Wasabi bucket
+            </CardDescription>
+          </div>
+
+          <span
+            className={`text-xs font-medium px-2.5 py-0.5 rounded-full shrink-0 ${
+              useCustomVault
+                ? "text-indigo-400 bg-indigo-500/10 border border-indigo-500/20"
+                : "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+            }`}
+          >
+            {useCustomVault ? `Custom BYOS: ${vaultProvider.toUpperCase()}` : "Backlify Managed (Zero-Config)"}
+          </span>
         </CardHeader>
 
-        <CardContent className="p-5 sm:p-6 space-y-4">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="vault-provider" className="text-xs font-medium text-muted-foreground">
-                Provider
-              </Label>
-              <Select value={vaultProvider} onValueChange={setVaultProvider}>
-                <SelectTrigger id="vault-provider" className="h-9 bg-[#080808]">
-                  <SelectValue placeholder="Select provider" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="s3">Amazon S3</SelectItem>
-                  <SelectItem value="r2">Cloudflare R2</SelectItem>
-                  <SelectItem value="minio">Self-Hosted MinIO</SelectItem>
-                </SelectContent>
-              </Select>
+        <CardContent className="p-5 sm:p-6 space-y-5">
+          {/* Vault Mode Selector */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <div
+              onClick={() => setUseCustomVault(false)}
+              className={`p-4 rounded-lg border transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                !useCustomVault
+                  ? "border-emerald-500/50 bg-emerald-950/15 ring-1 ring-emerald-500/30"
+                  : "border-border/60 bg-[#080808]/70 hover:border-border hover:bg-[#0c0c0c]"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <IconCloud className={`size-4 ${!useCustomVault ? "text-emerald-400" : "text-muted-foreground"}`} />
+                  <span className="text-xs font-semibold text-foreground">Backlify Managed Vault</span>
+                </div>
+                {!useCustomVault && (
+                  <span className="size-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" />
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Zero setup required. Automatic dual-region replication, AES-256 envelope encryption, and 0 egress fees during disaster recovery.
+              </p>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="bucket-name" className="text-xs font-medium text-muted-foreground">
-                Bucket Name
-              </Label>
-              <Input
-                id="bucket-name"
-                type="text"
-                value={bucketName}
-                placeholder="e.g. backlify-vault-prod"
-                onChange={(e) => setBucketName(e.target.value)}
-                className="h-9 bg-[#080808] border-input text-xs font-mono text-foreground"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="vault-region" className="text-xs font-medium text-muted-foreground">
-                Region
-              </Label>
-              <Input
-                id="vault-region"
-                type="text"
-                value={vaultRegion}
-                placeholder="e.g. us-east-1"
-                onChange={(e) => setVaultRegion(e.target.value)}
-                className="h-9 bg-[#080808] border-input text-xs font-mono text-foreground"
-              />
+            <div
+              onClick={() => setUseCustomVault(true)}
+              className={`p-4 rounded-lg border transition-all cursor-pointer flex flex-col justify-between gap-2 ${
+                useCustomVault
+                  ? "border-indigo-500/50 bg-indigo-950/15 ring-1 ring-indigo-500/30"
+                  : "border-border/60 bg-[#080808]/70 hover:border-border hover:bg-[#0c0c0c]"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <IconServer className={`size-4 ${useCustomVault ? "text-indigo-400" : "text-muted-foreground"}`} />
+                  <span className="text-xs font-semibold text-foreground">Bring Your Own Storage (BYOS)</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded bg-indigo-500/20 border border-indigo-500/40 text-indigo-300">
+                    PRO
+                  </span>
+                  {useCustomVault && (
+                    <span className="size-2 rounded-full bg-indigo-400 shadow-[0_0_8px_rgba(129,140,248,0.8)]" />
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Stream encrypted dumps directly to your own AWS S3, Cloudflare R2, MinIO, or Wasabi bucket for 100% data sovereignty.
+              </p>
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="kms-arn" className="text-xs font-medium text-muted-foreground">
-                AWS KMS Key ARN (Optional for BYOK)
-              </Label>
-              <span className="text-xs text-muted-foreground">AES-256 Hardware Encrypted</span>
+          {!useCustomVault ? (
+            <div className="rounded-lg border border-border/60 bg-[#0a0a0a] p-4 text-xs space-y-2">
+              <div className="flex items-center gap-2 text-foreground font-medium">
+                <IconCircleCheck className="size-4 text-emerald-400" />
+                <span>Managed Vault Active</span>
+              </div>
+              <p className="text-muted-foreground leading-relaxed">
+                Backups are securely streamed into Backlify's isolated, high-durability Cloudflare R2 / S3 network. Backups are encrypted at rest with AES-256 and verified with automated disaster recovery drills.
+              </p>
             </div>
-            <div className="relative">
-              <IconKey className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
-              <Input
-                id="kms-arn"
-                type="text"
-                value={kmsKeyArn}
-                onChange={(e) => setKmsKeyArn(e.target.value)}
-                placeholder="arn:aws:kms:region:account-id:key/key-id"
-                className="h-9 pl-9 bg-[#080808] border-input text-xs font-mono text-foreground"
-              />
+          ) : (
+            <div className="space-y-4 pt-1">
+              {/* Provider & Bucket Details */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="vault-provider" className="text-xs font-medium text-muted-foreground">
+                    Storage Provider
+                  </Label>
+                  <Select value={vaultProvider} onValueChange={setVaultProvider}>
+                    <SelectTrigger id="vault-provider" className="h-9 bg-[#080808]">
+                      <SelectValue placeholder="Select provider" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="s3">Amazon S3</SelectItem>
+                      <SelectItem value="r2">Cloudflare R2</SelectItem>
+                      <SelectItem value="minio">Self-Hosted MinIO</SelectItem>
+                      <SelectItem value="wasabi">Wasabi Cloud Storage</SelectItem>
+                      <SelectItem value="other">Other S3-Compatible</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="bucket-name" className="text-xs font-medium text-muted-foreground">
+                    Bucket Name <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    id="bucket-name"
+                    type="text"
+                    value={bucketName}
+                    placeholder="e.g. acme-prod-backups"
+                    onChange={(e) => setBucketName(e.target.value)}
+                    className="h-9 bg-[#080808] border-input text-xs font-mono text-foreground"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="vault-region" className="text-xs font-medium text-muted-foreground">
+                    Region {vaultProvider === "r2" ? "(use 'auto')" : ""}
+                  </Label>
+                  <Input
+                    id="vault-region"
+                    type="text"
+                    value={vaultRegion}
+                    placeholder={vaultProvider === "r2" ? "auto" : "e.g. us-east-1"}
+                    onChange={(e) => setVaultRegion(e.target.value)}
+                    className="h-9 bg-[#080808] border-input text-xs font-mono text-foreground"
+                  />
+                </div>
+              </div>
+
+              {/* Endpoint URL (for MinIO, R2, Wasabi, Custom) */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="vault-endpoint" className="text-xs font-medium text-muted-foreground">
+                    Custom S3 Endpoint URL {vaultProvider === "s3" ? "(Optional for AWS)" : "(Required)"}
+                  </Label>
+                  <span className="text-[11px] text-muted-foreground">
+                    {vaultProvider === "r2"
+                      ? "https://<account_id>.r2.cloudflarestorage.com"
+                      : vaultProvider === "minio"
+                      ? "https://minio.yourcompany.com:9000"
+                      : vaultProvider === "wasabi"
+                      ? "https://s3.wasabisys.com"
+                      : "Optional for standard AWS S3"}
+                  </span>
+                </div>
+                <Input
+                  id="vault-endpoint"
+                  type="text"
+                  value={vaultEndpoint}
+                  placeholder={
+                    vaultProvider === "r2"
+                      ? "https://<account_id>.r2.cloudflarestorage.com"
+                      : vaultProvider === "minio"
+                      ? "https://minio.yourcompany.com:9000"
+                      : "https://s3.us-east-1.amazonaws.com"
+                  }
+                  onChange={(e) => setVaultEndpoint(e.target.value)}
+                  className="h-9 bg-[#080808] border-input text-xs font-mono text-foreground"
+                />
+              </div>
+
+              {/* IAM Credentials */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="vault-access-key" className="text-xs font-medium text-muted-foreground">
+                    Access Key ID <span className="text-red-400">*</span>
+                  </Label>
+                  <Input
+                    id="vault-access-key"
+                    type="text"
+                    value={vaultAccessKeyId}
+                    placeholder="e.g. AKIAIOSFODNN7EXAMPLE"
+                    onChange={(e) => setVaultAccessKeyId(e.target.value)}
+                    className="h-9 bg-[#080808] border-input text-xs font-mono text-foreground"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="vault-secret-key" className="text-xs font-medium text-muted-foreground">
+                    Secret Access Key <span className="text-red-400">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      id="vault-secret-key"
+                      type={showVaultSecret ? "text" : "password"}
+                      value={vaultSecretKey}
+                      placeholder={vaultSecretKey?.includes("••••") ? "••••••••••••••••" : "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"}
+                      onChange={(e) => setVaultSecretKey(e.target.value)}
+                      className="h-9 pr-9 bg-[#080808] border-input text-xs font-mono text-foreground"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowVaultSecret(!showVaultSecret)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+                      title={showVaultSecret ? "Hide Secret" : "Show Secret"}
+                    >
+                      {showVaultSecret ? <IconEyeOff className="size-3.5" /> : <IconEye className="size-3.5" />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* KMS Key ARN */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="kms-arn" className="text-xs font-medium text-muted-foreground">
+                    AWS KMS Key ARN (Optional for Customer-Managed Keys)
+                  </Label>
+                  <span className="text-xs text-muted-foreground">Envelope Encrypted at Rest</span>
+                </div>
+                <div className="relative">
+                  <IconKey className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
+                  <Input
+                    id="kms-arn"
+                    type="text"
+                    value={kmsKeyArn}
+                    onChange={(e) => setKmsKeyArn(e.target.value)}
+                    placeholder="arn:aws:kms:region:account-id:key/key-id"
+                    className="h-9 pl-9 bg-[#080808] border-input text-xs font-mono text-foreground"
+                  />
+                </div>
+              </div>
+
+              {/* Vault Probe Test Results */}
+              {vaultTestResult.status === "success" && (
+                <div className="rounded-md border border-emerald-500/20 bg-emerald-950/20 p-3 space-y-1 text-xs">
+                  <div className="flex items-center gap-2 text-emerald-400 font-semibold">
+                    <IconCircleCheck className="size-4" />
+                    <span>Vault Connected & Verified — Latency: {vaultTestResult.latency}ms</span>
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    Bucket <span className="font-mono text-emerald-300 font-semibold">{vaultTestResult.bucket || bucketName}</span> is accessible with read/write permissions.
+                  </p>
+                </div>
+              )}
+
+              {vaultTestResult.status === "error" && (
+                <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 space-y-1 text-xs text-destructive">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <IconAlertTriangle className="size-4 text-destructive" />
+                    <span>Vault Connection Probe Failed</span>
+                  </div>
+                  <p className="text-xs leading-relaxed opacity-90">{vaultTestResult.error}</p>
+                </div>
+              )}
+
+              {vaultSaveError && (
+                <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive flex items-center gap-2">
+                  <IconAlertTriangle className="size-4 shrink-0 text-destructive" />
+                  <span>{vaultSaveError}</span>
+                </div>
+              )}
             </div>
-          </div>
+          )}
         </CardContent>
 
         <CardFooter className="px-5 sm:px-6 py-3.5 bg-muted/30 border-t border-border/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-muted-foreground font-normal">
-          <span>Ensure the IAM role has PutObject and GetObject permissions on this bucket.</span>
+          <div className="flex items-center gap-2">
+            {useCustomVault && (
+              <Button
+                type="button"
+                onClick={handleTestVault}
+                disabled={testingVault || !bucketName || !vaultAccessKeyId || !vaultSecretKey}
+                variant="outline"
+                size="sm"
+                className="h-8.5 px-3 text-xs border-border bg-card hover:bg-muted font-medium"
+              >
+                <IconRefresh className={`size-3.5 mr-1.5 ${testingVault ? "animate-spin text-muted-foreground" : ""}`} />
+                {testingVault ? "Probing Vault…" : "Test Vault Connection"}
+              </Button>
+            )}
+            <span className="hidden sm:inline">
+              {useCustomVault
+                ? "Ensure your IAM credentials have s3:PutObject and s3:GetObject permissions."
+                : "Managed vault snapshots are protected under Backlify's SLA with zero egress fees."}
+            </span>
+          </div>
+
           <Button
             size="sm"
             onClick={handleSaveVault}
             className="h-8.5 px-3.5 text-xs font-medium self-end sm:self-auto bg-white text-black hover:bg-neutral-200 transition-colors"
           >
-            {savedVault ? "Vault Saved" : "Update Vault"}
+            {savedVault ? (
+              <>
+                <IconCheck className="size-3.5 mr-1 text-black" />
+                Vault Saved
+              </>
+            ) : (
+              "Save Vault Settings"
+            )}
           </Button>
         </CardFooter>
       </Card>

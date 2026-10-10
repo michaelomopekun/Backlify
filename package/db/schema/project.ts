@@ -16,13 +16,22 @@ export const projects = pgTable('projects', {
   databaseUrl: text('database_url').notNull(),
 
   // Storage Vault Configuration
+  useCustomVault: boolean('use_custom_vault').default(false),
+
   vaultProvider: varchar('vault_provider', { length: 50 }).default('s3'),
 
   vaultBucket: text('vault_bucket'),
 
   vaultRegion: varchar('vault_region', { length: 50 }),
 
+  vaultEndpoint: text('vault_endpoint'),
+
+  vaultAccessKeyId: text('vault_access_key_id'),
+
+  vaultSecretKey: text('vault_secret_key'),
+
   kmsKeyArn: text('kms_key_arn'),
+
 
   // Retention Policy
   retentionCount: integer('retention_count').notNull().default(7),

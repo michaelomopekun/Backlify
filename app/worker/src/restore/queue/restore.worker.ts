@@ -94,7 +94,35 @@ export const restoreWorker = new Worker<RestoreJobData>(
 
             const { StorageService } = await import("shared/config/storage");
 
-            const storageService = new StorageService();
+            let customConfig = null;
+            try {
+                let projectId = (job.data as any).projectId;
+                if (!projectId && backupFile.backupJobId) {
+                    const dbJob = await BackupRepository.getJobById(backupFile.backupJobId);
+                    if (dbJob) projectId = dbJob.projectId;
+                }
+                if (projectId) {
+                    const { ProjectRepository } = await import("db");
+                    const project = await ProjectRepository.getProjectById(projectId);
+                    if (
+                        project?.useCustomVault &&
+                        project.vaultBucket &&
+                        project.vaultAccessKeyId &&
+                        project.vaultSecretKey
+                    ) {
+                        customConfig = {
+                            provider: project.vaultProvider || "s3",
+                            endpoint: project.vaultEndpoint,
+                            region: project.vaultRegion,
+                            bucket: project.vaultBucket,
+                            accessKeyId: project.vaultAccessKeyId,
+                            secretAccessKey: project.vaultSecretKey,
+                        };
+                    }
+                }
+            } catch {}
+
+            const storageService = new StorageService(customConfig);
 
             const path = await import("path");
 
