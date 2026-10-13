@@ -15,6 +15,8 @@ export const projects = pgTable('projects', {
 
   databaseUrl: text('database_url').notNull(),
 
+  databaseEngine: varchar('database_engine', { length: 50 }).notNull().default('postgres'),
+
   // Storage Vault Configuration
   useCustomVault: boolean('use_custom_vault').default(false),
 
