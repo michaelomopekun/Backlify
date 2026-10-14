@@ -9,12 +9,14 @@ export interface CreateProjectParams {
   orgId: string;
   name: string;
   databaseUrl: string;
+  databaseEngine?: string;
 }
 
 export interface UpdateProjectParams {
   name?: string;
   environment?: string | null;
   databaseUrl?: string;
+  databaseEngine?: string;
   useCustomVault?: boolean | null;
   vaultProvider?: string | null;
   vaultBucket?: string | null;
@@ -45,6 +47,7 @@ export class ProjectRepository {
         orgId: params.orgId,
         name: params.name,
         databaseUrl: secureDatabaseUrl,
+        databaseEngine: params.databaseEngine || "postgres",
         createdAt: new Date(),
         updatedAt: new Date(),
       }).returning();
