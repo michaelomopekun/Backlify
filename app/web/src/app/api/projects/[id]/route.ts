@@ -6,7 +6,7 @@ import { StorageService } from "shared/config/storage";
 import { logger } from "shared/config/logger";
 import { isOrganizationPro } from "shared";
 import { maskDatabaseUrl } from "shared/config/encryption";
-import { validateSafeDatabaseUrl, validateSafeWebhookUrl, validateSafeHost } from "shared/config/security";
+import { validateSafeDatabaseUrl, validateSafeWebhookUrl, validateSafeHost, detectDatabaseEngine } from "shared/config/security";
 import { authorizeProject } from "@/lib/auth-guard";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +14,8 @@ export const dynamic = "force-dynamic";
 const UpdateProjectInputSchema = z.object({
   name: z.string().min(1, "Name is required").max(255).optional(),
   environment: z.string().max(50).optional(),
-  databaseUrl: z.string().url("Invalid database URL format").optional(),
+  databaseUrl: z.string().min(1, "Invalid database URL").optional(),
+  databaseEngine: z.enum(["postgres", "mysql", "mongodb"]).optional(),
   useCustomVault: z.boolean().optional(),
   vaultProvider: z.string().max(50).optional(),
   vaultBucket: z.string().max(255).optional(),
@@ -177,7 +178,12 @@ export async function PATCH(
       }
     }
 
-    const updatedProject = await ProjectRepository.updateProject(id, validated.data);
+    const updatePayload = { ...validated.data };
+    if (validated.data.databaseUrl && !validated.data.databaseEngine) {
+      updatePayload.databaseEngine = detectDatabaseEngine(validated.data.databaseUrl) as any;
+    }
+
+    const updatedProject = await ProjectRepository.updateProject(id, updatePayload);
 
     return NextResponse.json({
       success: true,
