@@ -51,6 +51,7 @@ interface ProjectSettingsProps {
     name: string;
     environment?: string | null;
     databaseUrl: string;
+    databaseEngine?: string | null;
     useCustomVault?: boolean | null;
     vaultProvider?: string | null;
     vaultBucket?: string | null;
@@ -69,6 +70,27 @@ interface ProjectSettingsProps {
   } | null;
 }
 
+const ENGINE_CONFIG: Record<string, { name: string; tag: string; placeholder: string; prefixHint: string }> = {
+  postgres: {
+    name: "PostgreSQL",
+    tag: "POSTGRES",
+    placeholder: "postgresql://postgres:password@host:5432/dbname?sslmode=require",
+    prefixHint: "postgresql:// or postgres://",
+  },
+  mysql: {
+    name: "MySQL / MariaDB",
+    tag: "MYSQL",
+    placeholder: "mysql://user:password@host:3306/dbname",
+    prefixHint: "mysql://",
+  },
+  mongodb: {
+    name: "MongoDB",
+    tag: "MONGODB",
+    placeholder: "mongodb+srv://user:password@cluster.mongodb.net/dbname",
+    prefixHint: "mongodb:// or mongodb+srv://",
+  },
+};
+
 export function SettingsPageClient({ projectId, project }: ProjectSettingsProps) {
   // Active section for in-page navigation rail
   const [activeSection, setActiveSection] = useState("general");
@@ -76,13 +98,26 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
   const [environment, setEnvironment] = useState(project?.environment ?? "production");
   const [savedGeneral, setSavedGeneral] = useState(false);
 
-  // Database Connection
+  // Database Connection & Engine
+  const [databaseEngine, setDatabaseEngine] = useState<string>(project?.databaseEngine || "postgres");
   const [dbUrl, setDbUrl] = useState(project?.databaseUrl ?? "");
   const [showPassword, setShowPassword] = useState(false);
   const [copiedDb, setCopiedDb] = useState(false);
   const [savedDb, setSavedDb] = useState(false);
   const [testingPing, setTestingPing] = useState(false);
   const [copiedEgressIp, setCopiedEgressIp] = useState(false);
+
+  const handleDbUrlChange = (value: string) => {
+    setDbUrl(value);
+    const trimmed = value.trim().toLowerCase();
+    if (trimmed.startsWith("mysql://")) {
+      setDatabaseEngine("mysql");
+    } else if (trimmed.startsWith("mongodb://") || trimmed.startsWith("mongodb+srv://")) {
+      setDatabaseEngine("mongodb");
+    } else if (trimmed.startsWith("postgres://") || trimmed.startsWith("postgresql://")) {
+      setDatabaseEngine("postgres");
+    }
+  };
   const [pingResult, setPingResult] = useState<{
     status: "idle" | "success" | "error";
     latency?: number;
@@ -140,6 +175,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
     if (project) {
       if (project.name !== undefined) setProjectName(project.name);
       if (project.environment) setEnvironment(project.environment);
+      if (project.databaseEngine) setDatabaseEngine(project.databaseEngine);
       if (project.databaseUrl !== undefined) setDbUrl(project.databaseUrl);
       if (project.useCustomVault != null) setUseCustomVault(project.useCustomVault);
       if (project.vaultProvider) setVaultProvider(project.vaultProvider);
@@ -214,7 +250,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
       const res = await fetch(`/api/projects/${projectId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ databaseUrl: dbUrl }),
+        body: JSON.stringify({ databaseUrl: dbUrl, databaseEngine }),
       });
       if (res.ok) {
         setSavedDb(true);
@@ -343,7 +379,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
     if (!dbUrl) {
       setPingResult({
         status: "error",
-        error: "Database URL is empty. Please enter a valid PostgreSQL connection URI.",
+        error: "Database URL is empty. Please enter a valid database connection URI.",
       });
       return;
     }
@@ -356,6 +392,7 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
         body: JSON.stringify({
           projectId,
           databaseUrl: dbUrl,
+          engine: databaseEngine,
         }),
       });
       const data = await res.json();
@@ -583,31 +620,71 @@ export function SettingsPageClient({ projectId, project }: ProjectSettingsProps)
               <span>Target Database Connection</span>
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground font-normal">
-              Encrypted PostgreSQL connection URI used by backup workers and DR drills
+              Encrypted connection URI used by backup workers and DR drills across PostgreSQL, MySQL, and MongoDB
             </CardDescription>
           </div>
 
-          <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full shrink-0 ${
-            dbUrl
-              ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
-              : "text-muted-foreground bg-muted/30 border border-border"
-          }`}>
-            {dbUrl ? "Configured" : "Not configured"}
-          </span>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full border border-border bg-muted/40 text-foreground font-semibold">
+              {ENGINE_CONFIG[databaseEngine]?.name || "PostgreSQL"}
+            </span>
+            <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full shrink-0 ${
+              dbUrl
+                ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20"
+                : "text-muted-foreground bg-muted/30 border border-border"
+            }`}>
+              {dbUrl ? "Configured" : "Not configured"}
+            </span>
+          </div>
         </CardHeader>
 
         <CardContent className="p-5 sm:p-6 space-y-4">
+          {/* Database Engine Selector */}
           <div className="space-y-2">
-            <Label htmlFor="db-uri" className="text-xs font-medium text-muted-foreground">
-              PostgreSQL Connection URI
+            <Label className="text-xs font-medium text-muted-foreground">
+              Database Engine
             </Label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              {(Object.entries(ENGINE_CONFIG) as [string, { name: string; tag: string; placeholder: string; prefixHint: string }][]).map(([key, info]) => {
+                const isSelected = databaseEngine === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setDatabaseEngine(key)}
+                    className={`flex flex-col items-start p-2.5 rounded-lg border text-left transition-all ${
+                      isSelected
+                        ? "border-emerald-500/60 bg-emerald-500/10 text-foreground shadow-xs"
+                        : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full mb-1">
+                      <span className="text-xs font-semibold text-foreground">{info.name}</span>
+                      {isSelected && <IconCheck className="size-3.5 text-emerald-400" />}
+                    </div>
+                    <span className="text-[10px] font-mono text-muted-foreground">{info.prefixHint}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="db-uri" className="text-xs font-medium text-muted-foreground">
+                {ENGINE_CONFIG[databaseEngine]?.name || "PostgreSQL"} Connection URI
+              </Label>
+              <span className="text-[11px] text-muted-foreground font-mono">
+                Auto-detects on paste
+              </span>
+            </div>
             <div className="relative">
               <Input
                 id="db-uri"
                 type={showPassword ? "text" : "password"}
                 value={dbUrl}
-                placeholder="postgresql://user:password@host:5432/dbname"
-                onChange={(e) => setDbUrl(e.target.value)}
+                placeholder={ENGINE_CONFIG[databaseEngine]?.placeholder || ENGINE_CONFIG.postgres.placeholder}
+                onChange={(e) => handleDbUrlChange(e.target.value)}
                 className="h-9 pl-3.5 pr-20 bg-[#080808] border-input text-xs font-mono text-foreground"
               />
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">

@@ -60,6 +60,7 @@ interface Props {
   userName?: string;
   environment?: string | null;
   databaseUrl?: string | null;
+  databaseEngine?: string | null;
   projects?: ProjectItem[];
   organizations?: OrgItem[];
 }
@@ -74,6 +75,7 @@ export function ProjectHeader({
   userName,
   environment,
   databaseUrl,
+  databaseEngine,
   projects = [],
   organizations = [],
 }: Props) {
@@ -114,6 +116,22 @@ export function ProjectHeader({
       return "border-sky-500/30 bg-sky-500/10 text-sky-400";
     }
     return "border-emerald-500/30 bg-emerald-500/10 text-emerald-400";
+  };
+
+  const getEngineBadge = (eng?: string | null) => {
+    if (!eng) return null;
+    const lower = eng.toLowerCase();
+    switch (lower) {
+      case "postgres":
+      case "postgresql":
+        return { label: "Postgres", styles: "border-sky-500/30 bg-sky-500/10 text-sky-400" };
+      case "mysql":
+        return { label: "MySQL", styles: "border-amber-500/30 bg-amber-500/10 text-amber-400" };
+      case "mongodb":
+        return { label: "MongoDB", styles: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400" };
+      default:
+        return { label: eng, styles: "border-neutral-700 bg-neutral-800 text-neutral-300" };
+    }
   };
 
   const triggerMobileMenu = () => {
@@ -523,6 +541,15 @@ export function ProjectHeader({
                 )}>
                   {currentEnv}
                 </span>
+
+                {databaseEngine && (
+                  <span className={cn(
+                    "text-[10px] font-semibold px-2 py-0.5 rounded-full border font-mono tracking-wider select-none hidden sm:inline-flex transition-colors",
+                    getEngineBadge(databaseEngine)?.styles
+                  )}>
+                    {getEngineBadge(databaseEngine)?.label}
+                  </span>
+                )}
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

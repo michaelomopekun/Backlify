@@ -52,6 +52,38 @@ const SCHEDULE_PRESETS = [
   },
 ];
 
+export type DatabaseEngine = "postgres" | "mysql" | "mongodb";
+
+const ENGINE_OPTIONS: Array<{
+  id: DatabaseEngine;
+  name: string;
+  tag: string;
+  desc: string;
+  placeholder: string;
+}> = [
+  {
+    id: "postgres",
+    name: "PostgreSQL",
+    tag: "POPULAR",
+    desc: "Postgres 12-18, Supabase, Neon, RDS, Aurora",
+    placeholder: "postgresql://postgres:password@db.supabase.co:5432/postgres?sslmode=require",
+  },
+  {
+    id: "mysql",
+    name: "MySQL / MariaDB",
+    tag: "RELATIONAL",
+    desc: "MySQL 8+, MariaDB, PlanetScale, AWS RDS",
+    placeholder: "mysql://root:password@mysql.aws.rds.com:3306/production_db",
+  },
+  {
+    id: "mongodb",
+    name: "MongoDB",
+    tag: "DOCUMENT",
+    desc: "MongoDB Atlas, DocumentDB, Replica Sets",
+    placeholder: "mongodb+srv://admin:password@cluster0.mongodb.net/production_db",
+  },
+];
+
 export function NewProjectWizard({ orgId, orgName }: Props) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
@@ -59,6 +91,7 @@ export function NewProjectWizard({ orgId, orgName }: Props) {
   // Form states
   const [projectName, setProjectName] = useState("");
   const [environmentTier, setEnvironmentTier] = useState<"production" | "staging" | "development">("production");
+  const [databaseEngine, setDatabaseEngine] = useState<DatabaseEngine>("postgres");
   const [databaseUrl, setDatabaseUrl] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [selectedSchedule, setSelectedSchedule] = useState("daily");
@@ -80,11 +113,28 @@ export function NewProjectWizard({ orgId, orgName }: Props) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const handleUrlChange = (val: string) => {
+    setDatabaseUrl(val);
+    const trimmed = val.trim().toLowerCase();
+    if (/^postgres(ql)?:\/\//.test(trimmed)) setDatabaseEngine("postgres");
+    else if (/^mysql(x)?:\/\//.test(trimmed)) setDatabaseEngine("mysql");
+    else if (/^mongodb(\+srv)?:\/\//.test(trimmed)) setDatabaseEngine("mongodb");
+  };
+
+  const handleSelectEngine = (engine: DatabaseEngine) => {
+    setDatabaseEngine(engine);
+    setPingResult(null);
+  };
+
+  const currentPlaceholder =
+    ENGINE_OPTIONS.find((e) => e.id === databaseEngine)?.placeholder ||
+    "postgresql://postgres:password@host:5432/dbname";
+
   const handleTestConnection = async () => {
-    if (!databaseUrl || !/^postgres(ql)?:\/\//i.test(databaseUrl)) {
+    if (!databaseUrl.trim()) {
       setPingResult({
         status: "error",
-        error: "Please enter a valid PostgreSQL connection string starting with postgresql://",
+        error: `Please enter a valid ${databaseEngine.toUpperCase()} connection URI.`,
       });
       return;
     }
@@ -96,7 +146,7 @@ export function NewProjectWizard({ orgId, orgName }: Props) {
       const res = await fetch("/api/projects/test-connection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ databaseUrl }),
+        body: JSON.stringify({ databaseUrl, databaseEngine }),
       });
       const data = await res.json();
       setIsTesting(false);
@@ -110,7 +160,7 @@ export function NewProjectWizard({ orgId, orgName }: Props) {
       } else {
         setPingResult({
           status: "error",
-          error: data.error || "Could not establish connection to the PostgreSQL database.",
+          error: data.error || `Could not establish connection to the ${databaseEngine.toUpperCase()} database.`,
         });
       }
     } catch (err: any) {
@@ -146,6 +196,7 @@ export function NewProjectWizard({ orgId, orgName }: Props) {
     const formData = new FormData();
     formData.append("name", projectName.trim());
     formData.append("databaseUrl", databaseUrl.trim());
+    formData.append("databaseEngine", databaseEngine);
     formData.append("orgId", orgId);
     formData.append("cronExpression", activeCron);
 
@@ -338,23 +389,59 @@ export function NewProjectWizard({ orgId, orgName }: Props) {
       {step === 2 && (
         <div className="rounded-lg border border-[#1e1e1e] bg-[#111111] p-6 space-y-6">
           <div>
-            <h2 className="text-[15px] font-medium text-white">Target Database Connection</h2>
+            <h2 className="text-[15px] font-medium text-white">Target Database & Engine</h2>
             <p className="text-[12px] text-[#666666] mt-0.5">
-              Enter your PostgreSQL URI. Backlify uses this to execute snapshots and run DR integrity checks.
+              Select your engine and connection string. Backlify runs automated snapshots and disaster recovery drills across your fleet.
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-5">
+            {/* Engine Selector */}
             <div className="space-y-2">
               <label className="text-[12px] font-mono uppercase tracking-wider text-[#888888]">
-                PostgreSQL Connection URI <span className="text-primary">*</span>
+                Database Engine <span className="text-primary">*</span>
               </label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {ENGINE_OPTIONS.map((eng) => (
+                  <button
+                    key={eng.id}
+                    type="button"
+                    onClick={() => handleSelectEngine(eng.id)}
+                    className={`p-3 rounded-lg border text-left transition-all flex flex-col justify-between ${
+                      databaseEngine === eng.id
+                        ? "border-primary bg-primary/10 ring-1 ring-primary/40"
+                        : "border-[#1e1e1e] bg-[#0c0c0c] hover:border-[#2a2a2a] hover:bg-[#121212]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full mb-1">
+                      <span className="text-[13px] font-semibold text-white">{eng.name}</span>
+                      <span className="text-[9px] font-mono font-semibold px-1 py-0.5 rounded bg-white/5 border border-white/10 text-[#888888]">
+                        {eng.tag}
+                      </span>
+                    </div>
+                    <p className="text-[10.5px] text-[#666666] leading-tight">{eng.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-[12px] font-mono uppercase tracking-wider text-[#888888]">
+                  {ENGINE_OPTIONS.find((e) => e.id === databaseEngine)?.name} Connection URI <span className="text-primary">*</span>
+                </label>
+                <span className="text-[11px] font-mono text-[#666666]">
+                  {databaseEngine === "postgres" && "postgresql://user:pass@host:5432/db"}
+                  {databaseEngine === "mysql" && "mysql://user:pass@host:3306/db"}
+                  {databaseEngine === "mongodb" && "mongodb+srv://user:pass@cluster.mongodb.net/db"}
+                </span>
+              </div>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
                   value={databaseUrl}
-                  onChange={(e) => setDatabaseUrl(e.target.value)}
-                  placeholder="postgresql://postgres:password@db.supabase.co:5432/postgres?sslmode=require"
+                  onChange={(e) => handleUrlChange(e.target.value)}
+                  placeholder={currentPlaceholder}
                   className="w-full h-10 pl-3.5 pr-20 bg-[#0c0c0c] border border-[#222222] rounded-md text-[13px] font-mono text-white placeholder-[#444444] focus:outline-none focus:border-primary transition-colors"
                   autoFocus
                 />
