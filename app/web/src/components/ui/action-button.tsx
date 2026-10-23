@@ -5,7 +5,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 export type ButtonVariant = "dark" | "blue" | "amber" | "outline" | "ghost" | "custom";
-export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl" | "long";
+export type ButtonSize = "xs" | "sm" | "md" | "lg" | "xl" | "long" | "heroLong";
 
 export interface ActionButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -101,6 +101,7 @@ const VARIANT_STYLES: Record<ButtonVariant, {
     hoverBg: "transparent",
     hoverBorder: "transparent",
   },
+  
 };
 
 const SIZE_STYLES: Record<ButtonSize, {
@@ -111,12 +112,13 @@ const SIZE_STYLES: Record<ButtonSize, {
   minWidth?: string;
   width?: string;
 }> = {
-  xs: { height: "26px", padding: "0 10px", fontSize: "12px", gap: "6px" },
+  xs: { height: "29px", padding: "0 10px", fontSize: "12px", gap: "6px" },
   sm: { height: "30px", padding: "0 13px", fontSize: "13px", gap: "6px" },
   md: { height: "36px", padding: "0 16px", fontSize: "14px", gap: "8px" },
   lg: { height: "40px", padding: "0 20px", fontSize: "15px", gap: "8px" },
   xl: { height: "46px", padding: "0 24px", fontSize: "16px", gap: "10px" },
   long: { height: "32px", padding: "0 24px", fontSize: "12px", gap: "8px", minWidth: "165px" },
+  heroLong: { height: "40px", padding: "0 25px", fontSize: "12px", gap: "8px", minWidth: "140px" },
 };
 
 export const ActionButton = React.forwardRef<HTMLButtonElement, ActionButtonProps>(
@@ -136,7 +138,7 @@ export const ActionButton = React.forwardRef<HTMLButtonElement, ActionButtonProp
       borderRadius = "9px",
       borderWidth = "1px",
       fontSize,
-      fontWeight = "500",
+      fontWeight = "600",
       leftIcon,
       rightIcon,
       isLoading,
