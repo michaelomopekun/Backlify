@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/marketing/site-header";
 import { HeroLeft } from "@/components/marketing/hero-left";
+import { HeroRight } from "@/components/marketing/hero-right";
 
 export const metadata: Metadata = {
   title: "Landing Hero Preview — Backlify",
@@ -13,8 +14,8 @@ export default function PreviewLandingPage() {
       {/* ── Top Navigation Bar ── */}
       <SiteHeader />
 
-      {/* ── Hero Left Column ── */}
-      <HeroLeft />
+      {/* ── Hero Section (Left + Interactive Right) ── */}
+      <HeroLeft rightContent={<HeroRight />} />
     </main>
   );
 }

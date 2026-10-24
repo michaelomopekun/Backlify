@@ -57,6 +57,8 @@ export interface HeroLeftProps {
   /** Inline style overrides */
   style?: React.CSSProperties;
 
+  /** Optional right column content (e.g. HeroRight or ShaderLensBlur) */
+  rightContent?: React.ReactNode;
   isMobile?: boolean;
 }
 
@@ -89,10 +91,11 @@ export function HeroLeft({
   paddingBottom = "48px",
   className,
   style,
+  rightContent,
 }: HeroLeftProps) {
   const isMobileHook = useIsMobile();
   const isMobile = isMobileProp ?? isMobileHook;
-  const effectivePaddingTop = paddingTop ?? (isMobile ? "45px" : "155px");
+  const effectivePaddingTop = paddingTop ?? (isMobile ? "45px" : "40px");
 
   return (
     <section
@@ -110,73 +113,100 @@ export function HeroLeft({
       <div
         style={{
           display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-start",
-          maxWidth: columnMaxWidth,
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: "40px",
           width: "100%",
+          flexWrap: "wrap",
         }}
       >
-        {/* ── 2-Line High-Impact Display Headline ── */}
-        <h1
-          style={{
-            fontSize: fontSize,
-            fontWeight: fontWeight,
-            lineHeight: lineHeight,
-            letterSpacing: letterSpacing,
-            margin: 0,
-            padding: 0,
-            fontFamily:
-              "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
-          }}
-        >
-          <span
-            style={{
-              color: titleColor,
-              display: "block",
-            }}
-          >
-            {firstLine}
-          </span>
-          <span
-            style={{
-              color: accentColor,
-              display: "block",
-            }}
-          >
-            {secondLine}
-          </span>
-        </h1>
-
-        {/* ── Dual CTA Action Buttons ── */}
         <div
           style={{
             display: "flex",
-            alignItems: "center",
-            gap: buttonsGap,
-            marginTop: buttonsMarginTop,
-            flexWrap: "wrap",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            maxWidth: columnMaxWidth,
+            width: "100%",
+            flex: "1 1 480px",
           }}
         >
-          {/* Primary CTA (Amber Accent) */}
-          <ActionButton
-            variant="amber"
-            size={buttonSize}
-            href={primaryHref}
-            {...primaryButtonProps}
+          {/* ── 2-Line High-Impact Display Headline ── */}
+          <h1
+            style={{
+              fontSize: fontSize,
+              fontWeight: fontWeight,
+              lineHeight: lineHeight,
+              letterSpacing: letterSpacing,
+              margin: 0,
+              padding: 0,
+              fontFamily:
+                "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif",
+            }}
           >
-            {primaryText}
-          </ActionButton>
+            <span
+              style={{
+                color: titleColor,
+                display: "block",
+              }}
+            >
+              {firstLine}
+            </span>
+            <span
+              style={{
+                color: accentColor,
+                display: "block",
+              }}
+            >
+              {secondLine}
+            </span>
+          </h1>
 
-          {/* Secondary CTA (Dark with subtle border) */}
-          <ActionButton
-            variant="dark"
-            size={buttonSize}
-            href={secondaryHref}
-            {...secondaryButtonProps}
+          {/* ── Dual CTA Action Buttons ── */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: buttonsGap,
+              marginTop: buttonsMarginTop,
+              flexWrap: "wrap",
+            }}
           >
-            {secondaryText}
-          </ActionButton>
+            {/* Primary CTA (Amber Accent) */}
+            <ActionButton
+              variant="amber"
+              size={buttonSize}
+              href={primaryHref}
+              {...primaryButtonProps}
+            >
+              {primaryText}
+            </ActionButton>
+
+            {/* Secondary CTA (Dark with subtle border) */}
+            <ActionButton
+              variant="dark"
+              size={buttonSize}
+              href={secondaryHref}
+              {...secondaryButtonProps}
+            >
+              {secondaryText}
+            </ActionButton>
+          </div>
         </div>
+
+        {rightContent && (
+          <div
+            style={{
+              flex: "1 1 420px",
+              minWidth: "300px",
+              maxWidth: "520px",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            {rightContent}
+          </div>
+        )}
       </div>
     </section>
   );
