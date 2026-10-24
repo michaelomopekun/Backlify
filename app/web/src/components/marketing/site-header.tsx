@@ -14,7 +14,15 @@ const NAV_LINKS = [
   { label: "Docs", href: "https://docs.backlify.dev", external: true },
 ];
 
-export function SiteHeader({ className }: { className?: string }) {
+export interface SiteHeaderProps {
+  className?: string;
+  containerMaxWidth?: string;
+}
+
+export function SiteHeader({
+  className,
+  containerMaxWidth = "1150px",
+}: SiteHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   return (
@@ -33,7 +41,7 @@ export function SiteHeader({ className }: { className?: string }) {
     >
       <div
         style={{
-          maxWidth: "1040px",
+          maxWidth: containerMaxWidth,
           height: "100%",
           margin: "0 auto",
           padding: isMobileMenuOpen ? "0 23px" : "0 23px",
@@ -165,7 +173,7 @@ export function SiteHeader({ className }: { className?: string }) {
             <ActionButton
             variant="dark"
             size="xs"
-            borderRadius="6px"
+            borderRadius="8px"
             href="/login"
           >
             Sign in
@@ -176,7 +184,7 @@ export function SiteHeader({ className }: { className?: string }) {
           {!isMobileMenuOpen ? (<ActionButton
             variant="amber"
             size="xs"
-            borderRadius="6px"
+            borderRadius="8px"
             href="/signup"
           >
             Start free

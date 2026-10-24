@@ -46,7 +46,7 @@ export interface HeroLeftProps {
 
   /** Max width of the left column (default: "560px") */
   columnMaxWidth?: string;
-  /** Max width of outer centered container (default: "1040px" matching navbar) */
+  /** Max width of outer centered container (default: "1280px" matching navbar) */
   containerMaxWidth?: string;
   /** Top padding from header (default: "96px") */
   paddingTop?: string;
@@ -84,7 +84,7 @@ export function HeroLeft({
   buttonsMarginTop = "32px",
 
   columnMaxWidth = "560px",
-  containerMaxWidth = "1040px",
+  containerMaxWidth = "1150px",
   paddingTop,
   paddingBottom = "48px",
   className,
