@@ -28,7 +28,7 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
               <ShieldCheck className="w-5 h-5 text-[#94a3b8] shrink-0" />
               <h3>Automated Restore Drills</h3>
             </div>
-            <p className="text-sm text-[#94a3b8] leading-relaxed mb-10">
+            <p className="text-xs text-[#94a3b8] leading-relaxed mb-10">
               Never wonder if your backup actually works. Backlify automatically spins up isolated
               sandbox containers, restores dumps, and validates data integrity.
             </p>
@@ -107,9 +107,9 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
           <div className="w-full md:w-[48%] flex flex-col justify-start shrink-0">
             <div className="flex items-center gap-2.5 text-[#f9fafb] font-medium text-lg mb-2">
               <RefreshCw className="w-5 h-5 text-[#94a3b8] shrink-0" />
-              <h3>Continuous WAL Streaming &amp; PITR</h3>
+              <h3>Point In Time Recovery</h3>
             </div>
-            <p className="text-sm text-[#94a3b8] leading-relaxed mb-6">
+            <p className="text-xs text-[#94a3b8] leading-relaxed mb-10">
               Stream write-ahead logs in real-time. Rewind your PostgreSQL database to any exact
               second with point-in-time recovery.
             </p>
@@ -144,9 +144,9 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
           <div className="w-full md:w-[48%] flex flex-col justify-start shrink-0">
             <div className="flex items-center gap-2.5 text-[#f9fafb] font-medium text-lg mb-2">
               <HardDrive className="w-5 h-5 text-[#94a3b8] shrink-0" />
-              <h3>Zero-Knowledge BYOS Storage</h3>
+              <h3>BYOS Storage</h3>
             </div>
-            <p className="text-sm text-[#94a3b8] leading-relaxed mb-6">
+            <p className="text-xs text-[#94a3b8] leading-relaxed mb-10">
               Bring your own S3, Cloudflare R2, GCS, or MinIO. Encrypted client-side with
               AES-256-GCM before chunks ever leave your servers.
             </p>
