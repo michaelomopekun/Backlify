@@ -8,14 +8,16 @@ import { IsometricReplicationIllustration } from "@/components/marketing/isometr
 import { IsometricStorageIllustration } from "@/components/marketing/isometric-storage-illustration";
 import { IsometricCronIllustration } from "@/components/marketing/isometric-cron-illustration";
 import { IsometricAlertIllustration } from "@/components/marketing/isometric-alert-illustration";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface CoreFeaturesBentoProps {
   className?: string;
 }
 
 export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
+  const isMobile = useIsMobile();
   return (
-    <section className={cn("relative w-full max-w-[1240px] mx-auto px-17 py-5", className)}>
+    <section className={cn(`relative w-full max-w-[1240px] mx-auto ${isMobile ? 'px-5' : 'px-17'} py-5`, className)}>
 
       {/* ── 4-Column Supabase Bento Grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-2">
@@ -24,9 +26,9 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
            ══════════════════════════════════════════════════════════ */}
         <div className="lg:col-span-2 group relative rounded-2xl bg-[#0c0d12]/90 border border-[#1b1e24] p-7 sm:p-8 flex flex-col md:flex-row items-start justify-between gap-6 overflow-hidden hover:border-[#2a2f3a] transition-all duration-300">
           <div className="w-full md:w-[48%] flex flex-col justify-start shrink-0">
-            <div className="flex items-center gap-2.5 text-[#f9fafb] font-medium text-lg mb-2">
+            <div className="flex items-center gap-2.5 text-[#f9fafb] text-lg mb-2">
               <ShieldCheck className="w-5 h-5 text-[#94a3b8] shrink-0" />
-              <h3>Automated Restore Drills</h3>
+              <h3 className="font-sans text-[16px] text-[#f9fafb] tracking-tight">Automated Restore Drills</h3>
             </div>
             <p className="text-xs text-[#94a3b8] leading-relaxed mb-10">
               Never wonder if your backup actually works. Backlify automatically spins up isolated
@@ -61,9 +63,9 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
            ══════════════════════════════════════════════════════════ */}
         <div className="lg:col-span-1 group relative rounded-2xl bg-[#0c0d12]/90 border border-[#1b1e24] p-7 flex flex-col justify-between overflow-hidden hover:border-[#2a2f3a] transition-all duration-300">
           <div>
-            <div className="flex items-center gap-2.5 text-[#f9fafb] font-medium text-base mb-2">
+            <div className="flex items-center gap-2.5 text-[#f9fafb] text-base mb-2">
               <Clock className="w-5 h-5 text-[#94a3b8] shrink-0" />
-              <h3>Precision Cron</h3>
+              <h3 className="font-sans text-[16px] text-[#f9fafb] tracking-tight">Precision Cron</h3>
             </div>
             <p className="text-xs text-[#94a3b8] leading-relaxed">
               Sub-hourly cron schedules with GFS (Grandfather-Father-Son) retention policies.
@@ -83,9 +85,9 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
            ══════════════════════════════════════════════════════════ */}
         <div className="lg:col-span-1 group relative rounded-2xl bg-[#0c0d12]/90 border border-[#1b1e24] p-7 flex flex-col justify-between overflow-hidden hover:border-[#2a2f3a] transition-all duration-300">
           <div>
-            <div className="flex items-center gap-2.5 text-[#f9fafb] font-medium text-base mb-2">
+            <div className="flex items-center gap-2.5 text-[#f9fafb] text-base mb-2">
               <Bell className="w-5 h-5 text-[#94a3b8] shrink-0" />
-              <h3>Incident Alerts</h3>
+              <h3 className="font-sans text-[16px] text-[#f9fafb] tracking-tight">Incident Alerts</h3>
             </div>
             <p className="text-xs text-[#94a3b8] leading-relaxed">
               Instant alerts to Slack, Discord, Telegram, and Webhooks when backups lag or fail.
@@ -105,9 +107,9 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
            ══════════════════════════════════════════════════════════ */}
         <div className="lg:col-span-2 group relative rounded-2xl bg-[#0c0d12]/90 border border-[#1b1e24] p-7 sm:p-8 flex flex-col md:flex-row items-start justify-between gap-6 overflow-hidden hover:border-[#2a2f3a] transition-all duration-300">
           <div className="w-full md:w-[48%] flex flex-col justify-start shrink-0">
-            <div className="flex items-center gap-2.5 text-[#f9fafb] font-medium text-lg mb-2">
+            <div className="flex items-center gap-2.5 text-[#f9fafb] text-lg mb-2">
               <RefreshCw className="w-5 h-5 text-[#94a3b8] shrink-0" />
-              <h3>Point In Time Recovery</h3>
+              <h3 className="font-sans text-[16px] text-[#f9fafb] tracking-tight">Point In Time Recovery</h3>
             </div>
             <p className="text-xs text-[#94a3b8] leading-relaxed mb-10">
               Stream write-ahead logs in real-time. Rewind your PostgreSQL database to any exact
@@ -142,9 +144,9 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
            ══════════════════════════════════════════════════════════ */}
         <div className="lg:col-span-2 group relative rounded-2xl bg-[#0c0d12]/90 border border-[#1b1e24] p-7 sm:p-8 flex flex-col md:flex-row items-start justify-between gap-6 overflow-hidden hover:border-[#2a2f3a] transition-all duration-300">
           <div className="w-full md:w-[48%] flex flex-col justify-start shrink-0">
-            <div className="flex items-center gap-2.5 text-[#f9fafb] font-medium text-lg mb-2">
+            <div className="flex items-center gap-2.5 text-[#f9fafb] text-lg mb-2">
               <HardDrive className="w-5 h-5 text-[#94a3b8] shrink-0" />
-              <h3>BYOS Storage</h3>
+              <h3 className="font-sans text-[16px] text-[#f9fafb] tracking-tight">BYOS Storage</h3>
             </div>
             <p className="text-xs text-[#94a3b8] leading-relaxed mb-10">
               Bring your own S3, Cloudflare R2, GCS, or MinIO. Encrypted client-side with
