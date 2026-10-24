@@ -14,6 +14,8 @@ export interface IsometricCronIllustrationProps {
   accentColor?: string;
   /** Whether the animation should loop continuously */
   loop?: boolean;
+  /** Only play animation and reveal accent color on hover */
+  playOnHover?: boolean;
   /** Custom width/max-width */
   className?: string;
   style?: React.CSSProperties;
@@ -25,6 +27,7 @@ export function IsometricCronIllustration({
   inkColor = "#e5e7eb",
   accentColor = "#FFB31F",
   loop = true,
+  playOnHover = false,
   className,
   style,
 }: IsometricCronIllustrationProps) {
@@ -51,8 +54,8 @@ export function IsometricCronIllustration({
             "--illos-dark": dark,
             "--illos-ground": groundColor,
             "--illos-ink": inkColor,
-            "--illos-accent": accentColor,
-            "--illos-play": "running",
+            "--illos-accent": playOnHover ? inkColor : accentColor,
+            "--illos-play": playOnHover ? "paused" : "running",
           } as React.CSSProperties
         }
       >
@@ -62,8 +65,19 @@ export function IsometricCronIllustration({
             --d: var(--illos-dark, 1);
             --g: var(--illos-ground, #0a0a0a);
             --ink: var(--illos-ink, #e5e7eb);
-            --accent: var(--illos-accent, #FFB31F);
+            --accent: var(--illos-accent, ${playOnHover ? inkColor : accentColor});
             --mute: color-mix(in srgb, var(--ink) 45%, var(--g));
+          }
+          ${
+            playOnHover
+              ? `
+          .group:hover .li-cron,
+          .li-cron:hover {
+            --illos-play: running !important;
+            --illos-accent: ${accentColor} !important;
+          }
+          `
+              : ""
           }
           .li-cron path,
           .li-cron polygon,
@@ -72,6 +86,7 @@ export function IsometricCronIllustration({
             vector-effect: non-scaling-stroke;
             stroke-linecap: round;
             stroke-linejoin: round;
+            transition: fill 0.3s ease, stroke 0.3s ease;
           }
           .li-cron .top { fill: color-mix(in srgb, var(--ink) calc(var(--d) * 10% + (1 - var(--d)) * 0%), var(--g)); }
           .li-cron .left { fill: color-mix(in srgb, var(--ink) calc(var(--d) * 5% + (1 - var(--d)) * 4%), var(--g)); }

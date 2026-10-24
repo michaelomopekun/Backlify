@@ -16,22 +16,6 @@ export interface CoreFeaturesBentoProps {
 export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
   return (
     <section className={cn("relative w-full max-w-[1240px] mx-auto px-17 py-5", className)}>
-      {/* ── Section Header (Supabase Scale-to-millions style) ── */}
-      {/* <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#FFB31F]/10 border border-[#FFB31F]/20 text-[#FFB31F] font-mono text-xs uppercase tracking-widest mb-3">
-            Core Capabilities
-          </div>
-          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tight text-[#f9fafb]">
-            Engineered for complete{" "}
-            <span className="text-[#FFB31F]">peace of mind</span>
-          </h2>
-        </div>
-        <p className="max-w-md text-sm sm:text-base text-[#94a3b8] leading-relaxed">
-          Automated restore verification, continuous WAL replication, client-side encryption,
-          precision retention schedules, and instant failover alerts.
-        </p>
-      </div> */}
 
       {/* ── 4-Column Supabase Bento Grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-2">
@@ -44,7 +28,7 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
               <ShieldCheck className="w-5 h-5 text-[#94a3b8] shrink-0" />
               <h3>Automated Restore Drills</h3>
             </div>
-            <p className="text-sm text-[#94a3b8] leading-relaxed mb-6">
+            <p className="text-sm text-[#94a3b8] leading-relaxed mb-10">
               Never wonder if your backup actually works. Backlify automatically spins up isolated
               sandbox containers, restores dumps, and validates data integrity.
             </p>
@@ -65,7 +49,8 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
           </div>
           <div className="w-full md:w-[52%] flex items-center justify-center self-center">
             <IsometricQueueIllustration
-              accentColor="#e5e7eb"
+              playOnHover={true}
+              accentColor="#FFB31F"
               className="w-full max-w-[390px]"
             />
           </div>
@@ -86,7 +71,8 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
           </div>
           <div className="flex-1 flex items-center justify-center my-auto py-2">
             <IsometricCronIllustration
-              accentColor="#e5e7eb"
+              playOnHover={true}
+              accentColor="#FFB31F"
               className="w-full max-w-[310px]"
             />
           </div>
@@ -107,7 +93,8 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
           </div>
           <div className="flex-1 flex items-center justify-center my-auto py-2">
             <IsometricAlertIllustration
-              accentColor="#e5e7eb"
+              playOnHover={true}
+              accentColor="#FFB31F"
               className="w-full max-w-[310px]"
             />
           </div>
@@ -143,7 +130,8 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
           </div>
           <div className="w-full md:w-[52%] flex items-center justify-center self-center">
             <IsometricReplicationIllustration
-              accentColor="#e5e7eb"
+              playOnHover={true}
+              accentColor="#FFB31F"
               className="w-full max-w-[390px]"
             />
           </div>
@@ -179,7 +167,8 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
           </div>
           <div className="w-full md:w-[52%] flex items-center justify-center self-center">
             <IsometricStorageIllustration
-              accentColor="#e5e7eb"
+              playOnHover={true}
+              accentColor="#FFB31F"
               className="w-full max-w-[390px]"
             />
           </div>
