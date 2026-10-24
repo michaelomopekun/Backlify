@@ -161,6 +161,19 @@ export function HeroLeft({
             </span>
           </h1>
 
+          <p
+            style={{
+              maxWidth: "560px",
+              fontSize: "15px",
+              color: "#94a3b8",
+              lineHeight: "1.6",
+              marginTop: "16px",
+            }}
+          >
+            Automate every backup, verify every restore, and sleep soundly with continuous WAL
+            replication and instant failover alerts.
+          </p>
+
           {/* ── Dual CTA Action Buttons ── */}
           <div
             style={{
