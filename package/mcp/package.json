@@ -1,0 +1,43 @@
+{
+  "name": "@backlify/mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Official Model Context Protocol (MCP) server for Backlify database backup & recovery automation",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "backlify-mcp": "./dist/bin/backlify-mcp.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/bin/backlify-mcp.js",
+    "dev": "npx tsx bin/backlify-mcp.ts"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "backlify",
+    "database",
+    "backup",
+    "postgresql",
+    "claude",
+    "cursor"
+  ],
+  "author": "Backlify Team",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "db": "*",
+    "dotenv": "^16.4.5",
+    "shared": "*",
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0"
+  }
+}
