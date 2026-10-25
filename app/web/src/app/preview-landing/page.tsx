@@ -4,6 +4,7 @@ import { HeroLeft } from "@/components/marketing/hero-left";
 import { HeroRight } from "@/components/marketing/hero-right";
 
 import { CoreFeaturesBento } from "@/components/marketing/core-features-bento";
+import { MarketingRailsLayout } from "@/components/marketing/layout-rails";
 
 export const metadata: Metadata = {
   title: "Landing Hero Preview — Backlify",
@@ -12,16 +13,16 @@ export const metadata: Metadata = {
 
 export default function PreviewLandingPage() {
   return (
-    <main className="min-h-screen bg-[#0a0a0a] text-[#f9fafb]">
+    <MarketingRailsLayout>
       {/* ── Top Navigation Bar ── */}
-      <SiteHeader />
+      <SiteHeader containerMaxWidth="1240px" />
 
       {/* ── Hero Section (Left + Interactive Right) ── */}
       <HeroLeft rightContent={<HeroRight />} />
 
       {/* ── Core Capabilities Bento Grid (Supabase 4-Column Layout) ── */}
       <CoreFeaturesBento />
-    </main>
+    </MarketingRailsLayout>
   );
 }
 
