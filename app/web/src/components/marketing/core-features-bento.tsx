@@ -2,12 +2,13 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { Check, ShieldCheck, Clock, Bell, RefreshCw, HardDrive } from "lucide-react";
+import { Check, ShieldCheck, Clock, Bell, RefreshCw, HardDrive, Terminal } from "lucide-react";
 import { IsometricQueueIllustration } from "@/components/marketing/isometric-queue-illustration";
 import { IsometricReplicationIllustration } from "@/components/marketing/isometric-replication-illustration";
 import { IsometricStorageIllustration } from "@/components/marketing/isometric-storage-illustration";
 import { IsometricCronIllustration } from "@/components/marketing/isometric-cron-illustration";
 import { IsometricAlertIllustration } from "@/components/marketing/isometric-alert-illustration";
+import { TerminalMcpIllustration } from "@/components/marketing/terminal-mcp-illustration";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface CoreFeaturesBentoProps {
@@ -103,44 +104,52 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
         </div>
 
         {/* ══════════════════════════════════════════════════════════
-            CARD 4 (Row 2, 2 Cols): Continuous WAL Streaming & PITR
+            CARD 4 (Row 2, 1 Col): Model Context Protocol (MCP)
            ══════════════════════════════════════════════════════════ */}
-        <div className="lg:col-span-2 group relative rounded-2xl bg-[#0c0d12]/90 border border-[#1b1e24] p-7 sm:p-8 flex flex-col md:flex-row items-start justify-between gap-6 overflow-hidden hover:border-[#2a2f3a] transition-all duration-300">
-          <div className="w-full md:w-[48%] flex flex-col justify-start shrink-0">
-            <div className="flex items-center gap-2.5 text-[#f9fafb] text-lg mb-2">
-              <RefreshCw className="w-5 h-5 text-[#94a3b8] shrink-0" />
-              <h3 className="font-sans text-[16px] text-[#f9fafb] tracking-tight">Point In Time Recovery</h3>
+        <div className="lg:col-span-1 group relative rounded-2xl bg-[#0c0d12]/90 border border-[#1b1e24] p-7 flex flex-col justify-between overflow-hidden hover:border-[#2a2f3a] transition-all duration-300">
+          <div>
+            <div className="flex items-center gap-2.5 text-[#f9fafb] text-base mb-2">
+              <Terminal className="w-5 h-5 text-[#94a3b8] shrink-0" />
+              <h3 className="font-sans text-[16px] text-[#f9fafb] tracking-tight">MCP</h3>
             </div>
-            <p className="text-xs text-[#94a3b8] leading-relaxed mb-10">
-              Stream write-ahead logs in real-time. Rewind your PostgreSQL database to any exact
-              second with point-in-time recovery.
+            <p className="text-xs text-[#94a3b8] leading-relaxed">
+              Control backups and trigger restore drills directly from Claude, Cursor, and AI agents.
             </p>
-            <ul className="space-y-2.5 text-xs text-[#cbd5e1]">
-              <li className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[#94a3b8] shrink-0" />
-                <span>Sub-second RPO streaming replication</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[#94a3b8] shrink-0" />
-                <span>Non-blocking pg_receivewal log shipping</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <Check className="w-3.5 h-3.5 text-[#94a3b8] shrink-0" />
-                <span>Automated standby replica synchronization</span>
-              </li>
-            </ul>
           </div>
-          <div className="w-full md:w-[52%] flex items-center justify-center self-center">
-            <IsometricReplicationIllustration
+          <div className="flex-1 flex items-center justify-center my-auto py-2">
+            <TerminalMcpIllustration
               playOnHover={true}
               accentColor="#FFB31F"
-              className="w-full max-w-[390px]"
+              className="w-full max-w-[310px]"
             />
           </div>
         </div>
 
         {/* ══════════════════════════════════════════════════════════
-            CARD 5 (Row 2, 2 Cols): Zero-Knowledge BYOS Storage
+            CARD 5 (Row 2, 1 Col): Continuous WAL Streaming & PITR
+           ══════════════════════════════════════════════════════════ */}
+        <div className="lg:col-span-1 group relative rounded-2xl bg-[#0c0d12]/90 border border-[#1b1e24] p-7 flex flex-col justify-between overflow-hidden hover:border-[#2a2f3a] transition-all duration-300">
+          <div>
+            <div className="flex items-center gap-2.5 text-[#f9fafb] text-base mb-2">
+              <RefreshCw className="w-5 h-5 text-[#94a3b8] shrink-0" />
+              <h3 className="font-sans text-[16px] text-[#f9fafb] tracking-tight">Point In Time Recovery</h3>
+            </div>
+            <p className="text-xs text-[#94a3b8] leading-relaxed">
+              Stream write-ahead logs in real-time. Rewind your database to any exact second.
+            </p>
+          </div>
+          <div className="flex-1 flex items-center justify-center my-auto py-2">
+            <IsometricReplicationIllustration
+              playOnHover={true}
+              accentColor="#FFB31F"
+              className="w-full max-w-[310px]"
+            />
+          </div>
+        </div>
+
+        {/* ══════════════════════════════════════════════════════════
+            CARD 6 (Row 2, 2 Cols): Zero-Knowledge BYOS Storage
+Storage
            ══════════════════════════════════════════════════════════ */}
         <div className="lg:col-span-2 group relative rounded-2xl bg-[#0c0d12]/90 border border-[#1b1e24] p-7 sm:p-8 flex flex-col md:flex-row items-start justify-between gap-6 overflow-hidden hover:border-[#2a2f3a] transition-all duration-300">
           <div className="w-full md:w-[48%] flex flex-col justify-start shrink-0">
