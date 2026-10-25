@@ -36,9 +36,6 @@ export function TerminalMcpIllustration({
         .mcp-container {
           --mcp-play: ${playOnHover ? "paused" : "running"};
           --mcp-accent: ${playOnHover ? "#94a3b8" : accentColor};
-          --mcp-glow: ${playOnHover ? "transparent" : "rgba(255, 179, 31, 0.25)"};
-          --mcp-active-border: ${playOnHover ? "#1f222b" : "rgba(255, 179, 31, 0.4)"};
-          --mcp-active-bg: ${playOnHover ? "#0e1016" : "rgba(255, 179, 31, 0.04)"};
         }
 
         ${
@@ -48,9 +45,6 @@ export function TerminalMcpIllustration({
         .mcp-container:hover {
           --mcp-play: running !important;
           --mcp-accent: ${accentColor} !important;
-          --mcp-glow: rgba(255, 179, 31, 0.25) !important;
-          --mcp-active-border: rgba(255, 179, 31, 0.4) !important;
-          --mcp-active-bg: rgba(255, 179, 31, 0.05) !important;
         }
         `
             : ""
@@ -74,32 +68,6 @@ export function TerminalMcpIllustration({
           }
         }
 
-        /* Pulsing ping wave for the active running dot */
-        @keyframes mcp-ping-radar {
-          0% {
-            transform: scale(1);
-            opacity: 0.9;
-          }
-          60% {
-            transform: scale(2.4);
-            opacity: 0;
-          }
-          100% {
-            transform: scale(2.4);
-            opacity: 0;
-          }
-        }
-
-        /* Subtle scanline / glow wave on active pill */
-        @keyframes mcp-active-glow {
-          0%, 100% {
-            box-shadow: 0 0 10px -2px var(--mcp-glow);
-          }
-          50% {
-            box-shadow: 0 0 20px 1px var(--mcp-glow);
-          }
-        }
-
         /* Cursor blink */
         @keyframes mcp-cursor-blink {
           0%, 49% { opacity: 1; }
@@ -111,23 +79,13 @@ export function TerminalMcpIllustration({
           animation-play-state: var(--mcp-play);
         }
 
-        .mcp-ping {
-          animation: mcp-ping-radar 2s cubic-bezier(0, 0, 0.2, 1) infinite;
-          animation-play-state: var(--mcp-play);
-        }
-
-        .mcp-glow-box {
-          animation: mcp-active-glow 2.4s ease-in-out infinite;
-          animation-play-state: var(--mcp-play);
-        }
-
         .mcp-cursor {
           animation: mcp-cursor-blink 1s steps(2, start) infinite;
           animation-play-state: var(--mcp-play);
         }
 
         .mcp-transition {
-          transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+          transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
         }
       `}</style>
 
@@ -161,26 +119,12 @@ export function TerminalMcpIllustration({
           {/* ── Tool Stack ── */}
           <div className="w-full flex flex-col gap-2 relative z-10">
             {/* ── Item 1: Active Running Tool (`create_backup`) ── */}
-            <div
-              className="mcp-glow-box mcp-transition w-full rounded-xl border px-3.5 py-2.5 flex items-center justify-between text-xs backdrop-blur-sm"
-              style={{
-                borderColor: "var(--mcp-active-border)",
-                backgroundColor: "var(--mcp-active-bg)",
-              }}
-            >
+            <div className="w-full rounded-xl bg-[#0d0f15]/90 border border-[#1a1d24] px-3.5 py-2.5 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5">
-                <div className="relative flex items-center justify-center w-2.5 h-2.5">
-                  {/* Ping wave */}
-                  <span
-                    className="mcp-ping absolute inset-0 rounded-full"
-                    style={{ backgroundColor: "var(--mcp-accent)" }}
-                  />
-                  {/* Solid dot */}
-                  <span
-                    className="relative w-2 h-2 rounded-full mcp-transition"
-                    style={{ backgroundColor: "var(--mcp-accent)" }}
-                  />
-                </div>
+                <span
+                  className="w-2 h-2 rounded-full mcp-transition shrink-0"
+                  style={{ backgroundColor: "var(--mcp-accent)" }}
+                />
                 <span className="text-[#f1f5f9] font-medium tracking-tight">create_backup</span>
               </div>
               <span

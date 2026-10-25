@@ -149,7 +149,6 @@ export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
 
         {/* ══════════════════════════════════════════════════════════
             CARD 6 (Row 2, 2 Cols): Zero-Knowledge BYOS Storage
-Storage
            ══════════════════════════════════════════════════════════ */}
         <div className="lg:col-span-2 group relative rounded-2xl bg-[#0c0d12]/90 border border-[#1b1e24] p-7 sm:p-8 flex flex-col md:flex-row items-start justify-between gap-6 overflow-hidden hover:border-[#2a2f3a] transition-all duration-300">
           <div className="w-full md:w-[48%] flex flex-col justify-start shrink-0">
