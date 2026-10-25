@@ -85,9 +85,9 @@ export function NewProjectForm() {
           name="databaseUrl"
           label="Connection string"
           type="password"
-          placeholder="postgresql://user:password@host:5432/db"
+          placeholder="postgresql://, mysql://, or mongodb://"
           autoComplete="off"
-          hint="Stored so the runner can reach your database."
+          hint="PostgreSQL, MySQL, or MongoDB connection URI."
           required
         />
       </div>

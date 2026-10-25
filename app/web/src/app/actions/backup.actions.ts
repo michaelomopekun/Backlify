@@ -119,20 +119,20 @@ export async function createProject(formData: FormData) {
 
   const name = formData.get("name")?.toString().trim();
   const databaseUrl = formData.get("databaseUrl")?.toString().trim();
+  const databaseEngine = formData.get("databaseEngine")?.toString().trim();
   const orgId = formData.get("orgId")?.toString().trim() || "default-org";
   const cronExpression = formData.get("cronExpression")?.toString().trim() || "0 2 * * *";
 
   if (!name) return { error: "Give the project a name." };
   if (!databaseUrl) return { error: "A database connection string is required." };
-  if (!/^postgres(ql)?:\/\//i.test(databaseUrl)) {
-    return { error: "That doesn't look like a PostgreSQL connection string." };
-  }
 
-  // SSRF Defense
-  const ssrfCheck = await validateSafeDatabaseUrl(databaseUrl);
+  // SSRF Defense & Engine Protocol Validation
+  const ssrfCheck = await validateSafeDatabaseUrl(databaseUrl, { expectedEngine: databaseEngine });
   if (!ssrfCheck.safe) {
     return { error: ssrfCheck.error || "Restricted database target." };
   }
+
+  const resolvedEngine = databaseEngine || ssrfCheck.engine || "postgres";
 
   try {
     const existingOrg = await OrganizationRepository.getOrganizationById(orgId);
@@ -159,11 +159,11 @@ export async function createProject(formData: FormData) {
 
     const projectId = `proj-${uuidv4().substring(0, 8)}`;
     await ProjectRepository.createProject({
-      id: projectId
-,
+      id: projectId,
       orgId,
       name,
       databaseUrl,
+      databaseEngine: resolvedEngine,
     });
 
     if (cronExpression) {

@@ -225,28 +225,57 @@ export async function validateSafeHost(
 }
 
 /**
- * Validates a PostgreSQL connection URL against SSRF and unauthorized network destinations.
+ * Detects the database engine from a connection URI scheme.
+ */
+export function detectDatabaseEngine(
+  databaseUrl: string
+): "postgres" | "mysql" | "mongodb" | "unknown" {
+  if (!databaseUrl || typeof databaseUrl !== "string") return "unknown";
+  const trimmed = databaseUrl.trim().toLowerCase();
+  if (/^postgres(ql)?:\/\//.test(trimmed)) return "postgres";
+  if (/^mysql(x)?:\/\//.test(trimmed)) return "mysql";
+  if (/^mongodb(\+srv)?:\/\//.test(trimmed)) return "mongodb";
+  return "unknown";
+}
+
+/**
+ * Validates a database connection URL (PostgreSQL, MySQL, MongoDB) against SSRF and unauthorized network destinations.
  */
 export async function validateSafeDatabaseUrl(
   databaseUrl: string,
-  options?: { allowLocalInDev?: boolean }
-): Promise<{ safe: boolean; error?: string; hostname?: string }> {
+  options?: { allowLocalInDev?: boolean; expectedEngine?: string }
+): Promise<{ safe: boolean; error?: string; hostname?: string; engine?: string }> {
   try {
     if (!databaseUrl || typeof databaseUrl !== "string") {
       return { safe: false, error: "Database URL is required." };
     }
 
     const trimmed = databaseUrl.trim();
-    if (!/^postgres(ql)?:\/\//i.test(trimmed)) {
+    const engine = detectDatabaseEngine(trimmed);
+
+    if (engine === "unknown") {
       return {
         safe: false,
-        error: "Invalid protocol. Connection string must begin with postgresql:// or postgres://",
+        error: "Invalid protocol. Supported database protocols: postgresql://, mysql://, or mongodb://",
       };
     }
 
-    // Parse URL safely
-    const parsed = new URL(trimmed);
-    const hostname = parsed.hostname;
+    if (options?.expectedEngine && options.expectedEngine !== engine) {
+      return {
+        safe: false,
+        error: `Protocol mismatch: selected engine is "${options.expectedEngine}" but URL scheme matches "${engine}".`,
+      };
+    }
+
+    // Safely parse hostname across any database URI scheme (including mongodb+srv://)
+    let hostname = "";
+    try {
+      const normalizedForParsing = trimmed.replace(/^[a-z0-9+]+:\/\//i, "http://");
+      const parsed = new URL(normalizedForParsing);
+      hostname = parsed.hostname;
+    } catch {
+      return { safe: false, error: "Invalid database connection URL structure." };
+    }
 
     if (!hostname) {
       return { safe: false, error: "Database URL must include a valid hostname." };
@@ -254,10 +283,10 @@ export async function validateSafeDatabaseUrl(
 
     const hostCheck = await validateSafeHost(hostname, options);
     if (!hostCheck.safe) {
-      return { safe: false, error: hostCheck.error, hostname };
+      return { safe: false, error: hostCheck.error, hostname, engine };
     }
 
-    return { safe: true, hostname };
+    return { safe: true, hostname, engine };
   } catch (err: any) {
     return { safe: false, error: err?.message || "Invalid database connection URL structure." };
   }

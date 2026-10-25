@@ -6,19 +6,23 @@ import { logger } from "shared/config/logger";
 
 import { backupQueue } from "./backup.queue";
 
-import { BackupRepository, ProjectRepository, ScheduleRepository } from "db";
+import { BackupRepository, ProjectRepository, ScheduleRepository, BackupFileRepository, OrganizationRepository, RestoreRepository } from "db";
+import { isOrganizationPro } from "shared";
+import { RESTORE_JOB_STATUS, RestoreJobStatusType } from "shared/constants/restoreJobStatus";
+import { restoreQueue } from "../../restore/queue/restore.queue";
 
 import { BACKUP_JOB_STATUS, BackupJobStatusType } from "shared/constants/backupJobStatus";
 
-import { PgDumpService, parsePgDumpError } from "../service/pgdump.service";
-
+import { parsePgDumpError } from "../service/pgdump.service";
+import { EngineDumpService } from "../service/engine_dump.service";
+import { detectDatabaseEngine } from "shared/config/security";
 import { BackupFileUploadService } from "../service/backup_file_upload.service";
 
 import { v4 as uuidv4 } from "uuid";
 
 import { CleanupService } from "../service/cleanup.service";
 import { emitJobTelemetry } from "shared/config/job-telemetry";
-import { dispatchIncidentAlert } from "shared/config/alert-dispatcher";
+import { dispatchIncidentAlert, dispatchBackupSuccessAlert } from "shared/config/alert-dispatcher";
 import { calculateDynamicBackupTimeout } from "shared/config/timeout";
 import { decryptDatabaseUrl } from "shared/config/encryption";
 
@@ -176,27 +180,35 @@ export const backupWorker = new Worker<any>(
 
         logger.info({ jobId : job.id }, "updated job status to in_progress");
 
+        // Decrypt database URL if stored in encrypted format
+        const targetDatabaseUrl = decryptDatabaseUrl(job.data.databaseUrl);
+        let engine = job.data.databaseEngine;
+        if (!engine && job.data.projectId) {
+            const project = await ProjectRepository.getProjectById(job.data.projectId);
+            if (project?.databaseEngine) engine = project.databaseEngine;
+        }
+        if (!engine) {
+            engine = detectDatabaseEngine(targetDatabaseUrl);
+        }
+        if (engine === "unknown") engine = "postgres";
+
         await emitJobTelemetry({
             jobId: job.data.jobId,
             level: "info",
             phase: "INIT",
-            message: "Worker claimed backup job from queue. Initializing PostgreSQL snapshot pipeline...",
+            message: `Worker claimed backup job from queue. Initializing ${engine.toUpperCase()} snapshot pipeline...`,
             progress: 10,
         });
 
-        // 2 call pgdump service to perform backup
-        const pg_dump_service = new PgDumpService();
-
-        // Decrypt database URL if stored in encrypted format
-        const targetDatabaseUrl = decryptDatabaseUrl(job.data.databaseUrl);
-
-        // Dynamically inspect source database size to calculate an adaptive execution timeout
-        const inspectedSizeBytes = await pg_dump_service.inspectDatabaseSize(targetDatabaseUrl);
+        // 2 call engine dump service to perform backup
+        const dumpService = new EngineDumpService();
+        const inspectedSizeBytes = await dumpService.inspectDatabaseSize(engine, targetDatabaseUrl);
         const dynamicTimeout = calculateDynamicBackupTimeout(inspectedSizeBytes);
 
         logger.info(
             {
                 jobId: job.data.jobId,
+                engine,
                 inspectedSizeBytes,
                 timeoutMs: dynamicTimeout.timeoutMs,
                 timeoutMinutes: dynamicTimeout.timeoutMinutes,
@@ -210,7 +222,7 @@ export const backupWorker = new Worker<any>(
                 jobId: job.data.jobId,
                 level: "info",
                 phase: "INIT",
-                message: `Source database size: ${dynamicTimeout.estimatedSizeFormatted}. Dynamic pg_dump timeout allocated: ${dynamicTimeout.timeoutMinutes} minutes.`,
+                message: `Source database size: ${dynamicTimeout.estimatedSizeFormatted}. Dynamic ${engine.toUpperCase()} timeout allocated: ${dynamicTimeout.timeoutMinutes} minutes.`,
                 progress: 18,
             });
         } else {
@@ -227,11 +239,12 @@ export const backupWorker = new Worker<any>(
             jobId: job.data.jobId,
             level: "info",
             phase: "DUMP",
-            message: `Spawning pg_dump (-Fc) with ${dynamicTimeout.timeoutMinutes}-min execution window...`,
+            message: `Spawning ${engine.toUpperCase()} snapshot with ${dynamicTimeout.timeoutMinutes}-min execution window...`,
             progress: 25,
         });
 
-        const backup_result = await pg_dump_service.executePgDump({
+        const backup_result = await dumpService.executeDump({
+            engine,
             databaseUrl: targetDatabaseUrl,
             jobId: job.data.jobId,
             timeout: dynamicTimeout.timeoutMs,
@@ -254,7 +267,7 @@ export const backupWorker = new Worker<any>(
                 jobId: job.data.jobId,
                 level: "success",
                 phase: "DUMP",
-                message: `pg_dump completed successfully (${sizeKb} KB in ${backup_result.duration}ms).`,
+                message: `${engine.toUpperCase()} snapshot completed successfully (${sizeKb} KB in ${backup_result.duration}ms).`,
                 progress: 60,
             });
 
@@ -323,16 +336,16 @@ export const backupWorker = new Worker<any>(
         else {
 
             // 6 log failure — throw error here triggers BullMQ retry (attempts: 3, exponential backoff)
-            const rawErrorMessage = backup_result.error ?? "pg_dump failed";
-            const errorMessage = parsePgDumpError(rawErrorMessage);
+            const rawErrorMessage = backup_result.error ?? `${engine} dump failed`;
+            const errorMessage = engine === "postgres" ? parsePgDumpError(rawErrorMessage) : rawErrorMessage;
             
-            logger.error({ jobId : job.id, error: errorMessage, raw: rawErrorMessage }, "Backup job failed, will retry if attempts remain");
+            logger.error({ jobId : job.id, error: errorMessage, raw: rawErrorMessage, engine }, "Backup job failed, will retry if attempts remain");
 
             await emitJobTelemetry({
                 jobId: job.data.jobId,
                 level: "error",
                 phase: "ERROR",
-                message: `pg_dump execution failed: ${errorMessage}`,
+                message: `${engine.toUpperCase()} execution failed: ${errorMessage}`,
             });
             
             throw new Error(errorMessage);
@@ -344,7 +357,7 @@ export const backupWorker = new Worker<any>(
 
         connection: redis as any,
 
-        concurrency: 5,
+        concurrency: Number(process.env.BACKUP_CONCURRENCY) || 2,
 
     }
 
@@ -375,11 +388,61 @@ backupWorker.on("completed", async (job) => {
 
             await cleanupService.enforceRetentionPolicy(dbJob.projectId);
 
+            const project = await ProjectRepository.getProjectById(dbJob.projectId);
+            const backupFile = await BackupFileRepository.getBackupFileByJobId(dbJob.id);
+
+            // 1. Dispatch backup success alert
+            if (backupFile) {
+                const durationSeconds = dbJob.completedAt && dbJob.startedAt
+                    ? Math.max(1, Math.round((new Date(dbJob.completedAt).getTime() - new Date(dbJob.startedAt).getTime()) / 1000))
+                    : 1;
+
+                await dispatchBackupSuccessAlert({
+                    jobId: dbJob.id,
+                    projectId: dbJob.projectId,
+                    fileSize: backupFile.fileSize || 0,
+                    durationSeconds,
+                    storageProvider: backupFile.storageProvider,
+                });
+            }
+
+            // 2. Pro-Exclusive Feature: Automated Restore Verification Drill on new snapshot!
+            if (project?.orgId && project.notifyOnDrill !== false && backupFile) {
+                const org = await OrganizationRepository.getOrganizationById(project.orgId);
+                if (isOrganizationPro(org)) {
+                    const drillJobId = `drill-auto-${uuidv4().substring(0, 12)}`;
+                    await RestoreRepository.saveRestoreJob({
+                        jobId: drillJobId,
+                        backupFileId: backupFile.id,
+                        targetDatabaseUrl: "headless:drill",
+                        jobStatus: RESTORE_JOB_STATUS.PENDING as RestoreJobStatusType,
+                    });
+
+                    await restoreQueue.add(
+                        "restore",
+                        {
+                            jobId: drillJobId,
+                            backupFileId: backupFile.id,
+                            targetDatabaseUrl: "headless:drill",
+                            isDrill: true,
+                            jobStatus: RESTORE_JOB_STATUS.PENDING as RestoreJobStatusType,
+                            timestamp: Date.now(),
+                        },
+                        { jobId: drillJobId }
+                    );
+
+                    logger.info(
+                        { drillJobId, projectId: project.id, orgId: org.id },
+                        "Pro Feature: Automatically enqueued Disaster Recovery verification drill for new snapshot"
+                    );
+                }
+            }
+
         }
 
     } catch (err) {
 
-        logger.error({ jobId: job.id, error: err }, "Failed to run cleanup service after backup completion");
+        logger.error({ jobId: job.id, error: err }, "Failed to run post-backup completion tasks");
 
     }
 

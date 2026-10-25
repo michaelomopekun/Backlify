@@ -8,3 +8,4 @@ export * from "./config/timeout";
 export * from "./config/network";
 export * from "./config/billing";
 export * from "./config/security";
+export * from "./config/email-templates";

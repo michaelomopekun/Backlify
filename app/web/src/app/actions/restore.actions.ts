@@ -152,7 +152,7 @@ export async function triggerDrill(projectId: string, backupFileId?: string) {
 
       if (drillsThisMonth >= 1) {
         return {
-          error: "Free plan limit reached (1 Disaster Recovery drill per calendar month). Upgrade to Pro for unlimited automated drills.",
+          error: "Free plan limit reached (1 Disaster Recovery drill per calendar month). Upgrade to Pro for unlimited manual drills & automated verification on every backup.",
         };
       }
     }

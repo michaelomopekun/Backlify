@@ -125,8 +125,8 @@ export function AccountPreferencesClient({ user }: { user: UserProfile }) {
         <h2 className="text-base font-semibold text-foreground font-sans">Profile information</h2>
 
         <Card className="border-border/60 bg-card/60 py-0 gap-0 overflow-hidden shadow-xs">
-          <CardContent className="p-5 sm:p-6 space-y-5">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+          <CardContent className="p-4 sm:p-6 space-y-4 sm:space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
               {/* First Name */}
               <div className="space-y-2">
                 <Label htmlFor="first-name" className="text-xs font-medium text-foreground">
@@ -206,12 +206,12 @@ export function AccountPreferencesClient({ user }: { user: UserProfile }) {
             )}
           </CardContent>
 
-          <CardFooter className="px-5 sm:px-6 py-3.5 bg-muted/20 border-t border-border/50 flex items-center justify-end">
+          <CardFooter className="px-4 sm:px-6 py-3 bg-muted/20 border-t border-border/50 flex items-center justify-end">
             <Button
               size="sm"
               onClick={handleSaveProfile}
               disabled={saving || (!hasChanges && !saved)}
-              className="h-8.5 px-4 text-xs font-medium bg-white text-black hover:bg-neutral-200 transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-8.5 px-4 text-xs font-medium bg-[#FFB31F] text-black hover:bg-[#d7a218] transition-colors shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {saving ? (
                 <>
@@ -240,7 +240,7 @@ export function AccountPreferencesClient({ user }: { user: UserProfile }) {
           </p>
         </div>
 
-        <div className="rounded-xl border border-border/60 bg-card/60 p-4 sm:p-5 flex items-center justify-between gap-4 shadow-xs">
+        <div className="rounded-xl border border-border/60 bg-card/60 p-3.5 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-xs">
           <div className="flex items-center gap-3.5 min-w-0">
             <div className="size-9 rounded-lg bg-[#181818] border border-[#262626] flex items-center justify-center text-foreground shrink-0">
               {isGithub ? (
@@ -259,7 +259,7 @@ export function AccountPreferencesClient({ user }: { user: UserProfile }) {
             </div>
           </div>
 
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
+          <span className="inline-flex items-center self-start sm:self-auto gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
             <span className="size-1.5 rounded-full bg-emerald-400" />
             Connected
           </span>

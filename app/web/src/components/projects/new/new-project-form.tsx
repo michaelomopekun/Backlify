@@ -34,6 +34,48 @@ import {
 } from "@/components/ui/card";
 import { createProject } from "@/app/actions/backup.actions";
 
+export type DatabaseEngine = "postgres" | "mysql" | "mongodb";
+
+interface EngineOption {
+  id: DatabaseEngine;
+  name: string;
+  tag: string;
+  badge: string;
+  placeholder: string;
+  prefixRegex: RegExp;
+  hint: string;
+}
+
+const ENGINE_OPTIONS: EngineOption[] = [
+  {
+    id: "postgres",
+    name: "PostgreSQL",
+    tag: "pg_dump / pg_restore",
+    badge: "border-sky-500/30 bg-sky-500/10 text-sky-400",
+    placeholder: "postgresql://postgres:password@db.supabase.co:5432/postgres?sslmode=require",
+    prefixRegex: /^postgres(ql)?:\/\//i,
+    hint: "Compatible with Supabase, Neon, AWS RDS, Timescale, or self-hosted PostgreSQL.",
+  },
+  {
+    id: "mysql",
+    name: "MySQL",
+    tag: "mysqldump",
+    badge: "border-amber-500/30 bg-amber-500/10 text-amber-400",
+    placeholder: "mysql://root:password@db.planetscale.com:3306/production",
+    prefixRegex: /^mysql:\/\//i,
+    hint: "Compatible with MySQL 5.7+, 8.0+, MariaDB, PlanetScale, or AWS Aurora MySQL.",
+  },
+  {
+    id: "mongodb",
+    name: "MongoDB",
+    tag: "mongodump / bson",
+    badge: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+    placeholder: "mongodb+srv://admin:password@cluster0.mongodb.net/production?retryWrites=true&w=majority",
+    prefixRegex: /^mongodb(\+srv)?:\/\//i,
+    hint: "Compatible with MongoDB Atlas, replica sets, or self-hosted standalone clusters.",
+  },
+];
+
 interface Props {
   orgId: string;
   orgName: string;
@@ -53,12 +95,28 @@ export function NewProjectForm({
   const { priceFormatted } = useLocalizedPricing();
   const quotaReached = !isPro && projectCount >= maxProjects;
   const [name, setName] = useState("");
+  const [databaseEngine, setDatabaseEngine] = useState<DatabaseEngine>("postgres");
   const [databaseUrl, setDatabaseUrl] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [schedule, setSchedule] = useState("0 2 * * *");
   const [tier, setTier] = useState("production");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const selectedEngineConfig =
+    ENGINE_OPTIONS.find((e) => e.id === databaseEngine) || ENGINE_OPTIONS[0];
+
+  const handleDatabaseUrlChange = (value: string) => {
+    setDatabaseUrl(value);
+    const trimmed = value.trim();
+    if (/^postgres(ql)?:\/\//i.test(trimmed)) {
+      setDatabaseEngine("postgres");
+    } else if (/^mysql:\/\//i.test(trimmed)) {
+      setDatabaseEngine("mysql");
+    } else if (/^mongodb(\+srv)?:\/\//i.test(trimmed)) {
+      setDatabaseEngine("mongodb");
+    }
+  };
 
   // Ping test
   const [isTesting, setIsTesting] = useState(false);
@@ -79,10 +137,25 @@ export function NewProjectForm({
   };
 
   const handleTestConnection = async () => {
-    if (!databaseUrl || !/^postgres(ql)?:\/\//i.test(databaseUrl)) {
+    const trimmedUrl = databaseUrl.trim();
+    if (!trimmedUrl) {
       setPingResult({
         status: "error",
-        error: "Please enter a valid PostgreSQL connection string starting with postgresql://",
+        error: `Please enter a valid ${selectedEngineConfig.name} connection URI.`,
+      });
+      return;
+    }
+
+    if (!selectedEngineConfig.prefixRegex.test(trimmedUrl)) {
+      setPingResult({
+        status: "error",
+        error: `Invalid connection URI for ${selectedEngineConfig.name}. Expected prefix: ${
+          databaseEngine === "mongodb"
+            ? "mongodb:// or mongodb+srv://"
+            : databaseEngine === "mysql"
+            ? "mysql://"
+            : "postgresql:// or postgres://"
+        }`,
       });
       return;
     }
@@ -94,7 +167,10 @@ export function NewProjectForm({
       const res = await fetch("/api/projects/test-connection", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ databaseUrl: databaseUrl.trim() }),
+        body: JSON.stringify({
+          databaseUrl: trimmedUrl,
+          engine: databaseEngine,
+        }),
       });
       const data = await res.json();
       setIsTesting(false);
@@ -139,6 +215,7 @@ export function NewProjectForm({
     const formData = new FormData();
     formData.append("name", name.trim());
     formData.append("databaseUrl", databaseUrl.trim());
+    formData.append("databaseEngine", databaseEngine);
     formData.append("orgId", orgId);
     formData.append("cronExpression", schedule);
 
@@ -164,7 +241,7 @@ export function NewProjectForm({
           Create a new project
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground leading-relaxed">
-          Your project will contain your PostgreSQL connection settings, automated backup schedules, and disaster recovery logs.
+          Your project will contain your database connection settings, automated backup schedules, and disaster recovery logs.
         </CardDescription>
       </CardHeader>
 
@@ -241,14 +318,60 @@ export function NewProjectForm({
             </div>
           </div>
 
-          {/* Row 3: Database Connection URI */}
+          {/* Row 3: Database Engine */}
           <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-start">
             <div>
-              <label htmlFor="db-url" className="text-xs font-medium text-foreground block">
-                PostgreSQL URI <span className="text-muted-foreground">*</span>
+              <label className="text-xs font-medium text-foreground block">
+                Database Engine <span className="text-muted-foreground">*</span>
               </label>
               <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
-                Direct connection URI for automated backups.
+                Choose your dialect for tailored dump and restore tooling.
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {ENGINE_OPTIONS.map((opt) => {
+                  const isSelected = databaseEngine === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => setDatabaseEngine(opt.id)}
+                      className={`flex flex-col items-start p-3 rounded-lg border text-left transition-all ${
+                        isSelected
+                          ? "border-emerald-500/60 bg-emerald-500/10 text-foreground shadow-xs ring-1 ring-emerald-500/30"
+                          : "border-border/60 bg-background/50 hover:bg-muted/40 text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1">
+                        <span className="text-xs font-semibold text-foreground">{opt.name}</span>
+                        {isSelected && <IconCheck className="size-3.5 text-emerald-400" />}
+                      </div>
+                      {/* <span className="text-[10px] font-mono text-muted-foreground">{opt.tag}</span> */}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {selectedEngineConfig.hint}
+              </p>
+            </div>
+          </div>
+
+          {/* Row 4: Database Connection URI */}
+          <div className="px-6 py-5 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 items-start">
+            <div>
+              <div className="flex items-center gap-2">
+                <label htmlFor="db-url" className="text-xs font-medium text-foreground block">
+                  {selectedEngineConfig.name} URI <span className="text-muted-foreground">*</span>
+                </label>
+                <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border font-medium ${selectedEngineConfig.badge}`}>
+                  {selectedEngineConfig.id.toUpperCase()}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">
+                Direct connection URI for automated backups. Auto-detects on paste.
               </p>
             </div>
 
@@ -259,8 +382,8 @@ export function NewProjectForm({
                   name="databaseUrl"
                   type={showPassword ? "text" : "password"}
                   value={databaseUrl}
-                  onChange={(e) => setDatabaseUrl(e.target.value)}
-                  placeholder="postgresql://postgres:password@db.supabase.co:5432/postgres?sslmode=require"
+                  onChange={(e) => handleDatabaseUrlChange(e.target.value)}
+                  placeholder={selectedEngineConfig.placeholder}
                   required
                   className="bg-muted/30 border-border font-mono text-xs h-9 pr-9"
                 />

@@ -12,7 +12,8 @@ export const dynamic = "force-dynamic";
 const CreateProjectInputSchema = z.object({
   orgId: z.string().min(1, "Organization ID is required"),
   name: z.string().min(1, "Name is required").max(255),
-  databaseUrl: z.string().url("Invalid database URL format"),
+  databaseUrl: z.string().min(1, "Database URL is required"),
+  databaseEngine: z.enum(["postgres", "mysql", "mongodb"]).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { orgId, name, databaseUrl } = validated.data;
+    const { orgId, name, databaseUrl, databaseEngine } = validated.data;
 
     // Verify user is an owner or admin of this organization
     const orgAuth = await authorizeOrg(orgId, "admin");
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
     }
 
     // SSRF Defense: Ensure database URL does not point to internal networks or cloud metadata
-    const ssrfCheck = await validateSafeDatabaseUrl(databaseUrl);
+    const ssrfCheck = await validateSafeDatabaseUrl(databaseUrl, { expectedEngine: databaseEngine });
     if (!ssrfCheck.safe) {
       return NextResponse.json(
         {
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const resolvedEngine = databaseEngine || ssrfCheck.engine || "postgres";
     const id = `proj-${uuidv4().substring(0, 12)}`;
 
     const project = await ProjectRepository.createProject({
@@ -57,6 +59,7 @@ export async function POST(req: NextRequest) {
       orgId,
       name,
       databaseUrl,
+      databaseEngine: resolvedEngine,
     });
 
     return NextResponse.json(
