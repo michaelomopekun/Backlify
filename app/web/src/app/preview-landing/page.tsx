@@ -4,6 +4,7 @@ import { HeroLeft } from "@/components/marketing/hero-left";
 import { HeroRight } from "@/components/marketing/hero-right";
 
 import { CoreFeaturesBento } from "@/components/marketing/core-features-bento";
+import { SupportedEnginesStrip } from "@/components/marketing/supported-engines-strip";
 import { MarketingRailsLayout } from "@/components/marketing/layout-rails";
 
 export const metadata: Metadata = {
@@ -22,6 +23,11 @@ export default function PreviewLandingPage() {
 
       {/* ── Core Capabilities Bento Grid (Supabase 4-Column Layout) ── */}
       <CoreFeaturesBento />
+
+      {/* ── Supported Database Engines Strip ── */}
+      <div className="my-10">
+        <SupportedEnginesStrip />
+      </div>
     </MarketingRailsLayout>
   );
 }
