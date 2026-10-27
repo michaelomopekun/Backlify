@@ -68,3 +68,5 @@ benchmark
 benchmark_report.md
 benchmark.md
 DBDOCK_CODE
+.antigravityignore
+.backlify/

@@ -7,6 +7,7 @@
     "package/shared",
     "package/db",
     "package/mcp",
+    "package/cli",
     "app/worker",
     "app/web"
   ],
@@ -16,6 +17,7 @@
     "build:web": "npm run build --workspace=web",
     "build:worker": "npm run build --workspace=worker",
     "build:mcp": "npm run build --workspace=@backlify/mcp",
+    "build:cli": "npm run build --workspace=@backlify/cli",
     "lint": "npm run lint --workspaces --if-present",
     "drizzle-generate": "npm run drizzle-generate --workspace=db",
     "drizzle-push": "npm run drizzle-push --workspace=db",
