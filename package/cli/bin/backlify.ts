@@ -2,21 +2,42 @@
 
 import { Command } from "commander";
 import dotenv from "dotenv";
-dotenv.config();
+import path from "node:path";
+import fs from "node:fs";
+
+// Load nearest .env searching upwards from current directory
+let searchDir = process.cwd();
+for (let i = 0; i < 5; i++) {
+  const envFile = path.join(searchDir, ".env");
+  if (fs.existsSync(envFile)) {
+    dotenv.config({ path: envFile });
+    break;
+  }
+  const parent = path.dirname(searchDir);
+  if (parent === searchDir) break;
+  searchDir = parent;
+}
 
 import { loginCommand, logoutCommand, whoamiCommand } from "../src/commands/auth.js";
+import { initCommand } from "../src/commands/init.js";
 import { linkCommand, unlinkCommand, statusCommand } from "../src/commands/link.js";
 import { backupCommand, listBackupsCommand } from "../src/commands/backup.js";
+import { scheduleCommand } from "../src/commands/schedule.js";
 import { runCommand } from "../src/commands/run.js";
 import { restoreCommand, drillCommand } from "../src/commands/restore.js";
 import { mcpCommand } from "../src/commands/mcp.js";
+import { logger } from "../src/ui/logger.js";
 
 const program = new Command();
 
 program
   .name("backlify")
   .description("Developer-first CLI for Backlify — Database backups, recovery drills, and guarded migrations")
-  .version("1.0.0");
+  .version("1.0.0")
+  .action(() => {
+    logger.banner();
+    program.outputHelp();
+  });
 
 // ── Auth Commands ──
 program
@@ -36,7 +57,16 @@ program
   .description("Show currently logged-in user and active configuration")
   .action(whoamiCommand);
 
-// ── Project Linking ──
+// ── Project Initialization & Linking ──
+program
+  .command("init")
+  .description("Initialize a new Backlify project and link this directory (auto-detects DATABASE_URL)")
+  .option("-n, --name <name>", "Project name (defaults to current folder name)")
+  .option("-d, --db <url>", "Database connection string")
+  .option("-e, --engine <engine>", "Database engine (postgres, supabase, neon, timescaledb)")
+  .option("-y, --yes", "Skip interactive prompts and use defaults", false)
+  .action(initCommand);
+
 program
   .command("link")
   .description("Link current repository/directory to a Backlify database project")
@@ -69,6 +99,17 @@ program
   .option("-n, --limit <number>", "Number of snapshots to display", "10")
   .option("-p, --project-id <projectId>", "Override linked project ID")
   .action(listBackupsCommand);
+
+// ── Automated Backup Schedules ──
+program
+  .command("schedule")
+  .description("Configure or inspect automated recurring backup schedules")
+  .option("-e, --every <cadence>", "Schedule preset: hourly, daily, weekly")
+  .option("-c, --cron <pattern>", "Custom 5-part cron expression (e.g. '0 2 * * *')")
+  .option("-z, --tz <timezone>", "Timezone identifier (e.g. 'UTC', 'America/New_York')", "UTC")
+  .option("-d, --disable", "Disable automated recurring backup schedule", false)
+  .option("-p, --project-id <projectId>", "Override linked project ID")
+  .action(scheduleCommand);
 
 // ── Guarded Migration Runner ──
 program

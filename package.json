@@ -1,5 +1,5 @@
 {
-  "name": "backlify",
+  "name": "backlify-monorepo",
   "version": "1.0.0",
   "private": true,
   "description": "Backlify — Automated PostgreSQL backup and restore platform",
@@ -17,7 +17,7 @@
     "build:web": "npm run build --workspace=web",
     "build:worker": "npm run build --workspace=worker",
     "build:mcp": "npm run build --workspace=@backlify/mcp",
-    "build:cli": "npm run build --workspace=@backlify/cli",
+    "build:cli": "npm run build --workspace=backlify-cli",
     "lint": "npm run lint --workspaces --if-present",
     "drizzle-generate": "npm run drizzle-generate --workspace=db",
     "drizzle-push": "npm run drizzle-push --workspace=db",
