@@ -339,7 +339,7 @@ export function CliShowcase({ className }: { className?: string }) {
         <div className="lg:col-span-5 flex flex-col">
           <div className="relative w-full rounded-2xl bg-[#101010ff] border border-[#1e2028] shadow-[0_12px_40px_rgba(0,0,0,0.6)] overflow-hidden">
             {/* Top Icon Bar */}
-            <div className="grid grid-cols-5 border-b border-[#1c1e26] bg-[#0a0b0f]">
+            <div className="grid grid-cols-5 border-b border-[#1c1e26] bg-[#101010ff]/70">
               {TABS.map((tab, idx) => {
                 const Icon = tab.icon;
                 const isActive = activeTabIdx === idx;
