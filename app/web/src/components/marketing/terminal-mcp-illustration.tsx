@@ -91,7 +91,7 @@ export function TerminalMcpIllustration({
 
       <div className="mcp-container relative w-full flex flex-col items-center">
         {/* ── Top Command Capsule ── */}
-        <div className="relative z-10 w-full rounded-full bg-[#0d0f15] border border-[#1f222b] px-3.5 py-2 flex items-center justify-center text-[11px] sm:text-xs whitespace-nowrap tracking-wide shadow-sm mcp-transition">
+        <div className="relative z-10 w-full rounded-full bg-[#121316] border border-[#1f222b] px-3.5 py-2 flex items-center justify-center text-[11px] sm:text-xs whitespace-nowrap tracking-wide shadow-sm mcp-transition">
           <span className="text-[#64748b] mr-2 select-none font-bold">$</span>
           <span className="text-[#f1f5f9] mr-1.5">{command}</span>
           <span
@@ -119,7 +119,7 @@ export function TerminalMcpIllustration({
           {/* ── Tool Stack ── */}
           <div className="w-full flex flex-col gap-2 relative z-10">
             {/* ── Item 1: Active Running Tool (`create_backup`) ── */}
-            <div className="w-full rounded-xl bg-[#0d0f15]/90 border border-[#1a1d24] px-3.5 py-2.5 flex items-center justify-between text-xs">
+            <div className="w-full rounded-xl bg-[#121316]/90 border border-[#1a1d24] px-3.5 py-2.5 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5">
                 <span
                   className="w-2 h-2 rounded-full mcp-transition shrink-0"
@@ -136,7 +136,7 @@ export function TerminalMcpIllustration({
             </div>
 
             {/* ── Item 2: Completed Tool (`list_schedules`) ── */}
-            <div className="w-full rounded-xl bg-[#0d0f15]/90 border border-[#1a1d24] px-3.5 py-2.5 flex items-center justify-between text-xs">
+            {/* <div className="w-full rounded-xl bg-[#121316]/90 border border-[#1a1d24] px-3.5 py-2.5 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5">
                 <span className="w-2 h-2 rounded-full bg-[#475569] shrink-0" />
                 <span className="text-[#cbd5e1] tracking-tight">list_schedules</span>
@@ -144,10 +144,10 @@ export function TerminalMcpIllustration({
               <span className="text-[11px] text-[#64748b] tracking-wide lowercase">
                 done
               </span>
-            </div>
+            </div> */}
 
             {/* ── Item 3: Completed Tool (`set_schedule_enabl...`) ── */}
-            <div className="w-full rounded-xl bg-[#0d0f15]/90 border border-[#1a1d24] px-3.5 py-2.5 flex items-center justify-between text-xs">
+            <div className="w-full rounded-xl bg-[#121316]/90 border border-[#1a1d24] px-3.5 py-2.5 flex items-center justify-between text-xs">
               <div className="flex items-center gap-2.5">
                 <span className="w-2 h-2 rounded-full bg-[#475569] shrink-0" />
                 <span className="text-[#cbd5e1] tracking-tight truncate max-w-[150px]">
@@ -160,7 +160,7 @@ export function TerminalMcpIllustration({
             </div>
 
             {/* ── Item 4: Bottom Faded Tool (`restore_backup`) ── */}
-            <div className="w-full rounded-xl bg-[#0d0f15]/40 border border-[#1a1d24]/60 px-3.5 py-2.5 flex items-center justify-between text-xs opacity-40">
+            <div className="w-full rounded-xl bg-[#121316]/40 border border-[#1a1d24]/60 px-3.5 py-2.5 flex items-center justify-between text-xs opacity-40">
               <div className="flex items-center gap-2.5">
                 <span className="w-2 h-2 rounded-full bg-[#334155] shrink-0" />
                 <span className="text-[#64748b] tracking-tight">restore_backup</span>
