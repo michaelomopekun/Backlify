@@ -41,8 +41,11 @@ function AnalyticsIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
       {...props}
     >
       <rect x="3" y="3" width="18" height="18" rx="4" />
-      <path d="M7 16l3.5-4.5 3 3L17 9" />
-      <path d="M14 9h3v3" />
+      <path d="M7 11.5l3-3 3 2.5 4-4" />
+      <path d="M14.5 7H17v2.5" />
+      <path d="M7.5 17v-2" />
+      <path d="M11.5 17v-4" />
+      <path d="M15.5 17v-6" />
     </svg>
   );
 }
@@ -282,6 +285,162 @@ export function VeyroProCard({
   );
 }
 
+/* ── Backlify Purpose-Crafted Feature SVGs (17x17 Developer-First Icons) ── */
+
+// 1. Hourly continuous backups: Circular sync history loop with clock
+function BackupClockIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-[17px] h-[17px] min-w-[17px] min-h-[17px] shrink-0", className)}
+      {...props}
+    >
+      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+      <path d="M3 3v5h5" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+// 2. Automated TOC verification drills: Data integrity verification shield with check
+function VerificationDrillIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-[17px] h-[17px] min-w-[17px] min-h-[17px] shrink-0", className)}
+      {...props}
+    >
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+      <path d="m9 12 2 2 4-4" />
+    </svg>
+  );
+}
+
+// 3. 50 GB managed cloud storage: Cloud volume with upload/storage indicator
+function CloudStorageIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-[17px] h-[17px] min-w-[17px] min-h-[17px] shrink-0", className)}
+      {...props}
+    >
+      <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9z" />
+      <path d="M12 12v5" />
+      <path d="m9.5 14.5 2.5-2.5 2.5 2.5" />
+    </svg>
+  );
+}
+
+// 4. 50 active database connections: Multi-tier database cylinders
+function DatabaseIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-[17px] h-[17px] min-w-[17px] min-h-[17px] shrink-0", className)}
+      {...props}
+    >
+      <ellipse cx="12" cy="5" rx="9" ry="3" />
+      <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+      <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+    </svg>
+  );
+}
+
+// 5. Unlimited BYO storage vaults: Reinforced safe vault with combination dial & spokes
+function StorageVaultIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-[17px] h-[17px] min-w-[17px] min-h-[17px] shrink-0", className)}
+      {...props}
+    >
+      <rect x="3" y="3" width="18" height="18" rx="3" />
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 8v2m0 4v2m-4-4h2m4 0h2" />
+      <circle cx="12" cy="12" r="1.5" />
+    </svg>
+  );
+}
+
+// 6. Discord & Slack incident webhooks: Incident alert bell with notification clapper
+function IncidentWebhookIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-[17px] h-[17px] min-w-[17px] min-h-[17px] shrink-0", className)}
+      {...props}
+    >
+      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+      <path d="M4 2C2.8 3.7 2 5.7 2 8" />
+      <path d="M20 2c1.2 1.7 2 3.7 2 6" />
+    </svg>
+  );
+}
+
+// 7. Priority core engineer support: Direct engineer support headset with microphone
+function CoreEngineerSupportIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-[17px] h-[17px] min-w-[17px] min-h-[17px] shrink-0", className)}
+      {...props}
+    >
+      <path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3" />
+      <path d="M19 19v1a2 2 0 0 1-2 2h-5" />
+    </svg>
+  );
+}
+
 /* ── Backlify Adaptation: Same Lighting & Depth in Brand Amber ── */
 
 export interface BacklifyCardProps {
@@ -379,31 +538,31 @@ export function BacklifyProCardAdapted({
       {/* ── Feature List ── */}
       <ul className="space-y-5 relative z-10">
         <li className="flex items-center gap-3 text-[#fef3c7]">
-          <AutomationIcon className="text-amber-400" />
+          <BackupClockIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">Hourly continuous backups</span>
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]">
-          <AnalyticsIcon className="text-amber-400" />
+          <VerificationDrillIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">Automated TOC verification drills</span>
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]">
-          <ApprovalsIcon className="text-amber-400" />
+          <CloudStorageIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">50 GB managed cloud storage</span>
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]">
-          <DashboardIcon className="text-amber-400" />
+          <DatabaseIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">50 active database connections</span>
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]">
-          <PermissionsIcon className="text-amber-400" />
+          <StorageVaultIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">Unlimited BYO storage vaults</span>
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]">
-          <IntegrationsIcon className="text-amber-400" />
+          <IncidentWebhookIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">Discord & Slack incident webhooks</span>
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]">
-          <SupportIcon className="text-amber-400" />
+          <CoreEngineerSupportIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">Priority core engineer support</span>
         </li>
       </ul>
