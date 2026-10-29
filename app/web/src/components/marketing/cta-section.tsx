@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { ActionButton } from "@/components/ui/action-button";
 
 export interface CtaSectionProps {
   headline_first_half?: string;
@@ -11,18 +11,16 @@ export interface CtaSectionProps {
   primaryCtaHref?: string;
   secondaryCtaText?: string;
   secondaryCtaHref?: string;
-  buttonVariant?: "amber" | "emerald";
   className?: string;
 }
 
 export function CtaSection({
-  headline_first_half = "Build in a weekend,",
-  headline_second_half = "scale to millions",
+  headline_first_half = "Ship in a weekend,",
+  headline_second_half = "recover in seconds",
   primaryCtaText = "Start your project",
   primaryCtaHref = "/signup",
   secondaryCtaText = "Request a demo",
   secondaryCtaHref = "mailto:support@dbdock.xyz",
-  buttonVariant = "amber",
   className,
 }: CtaSectionProps) {
   return (
@@ -40,33 +38,32 @@ export function CtaSection({
         <span className="text-[#f9fafb] font-medium">{headline_second_half}</span>
       </h2>
 
-      {/* ── Action Buttons ── */}
+      {/* ── Action Buttons using ActionButton UI Component ── */}
       <div className="flex flex-wrap items-center justify-center gap-3">
-        {/* Primary Action Button (Brand Amber or Supabase Emerald) */}
-        <Link
+        {/* Primary Action Button (Brand Amber) */}
+        <ActionButton
+          variant="amber"
+          size="lg"
+          borderRadius="8px"
+          fontSize="14px"
+          fontWeight="600"
           href={primaryCtaHref}
-          className={cn(
-            "inline-flex items-center justify-center px-4 h-[38px] rounded-[6px] text-[13.5px] transition-all duration-150 cursor-pointer shadow-sm active:scale-[0.98]",
-            buttonVariant === "amber"
-              ? "bg-[#ffb31f] hover:bg-[#e69f16] text-[#000000] font-semibold"
-              : "bg-[#04653b] hover:bg-[#077b49] text-white font-medium border border-[#0d8250]/40"
-          )}
         >
           {primaryCtaText}
-        </Link>
+        </ActionButton>
 
         {/* Secondary Action Button (Dark Secondary) */}
-        <Link
+        <ActionButton
+          variant="dark"
+          size="lg"
+          borderRadius="8px"
+          fontSize="14px"
+          fontWeight="500"
           href={secondaryCtaHref}
-          className={cn(
-            "inline-flex items-center justify-center px-4 h-[38px] rounded-[6px] text-[13.5px] font-medium transition-all duration-150 cursor-pointer shadow-sm active:scale-[0.98]",
-            "bg-[#1b1c20] hover:bg-[#25272e] border border-[#2b2c32] hover:border-[#383a42] text-[#ededed] hover:text-white"
-          )}
         >
           {secondaryCtaText}
-        </Link>
+        </ActionButton>
       </div>
     </section>
   );
 }
-
