@@ -102,7 +102,7 @@ export interface QaSectionProps {
 export function QaSection({
   headline = "Questions",
   subheadline = "on the record, restores,\nand limits",
-  supportEmail = "support@dbdock.xyz",
+  supportEmail = "support@mail.backlify.space",
   items,
   className,
 }: QaSectionProps) {
