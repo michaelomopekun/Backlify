@@ -572,7 +572,7 @@ export function BacklifyProCardAdapted({
 
       {/* ── 1-Line Value Subtitle (Clear Utility Context) ── */}
       {subtitle && (
-        <p className="text-[12px] text-[#8a8f98] leading-relaxed mb-6 relative z-10 font-normal">
+        <p className="text-[12px] text-[#fef3c7]/70 leading-relaxed mb-6 relative z-10 font-normal">
           {subtitle}
         </p>
       )}
@@ -635,8 +635,8 @@ export function BacklifyProCardAdapted({
           <span className="text-[13.5px] leading-tight font-normal">Discord & Slack incident webhooks</span>
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]">
-          <CoreEngineerSupportIcon className="text-amber-400" />
-          <span className="text-[13.5px] leading-tight font-normal">Priority core engineer support</span>
+          <CalendarHistoryIcon className="text-amber-400" />
+          <span className="text-[13.5px] leading-tight font-normal">30-day snapshot retention history</span>
         </li>
       </ul>
     </div>
@@ -648,31 +648,64 @@ export function BacklifyProCardAdapted({
 export interface BacklifyStarterCardProps {
   className?: string;
   subtitle?: string;
+  patternVariant?: "exact" | "brand" | "amber" | "blue";
+  patternOpacity?: number;
 }
 
 export function BacklifyStarterCard({
   className,
+  patternOpacity = 0.95,
+  patternVariant = "brand",
   subtitle = "Local database checkpoints, daily schedules & essential recovery drills.",
 }: BacklifyStarterCardProps) {
+  const patternSrc =
+    patternVariant === "exact"
+      ? "/pegboard-exact.png"
+      : patternVariant === "blue"
+      ? "/pegboard-blue.png"
+      : "/pegboard-amber.png";
   return (
     <div
       className={cn(
         "relative w-[340px] sm:w-[360px] rounded-[20px] px-7 pt-7 pb-8 select-none overflow-hidden",
-        "bg-[#0e0f12] border border-[#222328] hover:border-[#2e3038] transition-colors duration-200",
+        "bg-[#0b0a08] border border-[#222328] hover:border-[#2e3038] transition-colors duration-200",
         className
       )}
     >
+
+      {/* Top Pegboard Dot-Matrix Texture with 3D Glowing Beads */}
+      <div
+        className="absolute inset-x-0 top-0 h-[180px] w-full pointer-events-none overflow-hidden select-none z-0"
+        style={{
+          maskImage:
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 100%)",
+        }}
+      >
+        <img
+          src={patternSrc}
+          alt=""
+          className="w-full h-full object-cover object-top"
+          style={{ opacity: patternOpacity }}
+        />
+      </div>
+
+     {/* Top subtle rim light */}
+      <div className="absolute top-0 inset-x-10 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent pointer-events-none z-10" />
+
+
       {/* ── Eyebrow: // BACKLIFY STARTER ── */}
       <div className="flex items-center gap-2 mb-2 relative z-10">
-        <span className="font-mono text-xs font-semibold text-[#64748b] tracking-widest">//</span>
-        <span className="font-mono text-[11px] font-semibold text-[#94a3b8] tracking-[0.18em] uppercase">
+        <span className="font-mono text-xs font-semibold text-[#FFFFFF] tracking-widest">//</span>
+        <span className="font-mono text-[11px] font-semibold text-[#FFFFFF] tracking-[0.18em] uppercase">
           BACKLIFY STARTER
         </span>
       </div>
 
       {/* ── 1-Line Value Subtitle ── */}
       {subtitle && (
-        <p className="text-[12px] text-[#8a8f98] leading-relaxed mb-6 relative z-10 font-normal">
+        <p className="text-[12px] text-[#FFFFFF]/60 leading-relaxed mb-6 relative z-10 font-normal">
           {subtitle}
         </p>
       )}
@@ -682,7 +715,7 @@ export function BacklifyStarterCard({
         <span className="font-sans text-[48px] font-medium tracking-[-0.03em] text-[#f1f5f9] leading-none">
           $0
         </span>
-        <span className="font-mono text-[11px] text-[#64748b] tracking-wider uppercase font-medium">
+        <span className="font-mono text-[11px] text-[#b45309] tracking-wider uppercase font-medium">
           // FOREVER
         </span>
       </div>
@@ -690,16 +723,16 @@ export function BacklifyStarterCard({
       {/* ── Action Button: Deploy for free (Clean secondary dark styling) ── */}
       <button
         type="button"
-        className="w-full h-[46px] rounded-md font-medium text-[14.5px] text-[#f1f5f9] bg-[#1a1b20] hover:bg-[#22242b] border border-[#2d2f38] hover:border-[#3b3e4a] flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer relative z-10 active:scale-[0.99]"
+        className="w-full h-[46px] rounded-md font-medium text-[14.5px] text-[#f1f5f9] bg-[#121316]/50 hover:bg-[#22242b] border border-[#2d2f38] hover:border-[#3b3e4a] flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer relative z-10 active:scale-[0.99]"
       >
         <span>Get started free</span>
-        <span className="text-[17px] font-normal leading-none ml-0.5 text-[#8a8f98]">›</span>
+        <span className="text-[17px] font-normal leading-none ml-0.5 text-[#ffffff]">›</span>
       </button>
 
       {/* ── Divider: ── INCLUDED IN STARTER: ── ── */}
       <div className="flex items-center gap-2.5 mt-10 mb-10 relative z-10">
         <div className="h-[1px] flex-1 bg-[#1e2026]" />
-        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#64748b] font-medium shrink-0">
+        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#b45309] font-medium shrink-0">
           INCLUDED IN STARTER:
         </span>
         <div className="h-[1px] flex-1 bg-[#1e2026]" />
@@ -707,32 +740,32 @@ export function BacklifyStarterCard({
 
       {/* ── Feature List (Clean Muted Slate Icons) ── */}
       <ul className="space-y-5 relative z-10">
-        <li className="flex items-center gap-3 text-[#cbd5e1]">
-          <BackupClockIcon className="text-[#8a8f98]" />
+        <li className="flex items-center gap-3 text-[#fef3c7]/80">
+          <BackupClockIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">Daily automated backup schedules</span>
         </li>
-        <li className="flex items-center gap-3 text-[#cbd5e1]">
-          <VerificationDrillIcon className="text-[#8a8f98]" />
+        <li className="flex items-center gap-3 text-[#fef3c7]/80">
+          <VerificationDrillIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">1 recovery verification drill / mo</span>
         </li>
-        <li className="flex items-center gap-3 text-[#cbd5e1]">
-          <CloudStorageIcon className="text-[#8a8f98]" />
+        <li className="flex items-center gap-3 text-[#fef3c7]/80">
+          <CloudStorageIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">50 MB cloud storage & BYO vaults</span>
         </li>
-        <li className="flex items-center gap-3 text-[#cbd5e1]">
-          <DatabaseIcon className="text-[#8a8f98]" />
+        <li className="flex items-center gap-3 text-[#fef3c7]/80">
+          <DatabaseIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">2 active database connections</span>
         </li>
-        <li className="flex items-center gap-3 text-[#cbd5e1]">
-          <CalendarHistoryIcon className="text-[#8a8f98]" />
+        <li className="flex items-center gap-3 text-[#fef3c7]/80">
+          <CalendarHistoryIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">7-day snapshot retention history</span>
         </li>
-        <li className="flex items-center gap-3 text-[#cbd5e1]">
-          <TerminalIcon className="text-[#8a8f98]" />
+        <li className="flex items-center gap-3 text-[#fef3c7]/80">
+          <TerminalIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">Local checkpoints & CLI toolchain</span>
         </li>
-        <li className="flex items-center gap-3 text-[#cbd5e1]">
-          <MailAlertIcon className="text-[#8a8f98]" />
+        <li className="flex items-center gap-3 text-[#fef3c7]/80">
+          <MailAlertIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">Community support & failure alerts</span>
         </li>
       </ul>
