@@ -66,25 +66,32 @@ export function PreviewPricingClient() {
       </div>
 
       {/* ── Main Production Tier: Starter (Free) vs Pro ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 items-stretch justify-items-center max-w-4xl mx-auto mb-16">
-        {/* Tier 1: Backlify Starter (Free Plan - Clean, No Pro Aesthetics) */}
-        <div className="flex flex-col items-center w-full">
-          <span className="inline-block px-3 py-1 rounded-full text-[11px] font-mono bg-zinc-800/60 text-[#94a3b8] border border-zinc-700/50 font-medium mb-5">
-            Free Plan · Clean Baseline (No Pro Aesthetics)
-          </span>
-          <BacklifyStarterCard />
+      <div className="w-full max-w-[340px] sm:max-w-[360px] md:max-w-[760px] mx-auto mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 items-stretch justify-items-center mb-6">
+          {/* Tier 1: Backlify Starter (Free Plan - Clean, No Pro Aesthetics) */}
+          <div className="flex flex-col items-center w-full">
+            <span className="inline-block px-3 py-1 rounded-full text-[11px] font-mono bg-zinc-800/60 text-[#94a3b8] border border-zinc-700/50 font-medium mb-5">
+              Free Plan · Clean Baseline (No Pro Aesthetics)
+            </span>
+            <BacklifyStarterCard />
+          </div>
+
+          {/* Tier 2: Backlify Pro (Featured Plan - With Brand Amber Aesthetics) */}
+          <div className="flex flex-col items-center w-full">
+            <span className="inline-block px-3 py-1 rounded-full text-[11px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/25 font-semibold mb-5">
+              Pro Plan · Premium Amber Aesthetics
+            </span>
+            <BacklifyProCardAdapted
+              patternVariant={patternMode === "exact" ? "exact" : "amber"}
+              patternOpacity={opacity}
+            />
+          </div>
         </div>
 
-        {/* Tier 2: Backlify Pro (Featured Plan - With Brand Amber Aesthetics) */}
-        <div className="flex flex-col items-center w-full">
-          <span className="inline-block px-3 py-1 rounded-full text-[11px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/25 font-semibold mb-5">
-            Pro Plan · Premium Amber Aesthetics
-          </span>
-          <BacklifyProCardAdapted
-            patternVariant={patternMode === "exact" ? "exact" : "amber"}
-            patternOpacity={opacity}
-          />
-        </div>
+        {/* ── Footnote Note under Pricing Cards ── */}
+        <p className="text-[13px] text-[#8a8f98] leading-relaxed text-left">
+          Local and customer-bucket checkpoints are outside Cloud backup limits. Encrypt them on every plan with your own key.
+        </p>
       </div>
 
       {/* ── Optional Reference Comparison ── */}

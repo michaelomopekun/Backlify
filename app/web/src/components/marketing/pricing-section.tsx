@@ -84,20 +84,27 @@ export function PricingSection({
 
       {/* ── Exact Side-by-Side Pricing Cards Grid ── */}
       {showCards && (
-        <div className="mt-14 w-full">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 items-stretch justify-items-center max-w-4xl mx-auto">
-            {/* Tier 1: Starter (Free) */}
-            <div className="flex flex-col items-center w-full">
-              <BacklifyStarterCard />
+        <div className="mt-14 w-full flex flex-col items-center">
+          <div className="w-full max-w-[340px] sm:max-w-[360px] md:max-w-[760px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 items-stretch justify-items-center">
+              {/* Tier 1: Starter (Free) */}
+              <div className="flex flex-col items-center w-full">
+                <BacklifyStarterCard />
+              </div>
+
+              {/* Tier 2: Pro (Amber Brand Aesthetics) */}
+              <div className="flex flex-col items-center w-full">
+                <BacklifyProCardAdapted
+                  price={billingCycle === "annual" ? "$2.50" : "$3"}
+                  period={billingCycle === "annual" ? "// MONTH (BILLED ANNUALLY)" : "// MONTH"}
+                />
+              </div>
             </div>
 
-            {/* Tier 2: Pro (Amber Brand Aesthetics) */}
-            <div className="flex flex-col items-center w-full">
-              <BacklifyProCardAdapted
-                price={billingCycle === "annual" ? "$2.50" : "$3"}
-                period={billingCycle === "annual" ? "// MONTH (BILLED ANNUALLY)" : "// MONTH"}
-              />
-            </div>
+            {/* ── Footnote Note under Pricing Cards ── */}
+            <p className="mt-6 text-[13px] text-[#8a8f98] leading-relaxed text-left">
+              Local and customer-bucket checkpoints are outside Cloud backup limits. Encrypt them on every plan with your own key.
+            </p>
           </div>
         </div>
       )}
