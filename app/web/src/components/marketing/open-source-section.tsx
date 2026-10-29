@@ -52,7 +52,7 @@ export function OpenSourceSection({
   npxCommand = "npx  dbdock",
   starCount = "114.2K",
   colorTheme = "amber",
-  pixelSize = "xlarge",
+  pixelSize = "jumbo",
   className,
 }: OpenSourceSectionProps) {
   const [copied, setCopied] = React.useState(false);
