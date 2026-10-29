@@ -165,7 +165,7 @@ export function VeyroProCard({ className }: { className?: string }) {
       )}
       style={{
         background: `
-          radial-gradient(130% 90% at 50% 108%, #0284c7 0%, #0369a1 26%, #082f49 52%, #08111e 72%, transparent 100%),
+          radial-gradient(130% 30% at 50% 80%, #0284c7 0%, #0369a1 26%, #082f49 52%, #08111e 72%, transparent 100%),
           #080b11
         `,
       }}
@@ -222,8 +222,6 @@ export function VeyroProCard({ className }: { className?: string }) {
         className="w-full h-[46px] rounded-full font-medium text-[14.5px] text-white flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer relative z-10 hover:brightness-110 active:scale-[0.99]"
         style={{
           background: "linear-gradient(180deg, #38bdf8 0%, #0ea5e9 55%, #0284c7 100%)",
-          boxShadow:
-            "0 0 24px rgba(56, 189, 248, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.45), inset 0 -1px 2px rgba(0, 0, 0, 0.25)",
         }}
       >
         <span>Start with Pro</span>
@@ -286,7 +284,7 @@ export function BacklifyProCardAdapted({ className }: { className?: string }) {
       )}
       style={{
         background: `
-          radial-gradient(130% 90% at 50% 108%, #d97706 0%, #b45309 26%, #78350f 52%, #1f1406 72%, transparent 100%),
+          radial-gradient(130% 40% at 50% 108%, #d97706 0%, #b45309 16%, #78350f 12%, #1f1406 72%, transparent 100%),
           #0b0a08
         `,
       }}
@@ -340,11 +338,9 @@ export function BacklifyProCardAdapted({ className }: { className?: string }) {
       {/* ── Action Button: Start with Pro > ── */}
       <button
         type="button"
-        className="w-full h-[46px] rounded-full font-semibold text-[14.5px] text-black flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer relative z-10 hover:brightness-105 active:scale-[0.99]"
+        className="w-full h-[46px] rounded-md font-semibold text-[14.5px] text-black flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer relative z-10 hover:brightness-105 active:scale-[0.99]"
         style={{
           background: "linear-gradient(180deg, #fcd34d 0%, #fbbf24 55%, #f59e0b 100%)",
-          boxShadow:
-            "0 0 24px rgba(245, 158, 11, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.5), inset 0 -1px 2px rgba(0, 0, 0, 0.2)",
         }}
       >
         <span>Start with Pro</span>
