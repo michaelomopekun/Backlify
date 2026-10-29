@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
    * `./Downloads/Documents/Dev/Backlify/...`. Pinning it keeps module resolution
    * and output file tracing inside the repo.
    */
-  serverExternalPackages: ["pino", "pino-pretty", "postgres"],
+  serverExternalPackages: ["pino", "pino-pretty", "postgres", "ioredis"],
   turbopack: {
     root: path.join(__dirname, "..", ".."),
   },

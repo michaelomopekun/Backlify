@@ -31,7 +31,6 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { UpgradeDialog } from "@/components/shared/upgrade-dialog";
-import { BILLING_CONFIG } from "shared";
 
 export interface InvoiceItem {
   id: string;

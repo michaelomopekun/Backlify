@@ -1,9 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { BILLING_CONFIG } from "shared";
 
 export type BillingPeriod = "monthly" | "annual";
+
+export const CLIENT_BILLING_CONFIG = {
+  STRIPE: {
+    PRO_MONTHLY_PRICE_USD: 3,
+    PRO_ANNUAL_PRICE_USD: 30,
+    CURRENCY: "usd",
+  },
+  PAYSTACK: {
+    PRO_MONTHLY_PRICE_NGN: 2000,
+    PRO_ANNUAL_PRICE_NGN: 20000,
+    CURRENCY: "NGN",
+  },
+} as const;
 
 export interface PlanIntervalPricing {
   price: number;
@@ -38,23 +50,23 @@ const NGN_CONFIG: Omit<LocalizedPricing, "isLoading"> = {
   currency: "NGN",
   gateway: "paystack",
   symbol: "₦",
-  price: BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN,
-  priceFormatted: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}`,
-  priceWithPeriod: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()} / month`,
-  priceShort: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}/mo`,
+  price: CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN,
+  priceFormatted: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}`,
+  priceWithPeriod: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()} / month`,
+  priceShort: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}/mo`,
   monthly: {
-    price: BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN,
-    priceFormatted: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}`,
-    priceWithPeriod: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()} / month`,
-    priceShort: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}/mo`,
+    price: CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN,
+    priceFormatted: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}`,
+    priceWithPeriod: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()} / month`,
+    priceShort: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}/mo`,
   },
   annual: {
-    price: BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN,
-    effectiveMonthlyPrice: Math.round(BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN / 12),
-    priceFormatted: `₦${BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()}`,
-    priceWithPeriod: `₦${BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()} / year`,
-    priceShort: `₦${BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()}/yr`,
-    effectiveMonthlyFormatted: `₦${Math.round(BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN / 12).toLocaleString()}/mo`,
+    price: CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN,
+    effectiveMonthlyPrice: Math.round(CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN / 12),
+    priceFormatted: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()}`,
+    priceWithPeriod: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()} / year`,
+    priceShort: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()}/yr`,
+    effectiveMonthlyFormatted: `₦${Math.round(CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN / 12).toLocaleString()}/mo`,
     savingsBadge: "2 months free",
     savingsPercentage: "-17%",
   },
@@ -64,22 +76,22 @@ const USD_CONFIG: Omit<LocalizedPricing, "isLoading"> = {
   currency: "USD",
   gateway: "stripe",
   symbol: "$",
-  price: BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD,
-  priceFormatted: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}`,
-  priceWithPeriod: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD} / month`,
-  priceShort: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}/mo`,
+  price: CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD,
+  priceFormatted: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}`,
+  priceWithPeriod: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD} / month`,
+  priceShort: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}/mo`,
   monthly: {
-    price: BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD,
-    priceFormatted: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}`,
-    priceWithPeriod: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD} / month`,
-    priceShort: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}/mo`,
+    price: CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD,
+    priceFormatted: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}`,
+    priceWithPeriod: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD} / month`,
+    priceShort: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}/mo`,
   },
   annual: {
-    price: BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD,
+    price: CLIENT_BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD,
     effectiveMonthlyPrice: 2.5,
-    priceFormatted: `$${BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD}`,
-    priceWithPeriod: `$${BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD} / year`,
-    priceShort: `$${BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD}/yr`,
+    priceFormatted: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD}`,
+    priceWithPeriod: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD} / year`,
+    priceShort: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD}/yr`,
     effectiveMonthlyFormatted: "$2.50/mo",
     savingsBadge: "2 months free",
     savingsPercentage: "-17%",
