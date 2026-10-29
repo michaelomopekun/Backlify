@@ -34,8 +34,11 @@ export default function PreviewLandingPage() {
       {/* ── CLI Showcase (DBDock Developer Section) ── */}
       <CliShowcase />
 
+      <div className="relative w-2px border-y border-[#22252b]">
       {/* ── Pricing Header Section ── */}
       <PricingSection />
+      </div>
+
     </MarketingRailsLayout>
   );
 }

@@ -31,7 +31,7 @@ export function PricingSection({ className, onCycleChange }: PricingHeaderProps)
           <span className="font-sans text-2xl sm:text-[26px] font-normal text-[#8a8f98] mb-2 tracking-normal">
             Pricing
           </span>
-          <h2 className="font-sans text-3xl sm:text-4xl lg:text-[42px] font-semibold text-[#f9fafb] tracking-[-0.02em] leading-[1.12]">
+          <h2 className="font-sans text-3xl sm:text-4xl lg:text-[34px] font-medium text-[#f9fafb] tracking-[-0.02em] leading-[1.12]">
             Local checkpoints are free. Add
             <br />
             Cloud backups when you need them
@@ -67,7 +67,7 @@ export function PricingSection({ className, onCycleChange }: PricingHeaderProps)
               )}
             >
               <span>Annual</span>
-              <span className="text-[#3b82f6] font-medium">2 months free</span>
+              <span className="text-[#FFB31F]/90 font-medium">2 months free</span>
             </button>
           </div>
         </div>
@@ -75,3 +75,4 @@ export function PricingSection({ className, onCycleChange }: PricingHeaderProps)
     </section>
   );
 }
+

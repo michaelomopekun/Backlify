@@ -199,7 +199,7 @@ export function VeyroProCard({ className }: { className?: string }) {
       <div className="absolute top-0 inset-x-10 h-[1px] bg-gradient-to-r from-transparent via-sky-400/30 to-transparent pointer-events-none" />
 
       {/* ── Eyebrow: // VEYRO PRO ── */}
-      <div className="flex items-center gap-2 mb-4 relative z-10">
+      <div className="flex items-center gap-2 mb-11 relative z-10">
         <span className="font-mono text-xs font-semibold text-[#38bdf8] tracking-widest">//</span>
         <span className="font-mono text-[11px] font-semibold text-[#f1f5f9] tracking-[0.18em] uppercase">
           VEYRO PRO
@@ -207,7 +207,7 @@ export function VeyroProCard({ className }: { className?: string }) {
       </div>
 
       {/* ── Price: $28 // MONTH ── */}
-      <div className="flex items-baseline gap-3 mb-5 relative z-10">
+      <div className="flex items-baseline gap-3 mb-7 relative z-10">
         <span className="font-sans text-[48px] font-semibold tracking-[-0.03em] text-white leading-none">
           $28
         </span>
@@ -229,7 +229,7 @@ export function VeyroProCard({ className }: { className?: string }) {
       </button>
 
       {/* ── Divider: ── EVERYTHING IN STARER, PLUS: ── ── */}
-      <div className="flex items-center gap-2.5 my-5 relative z-10">
+      <div className="flex items-center gap-2.5 mt-10 mb-9 relative z-10">
         <div className="h-[1px] flex-1 bg-[#1e293b]" />
         <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#64748b] font-medium shrink-0">
           EVERYTHING IN STARER, PLUS:
@@ -238,7 +238,7 @@ export function VeyroProCard({ className }: { className?: string }) {
       </div>
 
       {/* ── Feature List (Exact Compact Spacing) ── */}
-      <ul className="space-y-3.5 relative z-10">
+      <ul className="space-y-4.5 relative z-10">
         <li className="flex items-center gap-3 text-[#cbd5e1]">
           <AutomationIcon className="text-[#94a3b8]" />
           <span className="text-[13.5px] leading-tight font-normal">Advanced automation</span>
@@ -278,8 +278,8 @@ export function BacklifyProCardAdapted({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "relative w-[340px] sm:w-[360px] rounded-[28px] px-7 pt-7 pb-8 overflow-hidden select-none",
-        "border border-amber-500/25",
+        "relative w-[340px] sm:w-[360px] rounded-[20px] px-7 pt-7 pb-8 select-none",
+        "border-4 border-[#272522]",
         className
       )}
       style={{
@@ -318,7 +318,7 @@ export function BacklifyProCardAdapted({ className }: { className?: string }) {
       <div className="absolute top-0 inset-x-10 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent pointer-events-none" />
 
       {/* ── Eyebrow: // BACKLIFY PRO ── */}
-      <div className="flex items-center gap-2 mb-4 relative z-10">
+      <div className="flex items-center gap-2 mb-11 relative z-10">
         <span className="font-mono text-xs font-semibold text-amber-400 tracking-widest">//</span>
         <span className="font-mono text-[11px] font-semibold text-[#fef3c7] tracking-[0.18em] uppercase">
           BACKLIFY PRO
@@ -326,8 +326,8 @@ export function BacklifyProCardAdapted({ className }: { className?: string }) {
       </div>
 
       {/* ── Price: $3 // MONTH ── */}
-      <div className="flex items-baseline gap-3 mb-5 relative z-10">
-        <span className="font-sans text-[48px] font-semibold tracking-[-0.03em] text-white leading-none">
+      <div className="flex items-baseline gap-3 mb-8 relative z-10">
+        <span className="font-sans text-[48px] font-medium tracking-[-0.03em] text-white leading-none">
           $3
         </span>
         <span className="font-mono text-[11px] text-[#b45309] tracking-wider uppercase font-medium">
@@ -348,7 +348,7 @@ export function BacklifyProCardAdapted({ className }: { className?: string }) {
       </button>
 
       {/* ── Divider: ── EVERYTHING IN STARTER, PLUS: ── ── */}
-      <div className="flex items-center gap-2.5 my-5 relative z-10">
+      <div className="flex items-center gap-2.5 mt-10 mb-10 relative z-10">
         <div className="h-[1px] flex-1 bg-[#291e0a]" />
         <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#b45309] font-medium shrink-0">
           EVERYTHING IN STARTER, PLUS:
@@ -357,7 +357,7 @@ export function BacklifyProCardAdapted({ className }: { className?: string }) {
       </div>
 
       {/* ── Feature List ── */}
-      <ul className="space-y-3.5 relative z-10">
+      <ul className="space-y-4.5 relative z-10">
         <li className="flex items-center gap-3 text-[#fef3c7]">
           <AutomationIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">Hourly continuous backups</span>
