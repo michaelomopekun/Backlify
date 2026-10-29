@@ -8,6 +8,7 @@ import { SupportedEnginesStrip } from "@/components/marketing/supported-engines-
 import { CliShowcase } from "@/components/marketing/cli-showcase";
 import { PricingSection } from "@/components/marketing/pricing-section";
 import { OpenSourceSection } from "@/components/marketing/open-source-section";
+import { QaSection } from "@/components/marketing/qa-section";
 import { MarketingRailsLayout } from "@/components/marketing/layout-rails";
 
 export const metadata: Metadata = {
@@ -43,6 +44,11 @@ export default function PreviewLandingPage() {
       {/* ── Open Source from Day One Section ── */}
       <div className="relative w-full border-t border-[#22252b]">
         <OpenSourceSection />
+      </div>
+
+      {/* ── Questions on the record, restores, and limits (Q&A Section) ── */}
+      <div className="relative w-full border-t border-[#22252b]">
+        <QaSection />
       </div>
 
     </MarketingRailsLayout>

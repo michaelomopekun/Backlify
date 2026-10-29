@@ -7,9 +7,12 @@ import { DotMatrixDisplay, MatrixColorTheme, MatrixPixelSize } from "./dot-matri
 
 export interface OpenSourceSectionProps {
   headline?: string;
+  headline_first_half?: string;
+  headline_second_half?: string;
   description?: string;
   repoUrl?: string;
   npxCommand?: string;
+  word?: string;
   starCount?: string;
   colorTheme?: MatrixColorTheme;
   pixelSize?: MatrixPixelSize;
@@ -46,15 +49,19 @@ function NpmSquircleIcon({ className, ...props }: React.SVGProps<SVGSVGElement>)
 }
 
 export function OpenSourceSection({
-  headline = "Open source from day one",
+  headline,
+  headline_first_half = "Open source ",
+  headline_second_half = "from day one",
   description = "Backlify is built in the open because we believe critical infrastructure tools should be transparent, inspectable, and owned by the community. Read, contribute, self-host. You're never locked in, and always in control.",
   repoUrl = "https://github.com/michaelomopekun/Backlify",
   npxCommand = "npx  dbdock",
-  starCount = "114.2K",
+  word,
+  starCount,
   colorTheme = "amber",
   pixelSize = "jumbo",
   className,
 }: OpenSourceSectionProps) {
+  const displayWord = word || starCount || "MIT";
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = () => {
@@ -76,7 +83,13 @@ export function OpenSourceSection({
         <div className="flex flex-col items-start lg:col-span-5 max-w-xl z-10">
           {/* Main Display Headline */}
           <h2 className="font-sans text-3xl sm:text-4xl lg:text-[40px] font-semibold text-[#ededed] tracking-[-0.03em] leading-[1.14] mb-5">
-            {headline}
+            {headline ? (
+              headline
+            ) : (
+              <>
+                {headline_first_half} <span className="text-[#8a8f98]">{headline_second_half}</span>
+              </>
+            )}
           </h2>
 
           {/* Value Narrative Body */}
@@ -137,7 +150,7 @@ export function OpenSourceSection({
         {/* ── Right Column: Giant Scoreboard Dot-Matrix Display ── */}
         <div className="flex items-center justify-center lg:justify-end lg:col-span-7 w-full overflow-hidden">
           <DotMatrixDisplay
-            value={starCount}
+            value={displayWord}
             colorTheme={colorTheme}
             pixelSize={pixelSize}
             interactive={true}
