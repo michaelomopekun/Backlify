@@ -441,6 +441,70 @@ function CoreEngineerSupportIcon({ className, ...props }: React.SVGProps<SVGSVGE
   );
 }
 
+// 8. 7-day retention: Calendar history
+function CalendarHistoryIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-[17px] h-[17px] min-w-[17px] min-h-[17px] shrink-0", className)}
+      {...props}
+    >
+      <rect x="3" y="4" width="18" height="18" rx="2" />
+      <path d="M16 2v4M8 2v4M3 10h18" />
+      <path d="M8 14h.01M12 14h.01M16 14h.01M8 18h.01M12 18h.01" />
+    </svg>
+  );
+}
+
+// 9. Local CLI toolchain & checkpoints
+function TerminalIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-[17px] h-[17px] min-w-[17px] min-h-[17px] shrink-0", className)}
+      {...props}
+    >
+      <polyline points="4 17 10 11 4 5" />
+      <line x1="12" y1="19" x2="20" y2="19" />
+    </svg>
+  );
+}
+
+// 10. Community support & email alerts
+function MailAlertIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-[17px] h-[17px] min-w-[17px] min-h-[17px] shrink-0", className)}
+      {...props}
+    >
+      <rect x="2" y="4" width="20" height="16" rx="2" />
+      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+    </svg>
+  );
+}
+
 /* ── Backlify Adaptation: Same Lighting & Depth in Brand Amber ── */
 
 export interface BacklifyCardProps {
@@ -573,6 +637,103 @@ export function BacklifyProCardAdapted({
         <li className="flex items-center gap-3 text-[#fef3c7]">
           <CoreEngineerSupportIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">Priority core engineer support</span>
+        </li>
+      </ul>
+    </div>
+  );
+}
+
+/* ── Backlify Starter Card: Free Plan (Without Pro Aesthetics) ── */
+
+export interface BacklifyStarterCardProps {
+  className?: string;
+  subtitle?: string;
+}
+
+export function BacklifyStarterCard({
+  className,
+  subtitle = "Local database checkpoints, daily schedules & essential recovery drills.",
+}: BacklifyStarterCardProps) {
+  return (
+    <div
+      className={cn(
+        "relative w-[340px] sm:w-[360px] rounded-[20px] px-7 pt-7 pb-8 select-none overflow-hidden",
+        "bg-[#0e0f12] border border-[#222328] hover:border-[#2e3038] transition-colors duration-200",
+        className
+      )}
+    >
+      {/* ── Eyebrow: // BACKLIFY STARTER ── */}
+      <div className="flex items-center gap-2 mb-2 relative z-10">
+        <span className="font-mono text-xs font-semibold text-[#64748b] tracking-widest">//</span>
+        <span className="font-mono text-[11px] font-semibold text-[#94a3b8] tracking-[0.18em] uppercase">
+          BACKLIFY STARTER
+        </span>
+      </div>
+
+      {/* ── 1-Line Value Subtitle ── */}
+      {subtitle && (
+        <p className="text-[12px] text-[#8a8f98] leading-relaxed mb-6 relative z-10 font-normal">
+          {subtitle}
+        </p>
+      )}
+
+      {/* ── Price: $0 // FOREVER ── */}
+      <div className="flex items-baseline gap-3 mb-7 relative z-10">
+        <span className="font-sans text-[48px] font-medium tracking-[-0.03em] text-[#f1f5f9] leading-none">
+          $0
+        </span>
+        <span className="font-mono text-[11px] text-[#64748b] tracking-wider uppercase font-medium">
+          // FOREVER
+        </span>
+      </div>
+
+      {/* ── Action Button: Deploy for free (Clean secondary dark styling) ── */}
+      <button
+        type="button"
+        className="w-full h-[46px] rounded-md font-medium text-[14.5px] text-[#f1f5f9] bg-[#1a1b20] hover:bg-[#22242b] border border-[#2d2f38] hover:border-[#3b3e4a] flex items-center justify-center gap-1.5 transition-all duration-200 cursor-pointer relative z-10 active:scale-[0.99]"
+      >
+        <span>Get started free</span>
+        <span className="text-[17px] font-normal leading-none ml-0.5 text-[#8a8f98]">›</span>
+      </button>
+
+      {/* ── Divider: ── INCLUDED IN STARTER: ── ── */}
+      <div className="flex items-center gap-2.5 mt-10 mb-10 relative z-10">
+        <div className="h-[1px] flex-1 bg-[#1e2026]" />
+        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-[#64748b] font-medium shrink-0">
+          INCLUDED IN STARTER:
+        </span>
+        <div className="h-[1px] flex-1 bg-[#1e2026]" />
+      </div>
+
+      {/* ── Feature List (Clean Muted Slate Icons) ── */}
+      <ul className="space-y-5 relative z-10">
+        <li className="flex items-center gap-3 text-[#cbd5e1]">
+          <BackupClockIcon className="text-[#8a8f98]" />
+          <span className="text-[13.5px] leading-tight font-normal">Daily automated backup schedules</span>
+        </li>
+        <li className="flex items-center gap-3 text-[#cbd5e1]">
+          <VerificationDrillIcon className="text-[#8a8f98]" />
+          <span className="text-[13.5px] leading-tight font-normal">1 recovery verification drill / mo</span>
+        </li>
+        <li className="flex items-center gap-3 text-[#cbd5e1]">
+          <CloudStorageIcon className="text-[#8a8f98]" />
+          <span className="text-[13.5px] leading-tight font-normal">50 MB cloud storage & BYO vaults</span>
+        </li>
+        <li className="flex items-center gap-3 text-[#cbd5e1]">
+          <DatabaseIcon className="text-[#8a8f98]" />
+          <span className="text-[13.5px] leading-tight font-normal">2 active database connections</span>
+        </li>
+        <li className="flex items-center gap-3 text-[#cbd5e1]">
+          <CalendarHistoryIcon className="text-[#8a8f98]" />
+          <span className="text-[13.5px] leading-tight font-normal">7-day snapshot retention history</span>
+        </li>
+        <li className="flex items-center gap-3 text-[#cbd5e1]">
+          <TerminalIcon className="text-[#8a8f98]" />
+          <span className="text-[13.5px] leading-tight font-normal">Local checkpoints & CLI toolchain</span>
+        </li>
+        <li className="flex items-center gap-3 text-[#cbd5e1]">
+          <MailAlertIcon className="text-[#8a8f98]" />
+          <span className="text-[13.5px] leading-tight font-normal">Community support & failure alerts</span>
         </li>
       </ul>
     </div>
