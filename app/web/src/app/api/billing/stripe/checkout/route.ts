@@ -24,7 +24,8 @@ export async function POST(req: NextRequest) {
     const stripe = new Stripe(stripeSecretKey);
 
     const body = await req.json().catch(() => ({}));
-    const { orgId } = body;
+    const { orgId, billingPeriod = "monthly" } = body;
+    const isAnnual = billingPeriod === "annual";
 
     if (!orgId) {
       return NextResponse.json({ success: false, error: "Organization ID is required." }, { status: 400 });
@@ -44,6 +45,10 @@ export async function POST(req: NextRequest) {
 
     const appUrl = process.env.APP_URL || "https://backlify.space";
 
+    const unitAmount = isAnnual
+      ? BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD * 100 // $30.00 = 3000 cents
+      : BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD * 100; // $3.00 = 300 cents
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       mode: "subscription",
@@ -52,13 +57,15 @@ export async function POST(req: NextRequest) {
         {
           price_data: {
             currency: BILLING_CONFIG.STRIPE.CURRENCY,
-            unit_amount: BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD * 100, // $3.00 = 300 cents
+            unit_amount: unitAmount,
             recurring: {
-              interval: "month",
+              interval: isAnnual ? "year" : "month",
             },
             product_data: {
-              name: "Backlify Pro Plan",
-              description: "50 GB Cloud Storage, Hourly Backups, Automated DR Drills & Custom Webhooks.",
+              name: isAnnual ? "Backlify Pro Plan (Annual)" : "Backlify Pro Plan (Monthly)",
+              description: isAnnual
+                ? "Annual subscription (2 months free) — 50 GB Cloud Storage, Hourly Backups, Automated DR Drills & Custom Webhooks."
+                : "50 GB Cloud Storage, Hourly Backups, Automated DR Drills & Custom Webhooks.",
             },
           },
           quantity: 1,
@@ -68,6 +75,7 @@ export async function POST(req: NextRequest) {
         orgId,
         userId: user.id,
         plan: "pro",
+        billingPeriod: isAnnual ? "annual" : "monthly",
         provider: "stripe",
       },
       subscription_data: {
@@ -75,6 +83,7 @@ export async function POST(req: NextRequest) {
           orgId,
           userId: user.id,
           plan: "pro",
+          billingPeriod: isAnnual ? "annual" : "monthly",
         },
       },
       success_url: `${appUrl}/dashboard/org/${orgId}/settings?billing=success`,

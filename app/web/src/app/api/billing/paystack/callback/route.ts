@@ -36,9 +36,11 @@ export async function GET(req: NextRequest) {
       const customerCode = data.customer?.customer_code;
       const subscriptionCode = data.subscription?.subscription_code || reference;
 
-      // Renew 30 days from now
+      const isAnnual = data.metadata?.billingPeriod === "annual";
+
+      // Renew 365 days from now for Annual, or 30 days for Monthly
       const nextRenewal = new Date();
-      nextRenewal.setDate(nextRenewal.getDate() + 30);
+      nextRenewal.setDate(nextRenewal.getDate() + (isAnnual ? 365 : 30));
 
       await OrganizationRepository.updateSubscription(targetOrgId, {
         plan: "pro",

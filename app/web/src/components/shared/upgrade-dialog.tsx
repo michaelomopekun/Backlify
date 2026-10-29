@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   IconSparkles,
   IconCheck,
@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { useLocalizedPricing } from "@/hooks/use-localized-pricing";
+import { useLocalizedPricing, BillingPeriod } from "@/hooks/use-localized-pricing";
 
 export interface UpgradeDialogProps {
   open: boolean;
@@ -34,7 +34,26 @@ export function UpgradeDialog({
 }: UpgradeDialogProps) {
   const localized = useLocalizedPricing();
   const selectedCurrency = defaultCurrency || localized.currency;
+  const [interval, setInterval] = useState<BillingPeriod>("annual");
   const [isCheckoutLoading, setIsCheckoutLoading] = useState(false);
+
+  const isAnnual = interval === "annual";
+  const isNgn = selectedCurrency === "NGN";
+
+  const displayPrice = isNgn
+    ? isAnnual
+      ? "₦20,000"
+      : "₦2,000"
+    : isAnnual
+    ? "$30"
+    : "$3";
+
+  const periodLabel = isAnnual ? " / year" : " / month";
+  const subtextEquivalent = isAnnual
+    ? isNgn
+      ? "Equivalent to ~₦1,667/mo (2 months free)"
+      : "Equivalent to $2.50/mo (2 months free)"
+    : null;
 
   const handleCheckout = async () => {
     if (!orgId) {
@@ -45,11 +64,11 @@ export function UpgradeDialog({
     setIsCheckoutLoading(true);
     try {
       if (selectedCurrency === "NGN") {
-        // Paystack (₦2,000 / month)
+        // Paystack (₦2,000 / month or ₦20,000 / year)
         const res = await fetch("/api/billing/paystack/initialize", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orgId }),
+          body: JSON.stringify({ orgId, billingPeriod: interval }),
         });
         const data = await res.json();
         if (data.success && data.authorization_url) {
@@ -59,11 +78,11 @@ export function UpgradeDialog({
           setIsCheckoutLoading(false);
         }
       } else {
-        // Stripe ($3 / month)
+        // Stripe ($3 / month or $30 / year)
         const res = await fetch("/api/billing/stripe/checkout", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ orgId }),
+          body: JSON.stringify({ orgId, billingPeriod: interval }),
         });
         const data = await res.json();
         if (data.success && data.url) {
@@ -94,17 +113,51 @@ export function UpgradeDialog({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Single Localized Plan Display (Anonymous PPP - No Currency Toggles) */}
-        <div className="my-4 p-4 rounded-lg bg-[#141414] border border-[#242424] flex items-baseline justify-between">
+        {/* Billing Period Selector */}
+        <div className="mt-4 p-1 bg-[#161616] rounded-lg border border-[#242424] flex items-center">
+          <button
+            type="button"
+            onClick={() => setInterval("monthly")}
+            className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${
+              !isAnnual
+                ? "bg-[#252525] text-white shadow-sm"
+                : "text-[#888888] hover:text-neutral-300"
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            type="button"
+            onClick={() => setInterval("annual")}
+            className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${
+              isAnnual
+                ? "bg-[#252525] text-white shadow-sm"
+                : "text-[#888888] hover:text-neutral-300"
+            }`}
+          >
+            <span>Annual</span>
+            <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 font-semibold border border-amber-500/20">
+              2 months free
+            </span>
+          </button>
+        </div>
+
+        {/* Pricing Summary Card */}
+        <div className="my-3 p-4 rounded-lg bg-[#141414] border border-[#242424] flex items-baseline justify-between">
           <div>
             <div className="text-xs text-[#888888] font-medium">Pro Subscription</div>
             <div className="text-2xl font-bold text-white mt-0.5">
-              {selectedCurrency === "NGN" ? "₦2,000" : "$3"}
-              <span className="text-xs text-[#888888] font-normal"> / month</span>
+              {displayPrice}
+              <span className="text-xs text-[#888888] font-normal">{periodLabel}</span>
             </div>
+            {subtextEquivalent && (
+              <div className="text-[11px] text-amber-400/90 mt-0.5 font-medium">
+                {subtextEquivalent}
+              </div>
+            )}
           </div>
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20 font-medium">
-            Billed monthly
+            {isAnnual ? "Billed annually" : "Billed monthly"}
           </span>
         </div>
 
@@ -148,7 +201,7 @@ export function UpgradeDialog({
               <>
                 <IconCreditCard className="size-4" />
                 <span>
-                  Pay {selectedCurrency === "NGN" ? "₦2,000 / month with Paystack" : "$3 / month with Stripe"}
+                  Pay {displayPrice} {periodLabel} with {selectedCurrency === "NGN" ? "Paystack" : "Stripe"}
                 </span>
               </>
             )}

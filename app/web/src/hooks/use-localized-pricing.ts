@@ -1,27 +1,92 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { BILLING_CONFIG } from "shared";
+
+export type BillingPeriod = "monthly" | "annual";
+
+export interface PlanIntervalPricing {
+  price: number;
+  priceFormatted: string;
+  priceWithPeriod: string;
+  priceShort: string;
+}
+
+export interface AnnualPlanPricing extends PlanIntervalPricing {
+  effectiveMonthlyPrice: number;
+  effectiveMonthlyFormatted: string;
+  savingsBadge: string;
+  savingsPercentage: string;
+}
 
 export interface LocalizedPricing {
   currency: "NGN" | "USD";
   gateway: "paystack" | "stripe";
-  price: number;
   symbol: string;
-  priceFormatted: string; // e.g. "₦2,000" or "$3"
-  priceWithPeriod: string; // e.g. "₦2,000 / month" or "$3 / month"
-  priceShort: string; // e.g. "₦2,000/mo" or "$3/mo"
-  isLoading: boolean;
-}
-
-let cachedPricing: {
-  currency: "NGN" | "USD";
-  gateway: "paystack" | "stripe";
+  // Backwards-compatible shortcuts (default monthly)
   price: number;
-  symbol: string;
   priceFormatted: string;
   priceWithPeriod: string;
   priceShort: string;
-} | null = null;
+  // Detailed intervals
+  monthly: PlanIntervalPricing;
+  annual: AnnualPlanPricing;
+  isLoading: boolean;
+}
+
+const NGN_CONFIG: Omit<LocalizedPricing, "isLoading"> = {
+  currency: "NGN",
+  gateway: "paystack",
+  symbol: "₦",
+  price: BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN,
+  priceFormatted: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}`,
+  priceWithPeriod: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()} / month`,
+  priceShort: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}/mo`,
+  monthly: {
+    price: BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN,
+    priceFormatted: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}`,
+    priceWithPeriod: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()} / month`,
+    priceShort: `₦${BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}/mo`,
+  },
+  annual: {
+    price: BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN,
+    effectiveMonthlyPrice: Math.round(BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN / 12),
+    priceFormatted: `₦${BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()}`,
+    priceWithPeriod: `₦${BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()} / year`,
+    priceShort: `₦${BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()}/yr`,
+    effectiveMonthlyFormatted: `₦${Math.round(BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN / 12).toLocaleString()}/mo`,
+    savingsBadge: "2 months free",
+    savingsPercentage: "-17%",
+  },
+};
+
+const USD_CONFIG: Omit<LocalizedPricing, "isLoading"> = {
+  currency: "USD",
+  gateway: "stripe",
+  symbol: "$",
+  price: BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD,
+  priceFormatted: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}`,
+  priceWithPeriod: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD} / month`,
+  priceShort: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}/mo`,
+  monthly: {
+    price: BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD,
+    priceFormatted: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}`,
+    priceWithPeriod: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD} / month`,
+    priceShort: `$${BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}/mo`,
+  },
+  annual: {
+    price: BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD,
+    effectiveMonthlyPrice: 2.5,
+    priceFormatted: `$${BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD}`,
+    priceWithPeriod: `$${BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD} / year`,
+    priceShort: `$${BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD}/yr`,
+    effectiveMonthlyFormatted: "$2.50/mo",
+    savingsBadge: "2 months free",
+    savingsPercentage: "-17%",
+  },
+};
+
+let cachedPricing: Omit<LocalizedPricing, "isLoading"> | null = null;
 
 function getInitialPricing(): Omit<LocalizedPricing, "isLoading"> {
   if (cachedPricing) return cachedPricing;
@@ -31,30 +96,14 @@ function getInitialPricing(): Omit<LocalizedPricing, "isLoading"> {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
       const isLagos = tz.toLowerCase().includes("lagos") || tz.toLowerCase().includes("africa/lagos");
       if (isLagos) {
-        return {
-          currency: "NGN",
-          gateway: "paystack",
-          price: 2000,
-          symbol: "₦",
-          priceFormatted: "₦2,000",
-          priceWithPeriod: "₦2,000 / month",
-          priceShort: "₦2,000/mo",
-        };
+        return NGN_CONFIG;
       }
     } catch {
       // fallback
     }
   }
 
-  return {
-    currency: "USD",
-    gateway: "stripe",
-    price: 3,
-    symbol: "$",
-    priceFormatted: "$3",
-    priceWithPeriod: "$3 / month",
-    priceShort: "$3/mo",
-  };
+  return USD_CONFIG;
 }
 
 export function useLocalizedPricing(): LocalizedPricing {
@@ -74,15 +123,7 @@ export function useLocalizedPricing(): LocalizedPricing {
         .then((res) => res.json())
         .then((data) => {
           const isNigeria = data.currency === "NGN";
-          const resolved: typeof cachedPricing = {
-            currency: isNigeria ? "NGN" : "USD",
-            gateway: isNigeria ? "paystack" : "stripe",
-            price: isNigeria ? 2000 : 3,
-            symbol: isNigeria ? "₦" : "$",
-            priceFormatted: isNigeria ? "₦2,000" : "$3",
-            priceWithPeriod: isNigeria ? "₦2,000 / month" : "$3 / month",
-            priceShort: isNigeria ? "₦2,000/mo" : "$3/mo",
-          };
+          const resolved = isNigeria ? NGN_CONFIG : USD_CONFIG;
           cachedPricing = resolved;
           setPricing(resolved);
         })

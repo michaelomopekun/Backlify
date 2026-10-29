@@ -1,18 +1,23 @@
 /**
  * Backlify Billing & Monetization Constants and Helpers
  * Purchasing Power Parity (PPP):
- * - International: $3 / month via Stripe
- * - Nigeria: ₦2,000 / month via Paystack
+ * - International: $3 / month ($30 / year with 2 months free) via Stripe
+ * - Nigeria: ₦2,000 / month (₦20,000 / year with 2 months free) via Paystack
  */
+
+export type BillingInterval = "monthly" | "annual";
 
 export const BILLING_CONFIG = {
   STRIPE: {
-    PRO_MONTHLY_PRICE_USD: 3, // $3.00
+    PRO_MONTHLY_PRICE_USD: 3, // $3.00 / month
+    PRO_ANNUAL_PRICE_USD: 30, // $30.00 / year ($2.50/mo, 2 months free)
     CURRENCY: "usd",
   },
   PAYSTACK: {
-    PRO_MONTHLY_PRICE_NGN: 2000, // ₦2,000
+    PRO_MONTHLY_PRICE_NGN: 2000, // ₦2,000 / month
     PRO_MONTHLY_PRICE_KOBO: 200000, // Paystack operates in kobo (1 NGN = 100 Kobo)
+    PRO_ANNUAL_PRICE_NGN: 20000, // ₦20,000 / year (₦1,667/mo, 2 months free)
+    PRO_ANNUAL_PRICE_KOBO: 2000000, // ₦20,000 in kobo
     CURRENCY: "NGN",
   },
   QUOTAS: {
