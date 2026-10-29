@@ -165,7 +165,7 @@ export function HeroLeft({
             style={{
               maxWidth: "560px",
               fontSize: "15px",
-              color: "#94a3b8",
+              color: "#8a8f98",
               lineHeight: "1.6",
               marginTop: "16px",
             }}

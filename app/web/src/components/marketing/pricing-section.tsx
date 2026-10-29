@@ -49,7 +49,7 @@ export function PricingSection({
 
         {/* Right Column: Pill Toggle (Monthly / Annual 2 months free) */}
         <div className="flex items-center shrink-0 md:pb-1">
-          <div className="inline-flex items-center p-1 rounded-full bg-[#121316] border border-[#222328] select-none">
+          <div className="inline-flex items-center p-1 rounded-full bg-[#101010ff] border border-[#222328] select-none">
             {/* Monthly Button */}
             <button
               type="button"
@@ -95,7 +95,7 @@ export function PricingSection({
               {/* Tier 2: Pro (Amber Brand Aesthetics) */}
               <div className="flex flex-col items-center w-full">
                 <BacklifyProCardAdapted
-                  price={billingCycle === "annual" ? "$2.50" : "$3"}
+                  price={billingCycle === "annual" ? "$2.5" : "$3"}
                   period={billingCycle === "annual" ? "// MONTH (BILLED ANNUALLY)" : "// MONTH"}
                 />
               </div>
