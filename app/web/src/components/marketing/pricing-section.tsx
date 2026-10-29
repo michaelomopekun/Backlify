@@ -15,7 +15,6 @@ import {
   Bell,
   HardDrive,
   ArrowRight,
-  Check,
 } from "lucide-react";
 import { ActionButton } from "@/components/ui/action-button";
 
@@ -317,3 +316,4 @@ export function PricingSection() {
     </section>
   );
 }
+
