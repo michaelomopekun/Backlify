@@ -5,7 +5,7 @@ import { VeyroProCard, BacklifyProCardAdapted } from "@/components/marketing/vey
 import { cn } from "@/lib/utils";
 
 export function PreviewPricingClient() {
-  const [patternMode, setPatternMode] = useState<"exact" | "brand">("exact");
+  const [patternMode, setPatternMode] = useState<"exact" | "brand">("brand");
   const [opacity, setOpacity] = useState<number>(0.95);
 
   return (
@@ -89,3 +89,4 @@ export function PreviewPricingClient() {
     </section>
   );
 }
+

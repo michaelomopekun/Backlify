@@ -447,19 +447,21 @@ export interface BacklifyCardProps {
   className?: string;
   patternVariant?: "exact" | "brand" | "amber" | "blue";
   patternOpacity?: number;
+  subtitle?: string;
 }
 
 export function BacklifyProCardAdapted({
   className,
-  patternVariant = "exact",
+  patternVariant = "amber",
   patternOpacity = 0.95,
+  subtitle = "Complete database disaster recovery, continuous verification drills & incident alerts.",
 }: BacklifyCardProps) {
   const patternSrc =
-    patternVariant === "brand" || patternVariant === "amber"
-      ? "/pegboard-amber.png"
+    patternVariant === "exact"
+      ? "/pegboard-exact.png"
       : patternVariant === "blue"
       ? "/pegboard-blue.png"
-      : "/pegboard-exact.png";
+      : "/pegboard-amber.png";
 
   return (
     <div
@@ -497,15 +499,22 @@ export function BacklifyProCardAdapted({
       <div className="absolute top-0 inset-x-10 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent pointer-events-none z-10" />
 
       {/* ── Eyebrow: // BACKLIFY PRO ── */}
-      <div className="flex items-center gap-2 mb-11 relative z-10">
+      <div className="flex items-center gap-2 mb-2 relative z-10">
         <span className="font-mono text-xs font-semibold text-amber-400 tracking-widest">//</span>
         <span className="font-mono text-[11px] font-semibold text-[#fef3c7] tracking-[0.18em] uppercase">
           BACKLIFY PRO
         </span>
       </div>
 
+      {/* ── 1-Line Value Subtitle (Clear Utility Context) ── */}
+      {subtitle && (
+        <p className="text-[12px] text-[#8a8f98] leading-relaxed mb-6 relative z-10 font-normal">
+          {subtitle}
+        </p>
+      )}
+
       {/* ── Price: $3 // MONTH ── */}
-      <div className="flex items-baseline gap-3 mb-8 relative z-10">
+      <div className="flex items-baseline gap-3 mb-7 relative z-10">
         <span className="font-sans text-[48px] font-medium tracking-[-0.03em] text-white leading-none">
           $3
         </span>
