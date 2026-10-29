@@ -103,7 +103,7 @@ export function PricingSection({
 
             {/* ── Footnote Note under Pricing Cards ── */}
             <p className="mt-6 text-[13px] text-[#8a8f98] leading-relaxed text-left">
-              Local and customer-bucket checkpoints are outside Cloud backup limits. Encrypt them on every plan with your own key.
+              Local backups and BYO storage vaults are outside Cloud storage limits. Encrypt them on every plan with your own key.
             </p>
           </div>
         </div>

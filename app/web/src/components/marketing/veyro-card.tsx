@@ -682,7 +682,7 @@ export function BacklifyStarterCard({
   className,
   patternOpacity = 0.20,
   patternVariant = "brand",
-  subtitle = "Local database checkpoints, daily schedules & essential recovery drills.",
+  subtitle = "Automated daily database backups, essential restore drills & local CLI toolchain.",
 }: BacklifyStarterCardProps) {
   const patternSrc =
     patternVariant === "exact"
@@ -788,7 +788,7 @@ export function BacklifyStarterCard({
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]/80">
           <TerminalIcon className="text-amber-400" />
-          <span className="text-[13.5px] leading-tight font-normal">Local checkpoints & CLI toolchain</span>
+          <span className="text-[13.5px] leading-tight font-normal">Local CLI backups & developer toolchain</span>
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]/80">
           <LockSecurityIcon className="text-amber-400" />
