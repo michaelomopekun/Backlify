@@ -10,7 +10,7 @@ export function PreviewOpenSourceClient() {
   const [displayValue, setDisplayValue] = React.useState<string>("114.2K");
   const [showComparison, setShowComparison] = React.useState<boolean>(false);
 
-  const presets = ["114.2K", "100K", "50K", "14.8K", "100%"];
+  const presets = ["114.2K", "BACKLIFY", "100K", "50K", "14.8K", "100%"];
 
   return (
     <div className="w-full">
