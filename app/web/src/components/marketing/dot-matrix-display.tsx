@@ -619,15 +619,6 @@ export function DotMatrixDisplay({
 
   return (
     <div className={cn("relative flex items-center justify-center select-none w-full", className)}>
-      {/* ── Soft Atmospheric Background Glow filling the stadium ── */}
-      <div
-        className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-[75px] opacity-30"
-        style={{
-          background: `radial-gradient(ellipse 75% 65% at 50% 50%, ${theme.glowRgba} 0%, transparent 0%)`,
-        }}
-        aria-hidden="true"
-      />
-
       <svg
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
         className="w-full h-auto max-w-[760px] overflow-visible cursor-default"

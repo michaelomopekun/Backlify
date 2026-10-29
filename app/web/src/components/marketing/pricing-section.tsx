@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useLocalizedPricing } from "@/hooks/use-localized-pricing";
 import {
   BacklifyStarterCard,
   BacklifyProCardAdapted,
@@ -19,11 +20,21 @@ export function PricingSection({
   onCycleChange,
 }: PricingSectionProps) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const localizedPricing = useLocalizedPricing();
 
   const handleCycleSelect = (cycle: "monthly" | "annual") => {
     setBillingCycle(cycle);
     onCycleChange?.(cycle);
   };
+
+  const proPrice =
+    billingCycle === "annual"
+      ? localizedPricing.currency === "NGN"
+        ? "₦1,667"
+        : "$2.5"
+      : localizedPricing.currency === "NGN"
+      ? "₦2,000"
+      : "$3";
 
   return (
     <section
@@ -95,7 +106,7 @@ export function PricingSection({
               {/* Tier 2: Pro (Amber Brand Aesthetics) */}
               <div className="flex flex-col items-center w-full">
                 <BacklifyProCardAdapted
-                  price={billingCycle === "annual" ? "$2.5" : "$3"}
+                  price={proPrice}
                   period={billingCycle === "annual" ? "// MONTH (BILLED ANNUALLY)" : "// MONTH"}
                 />
               </div>
