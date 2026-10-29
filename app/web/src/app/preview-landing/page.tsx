@@ -6,6 +6,7 @@ import { HeroRight } from "@/components/marketing/hero-right";
 import { CoreFeaturesBento } from "@/components/marketing/core-features-bento";
 import { SupportedEnginesStrip } from "@/components/marketing/supported-engines-strip";
 import { CliShowcase } from "@/components/marketing/cli-showcase";
+import { PricingSection } from "@/components/marketing/pricing-section";
 import { MarketingRailsLayout } from "@/components/marketing/layout-rails";
 
 export const metadata: Metadata = {
@@ -32,7 +33,11 @@ export default function PreviewLandingPage() {
 
       {/* ── CLI Showcase (DBDock Developer Section) ── */}
       <CliShowcase />
+
+      {/* ── Pricing Section (Veyro & Backlify Dark Developer Aesthetic) ── */}
+      <div className="w-full mt-24 mb-16">
+        <PricingSection />
+      </div>
     </MarketingRailsLayout>
   );
 }
-
