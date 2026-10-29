@@ -2,26 +2,103 @@
 
 import { useState, useEffect } from "react";
 
-export interface LocalizedPricing {
-  currency: "NGN" | "USD";
-  gateway: "paystack" | "stripe";
-  price: number;
-  symbol: string;
-  priceFormatted: string; // e.g. "₦2,000" or "$3"
-  priceWithPeriod: string; // e.g. "₦2,000 / month" or "$3 / month"
-  priceShort: string; // e.g. "₦2,000/mo" or "$3/mo"
-  isLoading: boolean;
-}
+export type BillingPeriod = "monthly" | "annual";
 
-let cachedPricing: {
-  currency: "NGN" | "USD";
-  gateway: "paystack" | "stripe";
+export const CLIENT_BILLING_CONFIG = {
+  STRIPE: {
+    PRO_MONTHLY_PRICE_USD: 3,
+    PRO_ANNUAL_PRICE_USD: 30,
+    CURRENCY: "usd",
+  },
+  PAYSTACK: {
+    PRO_MONTHLY_PRICE_NGN: 2000,
+    PRO_ANNUAL_PRICE_NGN: 20000,
+    CURRENCY: "NGN",
+  },
+} as const;
+
+export interface PlanIntervalPricing {
   price: number;
-  symbol: string;
   priceFormatted: string;
   priceWithPeriod: string;
   priceShort: string;
-} | null = null;
+}
+
+export interface AnnualPlanPricing extends PlanIntervalPricing {
+  effectiveMonthlyPrice: number;
+  effectiveMonthlyFormatted: string;
+  savingsBadge: string;
+  savingsPercentage: string;
+}
+
+export interface LocalizedPricing {
+  currency: "NGN" | "USD";
+  gateway: "paystack" | "stripe";
+  symbol: string;
+  // Backwards-compatible shortcuts (default monthly)
+  price: number;
+  priceFormatted: string;
+  priceWithPeriod: string;
+  priceShort: string;
+  // Detailed intervals
+  monthly: PlanIntervalPricing;
+  annual: AnnualPlanPricing;
+  isLoading: boolean;
+}
+
+const NGN_CONFIG: Omit<LocalizedPricing, "isLoading"> = {
+  currency: "NGN",
+  gateway: "paystack",
+  symbol: "₦",
+  price: CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN,
+  priceFormatted: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}`,
+  priceWithPeriod: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()} / month`,
+  priceShort: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}/mo`,
+  monthly: {
+    price: CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN,
+    priceFormatted: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}`,
+    priceWithPeriod: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()} / month`,
+    priceShort: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_NGN.toLocaleString()}/mo`,
+  },
+  annual: {
+    price: CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN,
+    effectiveMonthlyPrice: Math.round(CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN / 12),
+    priceFormatted: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()}`,
+    priceWithPeriod: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()} / year`,
+    priceShort: `₦${CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN.toLocaleString()}/yr`,
+    effectiveMonthlyFormatted: `₦${Math.round(CLIENT_BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_NGN / 12).toLocaleString()}/mo`,
+    savingsBadge: "2 months free",
+    savingsPercentage: "-17%",
+  },
+};
+
+const USD_CONFIG: Omit<LocalizedPricing, "isLoading"> = {
+  currency: "USD",
+  gateway: "stripe",
+  symbol: "$",
+  price: CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD,
+  priceFormatted: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}`,
+  priceWithPeriod: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD} / month`,
+  priceShort: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}/mo`,
+  monthly: {
+    price: CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD,
+    priceFormatted: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}`,
+    priceWithPeriod: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD} / month`,
+    priceShort: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_MONTHLY_PRICE_USD}/mo`,
+  },
+  annual: {
+    price: CLIENT_BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD,
+    effectiveMonthlyPrice: 2.5,
+    priceFormatted: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD}`,
+    priceWithPeriod: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD} / year`,
+    priceShort: `$${CLIENT_BILLING_CONFIG.STRIPE.PRO_ANNUAL_PRICE_USD}/yr`,
+    effectiveMonthlyFormatted: "$2.50/mo",
+    savingsBadge: "2 months free",
+    savingsPercentage: "-17%",
+  },
+};
+
+let cachedPricing: Omit<LocalizedPricing, "isLoading"> | null = null;
 
 function getInitialPricing(): Omit<LocalizedPricing, "isLoading"> {
   if (cachedPricing) return cachedPricing;
@@ -31,30 +108,14 @@ function getInitialPricing(): Omit<LocalizedPricing, "isLoading"> {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
       const isLagos = tz.toLowerCase().includes("lagos") || tz.toLowerCase().includes("africa/lagos");
       if (isLagos) {
-        return {
-          currency: "NGN",
-          gateway: "paystack",
-          price: 2000,
-          symbol: "₦",
-          priceFormatted: "₦2,000",
-          priceWithPeriod: "₦2,000 / month",
-          priceShort: "₦2,000/mo",
-        };
+        return NGN_CONFIG;
       }
     } catch {
       // fallback
     }
   }
 
-  return {
-    currency: "USD",
-    gateway: "stripe",
-    price: 3,
-    symbol: "$",
-    priceFormatted: "$3",
-    priceWithPeriod: "$3 / month",
-    priceShort: "$3/mo",
-  };
+  return USD_CONFIG;
 }
 
 export function useLocalizedPricing(): LocalizedPricing {
@@ -74,15 +135,7 @@ export function useLocalizedPricing(): LocalizedPricing {
         .then((res) => res.json())
         .then((data) => {
           const isNigeria = data.currency === "NGN";
-          const resolved: typeof cachedPricing = {
-            currency: isNigeria ? "NGN" : "USD",
-            gateway: isNigeria ? "paystack" : "stripe",
-            price: isNigeria ? 2000 : 3,
-            symbol: isNigeria ? "₦" : "$",
-            priceFormatted: isNigeria ? "₦2,000" : "$3",
-            priceWithPeriod: isNigeria ? "₦2,000 / month" : "$3 / month",
-            priceShort: isNigeria ? "₦2,000/mo" : "$3/mo",
-          };
+          const resolved = isNigeria ? NGN_CONFIG : USD_CONFIG;
           cachedPricing = resolved;
           setPricing(resolved);
         })

@@ -38,8 +38,9 @@ export async function POST(req: NextRequest) {
         const orgId = data.metadata?.orgId;
 
         if (orgId) {
+          const isAnnual = data.metadata?.billingPeriod === "annual";
           const nextRenewal = new Date();
-          nextRenewal.setDate(nextRenewal.getDate() + 30);
+          nextRenewal.setDate(nextRenewal.getDate() + (isAnnual ? 365 : 30));
 
           await OrganizationRepository.updateSubscription(orgId, {
             plan: "pro",

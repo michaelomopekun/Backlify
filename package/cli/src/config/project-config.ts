@@ -8,6 +8,12 @@ export interface ProjectConfig {
   databaseEngine?: string;
   environment?: string;
   createdAt?: string;
+  schedule?: {
+    id: string;
+    cronExpression: string;
+    timezone: string;
+    isActive: boolean;
+  } | null;
 }
 
 const CONFIG_DIR_NAME = ".backlify";

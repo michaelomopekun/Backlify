@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json().catch(() => ({}));
-    const { orgId } = body;
+    const { orgId, billingPeriod = "monthly" } = body;
+    const isAnnual = billingPeriod === "annual";
 
     if (!orgId) {
       return NextResponse.json({ success: false, error: "Organization ID is required." }, { status: 400 });
@@ -40,6 +41,10 @@ export async function POST(req: NextRequest) {
 
     const appUrl = process.env.APP_URL || "https://backlify.space";
 
+    const amountKobo = isAnnual
+      ? BILLING_CONFIG.PAYSTACK.PRO_ANNUAL_PRICE_KOBO // ₦20,000.00 = 2,000,000 kobo
+      : BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_KOBO; // ₦2,000.00 = 200,000 kobo
+
     const paystackRes = await fetch("https://api.paystack.co/transaction/initialize", {
       method: "POST",
       headers: {
@@ -47,19 +52,20 @@ export async function POST(req: NextRequest) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        amount: BILLING_CONFIG.PAYSTACK.PRO_MONTHLY_PRICE_KOBO, // ₦2,000.00
+        amount: amountKobo,
         email: user.email,
         currency: BILLING_CONFIG.PAYSTACK.CURRENCY,
         metadata: {
           orgId,
           userId: user.id,
           plan: "pro",
+          billingPeriod: isAnnual ? "annual" : "monthly",
           provider: "paystack",
           custom_fields: [
             {
               display_name: "Plan",
               variable_name: "plan",
-              value: "Backlify Pro (Monthly)",
+              value: isAnnual ? "Backlify Pro (Annual)" : "Backlify Pro (Monthly)",
             },
             {
               display_name: "Organization",
