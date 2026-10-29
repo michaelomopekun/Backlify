@@ -161,7 +161,6 @@ export function VeyroProCard({ className }: { className?: string }) {
       className={cn(
         "relative w-[340px] sm:w-[360px] rounded-[28px] px-7 pt-7 pb-8 overflow-hidden select-none",
         "border border-[#1e293b]/70",
-        "shadow-[0_20px_50px_-10px_rgba(2,132,199,0.35),0_0_60px_rgba(3,105,161,0.2)]",
         className
       )}
       style={{
@@ -283,7 +282,6 @@ export function BacklifyProCardAdapted({ className }: { className?: string }) {
       className={cn(
         "relative w-[340px] sm:w-[360px] rounded-[28px] px-7 pt-7 pb-8 overflow-hidden select-none",
         "border border-amber-500/25",
-        "shadow-[0_20px_50px_-10px_rgba(245,158,11,0.3),0_0_60px_rgba(217,119,6,0.18)]",
         className
       )}
       style={{
