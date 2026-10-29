@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { DotMatrixDisplay, MatrixColorTheme } from "./dot-matrix-display";
+import { DotMatrixDisplay, MatrixColorTheme, MatrixPixelSize } from "./dot-matrix-display";
 
 export interface OpenSourceSectionProps {
   headline?: string;
@@ -11,6 +11,7 @@ export interface OpenSourceSectionProps {
   repoUrl?: string;
   starCount?: string;
   colorTheme?: MatrixColorTheme;
+  pixelSize?: MatrixPixelSize;
   className?: string;
 }
 
@@ -20,6 +21,7 @@ export function OpenSourceSection({
   repoUrl = "https://github.com/michaelomopekun/Backlify",
   starCount = "114.2K",
   colorTheme = "amber",
+  pixelSize = "xlarge",
   className,
 }: OpenSourceSectionProps) {
   return (
@@ -79,6 +81,7 @@ export function OpenSourceSection({
           <DotMatrixDisplay
             value={starCount}
             colorTheme={colorTheme}
+            pixelSize={pixelSize}
             interactive={true}
           />
         </div>

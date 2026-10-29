@@ -3,14 +3,15 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { OpenSourceSection } from "@/components/marketing/open-source-section";
-import { MatrixColorTheme } from "@/components/marketing/dot-matrix-display";
+import { MatrixColorTheme, MatrixPixelSize } from "@/components/marketing/dot-matrix-display";
 
 export function PreviewOpenSourceClient() {
   const [colorTheme, setColorTheme] = React.useState<MatrixColorTheme>("amber");
+  const [pixelSize, setPixelSize] = React.useState<MatrixPixelSize>("xlarge");
   const [displayValue, setDisplayValue] = React.useState<string>("114.2K");
   const [showComparison, setShowComparison] = React.useState<boolean>(false);
 
-  const presets = ["114.2K", "BACKLIFY", "100K", "50K", "14.8K", "100%"];
+  const presets = ["114.2K", "backlify", "MIT", "100K", "50K", "14.8K", "100%"];
 
   return (
     <div className="w-full">
@@ -66,6 +67,51 @@ export function PreviewOpenSourceClient() {
               >
                 <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#3ecf8e]" />
                 Supabase Emerald
+              </button>
+            </div>
+          </div>
+
+          {/* Pixel Size Switcher */}
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs uppercase tracking-wider text-[#8a8f98] font-medium">
+              Pixel Size:
+            </span>
+            <div className="inline-flex items-center p-1 rounded-full bg-[#1b1c20] border border-[#2b2c32]">
+              <button
+                type="button"
+                onClick={() => setPixelSize("large")}
+                className={cn(
+                  "px-2.5 py-1 text-xs font-mono rounded-full transition-all cursor-pointer",
+                  pixelSize === "large"
+                    ? "bg-[#2a2b33] text-white shadow-sm font-semibold"
+                    : "text-[#8a8f98] hover:text-white"
+                )}
+              >
+                Large (9.6px)
+              </button>
+              <button
+                type="button"
+                onClick={() => setPixelSize("xlarge")}
+                className={cn(
+                  "px-2.5 py-1 text-xs font-mono rounded-full transition-all cursor-pointer",
+                  pixelSize === "xlarge"
+                    ? "bg-amber-500/20 text-amber-400 border border-amber-500/40 shadow-sm font-semibold"
+                    : "text-[#8a8f98] hover:text-white"
+                )}
+              >
+                Extra Large (11.6px) ★
+              </button>
+              <button
+                type="button"
+                onClick={() => setPixelSize("jumbo")}
+                className={cn(
+                  "px-2.5 py-1 text-xs font-mono rounded-full transition-all cursor-pointer",
+                  pixelSize === "jumbo"
+                    ? "bg-[#2a2b33] text-white shadow-sm font-semibold"
+                    : "text-[#8a8f98] hover:text-white"
+                )}
+              >
+                Jumbo (14.5px)
               </button>
             </div>
           </div>
@@ -138,6 +184,7 @@ export function PreviewOpenSourceClient() {
         <OpenSourceSection
           starCount={displayValue}
           colorTheme={colorTheme}
+          pixelSize={pixelSize}
         />
       </div>
     </div>
