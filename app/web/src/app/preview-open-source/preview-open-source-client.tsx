@@ -3,9 +3,10 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import { OpenSourceSection } from "@/components/marketing/open-source-section";
+import { MatrixColorTheme } from "@/components/marketing/dot-matrix-display";
 
 export function PreviewOpenSourceClient() {
-  const [colorTheme, setColorTheme] = React.useState<"amber" | "emerald">("amber");
+  const [colorTheme, setColorTheme] = React.useState<MatrixColorTheme>("amber");
   const [displayValue, setDisplayValue] = React.useState<string>("114.2K");
   const [showComparison, setShowComparison] = React.useState<boolean>(false);
 
@@ -19,9 +20,10 @@ export function PreviewOpenSourceClient() {
           {/* Color Switcher */}
           <div className="flex items-center gap-3">
             <span className="font-mono text-xs uppercase tracking-wider text-[#8a8f98] font-medium">
-              LED Color:
+              Tile Color:
             </span>
             <div className="inline-flex items-center p-1 rounded-full bg-[#1b1c20] border border-[#2b2c32]">
+              {/* Brand Amber */}
               <button
                 type="button"
                 onClick={() => setColorTheme("amber")}
@@ -35,6 +37,23 @@ export function PreviewOpenSourceClient() {
                 <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_#ffb31f]" />
                 Brand Amber
               </button>
+
+              {/* Sky Blue (Reference Close-up Match) */}
+              <button
+                type="button"
+                onClick={() => setColorTheme("blue")}
+                className={cn(
+                  "px-3 py-1 text-xs font-mono rounded-full transition-all duration-150 cursor-pointer flex items-center gap-1.5",
+                  colorTheme === "blue"
+                    ? "bg-[#2a2b33] text-sky-400 shadow-sm font-semibold"
+                    : "text-[#8a8f98] hover:text-white"
+                )}
+              >
+                <span className="w-2 h-2 rounded-full bg-[#63b9fe] shadow-[0_0_6px_#63b9fe]" />
+                Sky Blue (Reference)
+              </button>
+
+              {/* Supabase Emerald */}
               <button
                 type="button"
                 onClick={() => setColorTheme("emerald")}
@@ -87,21 +106,26 @@ export function PreviewOpenSourceClient() {
                   : "bg-[#1b1c20] text-[#8a8f98] border-[#2b2c32] hover:text-white"
               )}
             >
-              {showComparison ? "Hide Reference" : "Compare Reference"}
+              {showComparison ? "Hide Close-Up" : "Compare Close-Up"}
             </button>
           </div>
         </div>
 
-        {/* Reference Image Panel */}
+        {/* Reference Image Close-up Panel */}
         {showComparison && (
-          <div className="mt-4 p-4 rounded-2xl bg-[#0e0f12] border border-[#23252d] flex flex-col items-center">
-            <span className="text-xs font-mono text-[#8a8f98] mb-3 uppercase tracking-wider">
-              Original Supabase Reference:
-            </span>
-            <div className="overflow-hidden rounded-lg border border-[#2b2d35] max-w-3xl w-full">
+          <div className="mt-4 p-5 rounded-2xl bg-[#0e0f12] border border-[#23252d] flex flex-col items-center">
+            <div className="flex items-center justify-between w-full mb-3 max-w-xl">
+              <span className="text-xs font-mono text-[#8a8f98] uppercase tracking-wider">
+                Your Exact Close-Up Reference:
+              </span>
+              <span className="text-xs font-mono text-amber-400">
+                Notice: Flat squircle tiles with 25% corner radius
+              </span>
+            </div>
+            <div className="overflow-hidden rounded-xl border border-[#2b2d35] max-w-xl w-full">
               <img
-                src="/supabase-open-source-reference.png"
-                alt="Supabase Reference"
+                src="/matrix_closeup.png"
+                alt="Squircle Tiles Close-up"
                 className="w-full h-auto object-cover"
               />
             </div>

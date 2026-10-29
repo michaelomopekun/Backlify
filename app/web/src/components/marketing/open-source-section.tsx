@@ -3,14 +3,14 @@
 import * as React from "react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { DotMatrixDisplay } from "./dot-matrix-display";
+import { DotMatrixDisplay, MatrixColorTheme } from "./dot-matrix-display";
 
 export interface OpenSourceSectionProps {
   headline?: string;
   description?: string;
   repoUrl?: string;
   starCount?: string;
-  colorTheme?: "amber" | "emerald";
+  colorTheme?: MatrixColorTheme;
   className?: string;
 }
 
@@ -86,3 +86,4 @@ export function OpenSourceSection({
     </section>
   );
 }
+
