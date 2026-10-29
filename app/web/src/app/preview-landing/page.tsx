@@ -9,6 +9,7 @@ import { CliShowcase } from "@/components/marketing/cli-showcase";
 import { PricingSection } from "@/components/marketing/pricing-section";
 import { OpenSourceSection } from "@/components/marketing/open-source-section";
 import { QaSection } from "@/components/marketing/qa-section";
+import { CtaSection } from "@/components/marketing/cta-section";
 import { MarketingRailsLayout } from "@/components/marketing/layout-rails";
 
 export const metadata: Metadata = {
@@ -49,6 +50,11 @@ export default function PreviewLandingPage() {
       {/* ── Questions on the record, restores, and limits (Q&A Section) ── */}
       <div className="relative w-full border-t border-[#22252b]">
         <QaSection />
+      </div>
+
+      {/* ── Final Call to Action (CTA Section) ── */}
+      <div className="relative w-full border-t border-[#22252b]">
+        <CtaSection />
       </div>
 
     </MarketingRailsLayout>
