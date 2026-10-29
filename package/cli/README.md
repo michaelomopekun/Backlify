@@ -367,3 +367,4 @@ Contributions are welcome! Please follow these guidelines:
 ## License
 
 [MIT](LICENSE) — Free forever, open-source, self-hosted, with zero vendor lock-in.
+

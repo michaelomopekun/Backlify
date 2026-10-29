@@ -131,7 +131,7 @@ export function QaSection({
     <section
       id="faq"
       className={cn(
-        "relative w-full max-w-[1240px] mx-auto px-5 sm:px-8 lg:px-12 py-20 lg:py-28 select-none",
+        "relative w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-12 py-20 lg:py-28 select-none",
         className
       )}
     >

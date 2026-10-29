@@ -1,6 +1,6 @@
 {
   "name": "backlify-cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Developer-first CLI for Backlify — Database backups, recovery drills, and guarded migrations",
   "main": "dist/index.js",
@@ -9,7 +9,8 @@
     "backlify": "dist/bin/backlify.js"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "publishConfig": {
     "access": "public"
