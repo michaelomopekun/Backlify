@@ -7,6 +7,9 @@ import { CoreFeaturesBento } from "@/components/marketing/core-features-bento";
 import { SupportedEnginesStrip } from "@/components/marketing/supported-engines-strip";
 import { CliShowcase } from "@/components/marketing/cli-showcase";
 import { PricingSection } from "@/components/marketing/pricing-section";
+import { OpenSourceSection } from "@/components/marketing/open-source-section";
+import { QaSection } from "@/components/marketing/qa-section";
+import { CtaSection } from "@/components/marketing/cta-section";
 import { MarketingRailsLayout } from "@/components/marketing/layout-rails";
 
 export const metadata: Metadata = {
@@ -34,9 +37,24 @@ export default function PreviewLandingPage() {
       {/* ── CLI Showcase (DBDock Developer Section) ── */}
       <CliShowcase />
 
-      <div className="relative w-2px border-y border-[#22252b]">
-      {/* ── Pricing Header Section ── */}
-      <PricingSection />
+      {/* ── Pricing Section with Starter & Pro Cards ── */}
+      <div className="relative w-full border-t border-[#22252b]">
+        <PricingSection />
+      </div>
+
+      {/* ── Open Source from Day One Section ── */}
+      <div className="relative w-full border-t border-[#22252b]">
+        <OpenSourceSection />
+      </div>
+
+      {/* ── Questions on the record, restores, and limits (Q&A Section) ── */}
+      <div className="relative w-full border-t border-[#22252b]">
+        <QaSection />
+      </div>
+
+      {/* ── Final Call to Action (CTA Section) ── */}
+      <div className="relative w-full border-t border-[#22252b]">
+        <CtaSection />
       </div>
 
     </MarketingRailsLayout>

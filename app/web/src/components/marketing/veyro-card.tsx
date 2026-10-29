@@ -534,6 +534,8 @@ export interface BacklifyCardProps {
   patternVariant?: "exact" | "brand" | "amber" | "blue";
   patternOpacity?: number;
   subtitle?: string;
+  price?: string;
+  period?: string;
 }
 
 export function BacklifyProCardAdapted({
@@ -541,6 +543,8 @@ export function BacklifyProCardAdapted({
   patternVariant = "amber",
   patternOpacity = 0.45,
   subtitle = "Complete database disaster recovery, continuous verification drills & incident alerts.",
+  price = "$3",
+  period = "// MONTH",
 }: BacklifyCardProps) {
   const patternSrc =
     patternVariant === "exact"
@@ -602,10 +606,10 @@ export function BacklifyProCardAdapted({
       {/* ── Price: $3 // MONTH ── */}
       <div className="flex items-baseline gap-3 mb-7 relative z-10">
         <span className="font-sans text-[48px] font-medium tracking-[-0.03em] text-white leading-none">
-          $3
+          {price}
         </span>
         <span className="font-mono text-[11px] text-[#b45309] tracking-wider uppercase font-medium">
-          // MONTH
+          {period}
         </span>
       </div>
 
@@ -784,7 +788,7 @@ export function BacklifyStarterCard({
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]/80">
           <TerminalIcon className="text-amber-400" />
-          <span className="text-[13.5px] leading-tight font-normal">Local checkpoints & CLI toolchain</span>
+          <span className="text-[13.5px] leading-tight font-normal">Local CLI backups & developer toolchain</span>
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]/80">
           <LockSecurityIcon className="text-amber-400" />

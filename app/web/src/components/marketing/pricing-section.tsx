@@ -2,25 +2,45 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useLocalizedPricing } from "@/hooks/use-localized-pricing";
+import {
+  BacklifyStarterCard,
+  BacklifyProCardAdapted,
+} from "@/components/marketing/veyro-card";
 
-export interface PricingHeaderProps {
+export interface PricingSectionProps {
   className?: string;
+  showCards?: boolean;
   onCycleChange?: (cycle: "monthly" | "annual") => void;
 }
 
-export function PricingSection({ className, onCycleChange }: PricingHeaderProps) {
+export function PricingSection({
+  className,
+  showCards = true,
+  onCycleChange,
+}: PricingSectionProps) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
+  const localizedPricing = useLocalizedPricing();
 
   const handleCycleSelect = (cycle: "monthly" | "annual") => {
     setBillingCycle(cycle);
     onCycleChange?.(cycle);
   };
 
+  const proPrice =
+    billingCycle === "annual"
+      ? localizedPricing.currency === "NGN"
+        ? "₦1,667"
+        : "$2.5"
+      : localizedPricing.currency === "NGN"
+      ? "₦2,000"
+      : "$3";
+
   return (
     <section
       id="pricing"
       className={cn(
-        "relative w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-12 pt-16 sm:pt-24 pb-12",
+        "relative w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-12 pt-16 sm:pt-24 pb-20",
         className
       )}
     >
@@ -40,7 +60,7 @@ export function PricingSection({ className, onCycleChange }: PricingHeaderProps)
 
         {/* Right Column: Pill Toggle (Monthly / Annual 2 months free) */}
         <div className="flex items-center shrink-0 md:pb-1">
-          <div className="inline-flex items-center p-1 rounded-full bg-[#121316] border border-[#222328] select-none">
+          <div className="inline-flex items-center p-1 rounded-full bg-[#101010ff] border border-[#222328] select-none">
             {/* Monthly Button */}
             <button
               type="button"
@@ -72,6 +92,33 @@ export function PricingSection({ className, onCycleChange }: PricingHeaderProps)
           </div>
         </div>
       </div>
+
+      {/* ── Exact Side-by-Side Pricing Cards Grid ── */}
+      {showCards && (
+        <div className="mt-14 w-full flex flex-col items-center">
+          <div className="w-full max-w-[340px] sm:max-w-[360px] md:max-w-[760px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 items-stretch justify-items-center">
+              {/* Tier 1: Starter (Free) */}
+              <div className="flex flex-col items-center w-full">
+                <BacklifyStarterCard />
+              </div>
+
+              {/* Tier 2: Pro (Amber Brand Aesthetics) */}
+              <div className="flex flex-col items-center w-full">
+                <BacklifyProCardAdapted
+                  price={proPrice}
+                  period={billingCycle === "annual" ? "// MONTH (BILLED ANNUALLY)" : "// MONTH"}
+                />
+              </div>
+            </div>
+
+            {/* ── Footnote Note under Pricing Cards ── */}
+            <p className="mt-6 text-[13px] text-[#8a8f98] leading-relaxed text-left">
+              Local and customer-bucket checkpoints are outside Cloud backup limits. Encrypt them on every plan with your own key.
+            </p>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

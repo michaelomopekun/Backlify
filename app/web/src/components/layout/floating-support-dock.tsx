@@ -449,7 +449,7 @@ export function FloatingSupportDock() {
                 title: "Contact Emergency Rescue",
                 desc: "Reach our database reliability engineers for restore assistance.",
                 icon: IconMail,
-                href: "mailto:support@backlify.dev",
+                href: "mailto:support@mail.backlify.space",
               },
             ].map((item) => {
               const Icon = item.icon;
