@@ -155,7 +155,24 @@ function SupportIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
 
 /* ── 1:1 Exact Veyro Pro Card (Pixel-Perfect Matching Reference Image) ── */
 
-export function VeyroProCard({ className }: { className?: string }) {
+export interface VeyroCardProps {
+  className?: string;
+  patternVariant?: "exact" | "brand" | "blue" | "amber";
+  patternOpacity?: number;
+}
+
+export function VeyroProCard({
+  className,
+  patternVariant = "exact",
+  patternOpacity = 0.95,
+}: VeyroCardProps) {
+  const patternSrc =
+    patternVariant === "brand" || patternVariant === "blue"
+      ? "/pegboard-blue.png"
+      : patternVariant === "amber"
+      ? "/pegboard-amber.png"
+      : "/pegboard-exact.png";
+
   return (
     <div
       className={cn(
@@ -170,33 +187,26 @@ export function VeyroProCard({ className }: { className?: string }) {
         `,
       }}
     >
-      {/* Top subtle micro-stipple / celestial stars texture */}
-      <svg
-        className="absolute inset-x-0 top-0 h-36 w-full pointer-events-none opacity-30"
-        aria-hidden="true"
+      {/* Top Pegboard Dot-Matrix Texture with 3D Glowing Beads */}
+      <div
+        className="absolute inset-x-0 top-0 h-[180px] w-full pointer-events-none overflow-hidden select-none z-0"
+        style={{
+          maskImage:
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 100%)",
+        }}
       >
-        <defs>
-          <pattern id="veyro-stipple" x="0" y="0" width="36" height="36" patternUnits="userSpaceOnUse">
-            <circle cx="6" cy="8" r="0.75" fill="#94a3b8" />
-            <circle cx="22" cy="14" r="1.0" fill="#e2e8f0" />
-            <circle cx="16" cy="26" r="0.65" fill="#64748b" />
-            <circle cx="31" cy="30" r="0.85" fill="#94a3b8" />
-            <circle cx="10" cy="34" r="0.6" fill="#e2e8f0" />
-          </pattern>
-          <linearGradient id="stipple-fade" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="white" stopOpacity="1" />
-            <stop offset="80%" stopColor="white" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="white" stopOpacity="0" />
-          </linearGradient>
-          <mask id="stipple-mask">
-            <rect width="100%" height="100%" fill="url(#stipple-fade)" />
-          </mask>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#veyro-stipple)" mask="url(#stipple-mask)" />
-      </svg>
+        <img
+          src={patternSrc}
+          alt=""
+          className="w-full h-full object-cover object-top"
+          style={{ opacity: patternOpacity }}
+        />
+      </div>
 
       {/* Top subtle rim light */}
-      <div className="absolute top-0 inset-x-10 h-[1px] bg-gradient-to-r from-transparent via-sky-400/30 to-transparent pointer-events-none" />
+      <div className="absolute top-0 inset-x-10 h-[1px] bg-gradient-to-r from-transparent via-sky-400/30 to-transparent pointer-events-none z-10" />
 
       {/* ── Eyebrow: // VEYRO PRO ── */}
       <div className="flex items-center gap-2 mb-11 relative z-10">
@@ -274,11 +284,28 @@ export function VeyroProCard({ className }: { className?: string }) {
 
 /* ── Backlify Adaptation: Same Lighting & Depth in Brand Amber ── */
 
-export function BacklifyProCardAdapted({ className }: { className?: string }) {
+export interface BacklifyCardProps {
+  className?: string;
+  patternVariant?: "exact" | "brand" | "amber" | "blue";
+  patternOpacity?: number;
+}
+
+export function BacklifyProCardAdapted({
+  className,
+  patternVariant = "exact",
+  patternOpacity = 0.95,
+}: BacklifyCardProps) {
+  const patternSrc =
+    patternVariant === "brand" || patternVariant === "amber"
+      ? "/pegboard-amber.png"
+      : patternVariant === "blue"
+      ? "/pegboard-blue.png"
+      : "/pegboard-exact.png";
+
   return (
     <div
       className={cn(
-        "relative w-[340px] sm:w-[360px] rounded-[20px] px-7 pt-7 pb-8 select-none",
+        "relative w-[340px] sm:w-[360px] rounded-[20px] px-7 pt-7 pb-8 select-none overflow-hidden",
         "border-4 border-[#272522]",
         className
       )}
@@ -289,33 +316,26 @@ export function BacklifyProCardAdapted({ className }: { className?: string }) {
         `,
       }}
     >
-      {/* Top micro-stipple / celestial stars texture */}
-      <svg
-        className="absolute inset-x-0 top-0 h-36 w-full pointer-events-none opacity-30"
-        aria-hidden="true"
+      {/* Top Pegboard Dot-Matrix Texture with 3D Glowing Beads */}
+      <div
+        className="absolute inset-x-0 top-0 h-[180px] w-full pointer-events-none overflow-hidden select-none z-0"
+        style={{
+          maskImage:
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 100%)",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 100%)",
+        }}
       >
-        <defs>
-          <pattern id="backlify-stipple" x="0" y="0" width="36" height="36" patternUnits="userSpaceOnUse">
-            <circle cx="6" cy="8" r="0.75" fill="#d97706" />
-            <circle cx="22" cy="14" r="1.0" fill="#fde68a" />
-            <circle cx="16" cy="26" r="0.65" fill="#78350f" />
-            <circle cx="31" cy="30" r="0.85" fill="#f59e0b" />
-            <circle cx="10" cy="34" r="0.6" fill="#fef3c7" />
-          </pattern>
-          <linearGradient id="stipple-fade-amber" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="white" stopOpacity="1" />
-            <stop offset="80%" stopColor="white" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="white" stopOpacity="0" />
-          </linearGradient>
-          <mask id="stipple-mask-amber">
-            <rect width="100%" height="100%" fill="url(#stipple-fade-amber)" />
-          </mask>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#backlify-stipple)" mask="url(#stipple-mask-amber)" />
-      </svg>
+        <img
+          src={patternSrc}
+          alt=""
+          className="w-full h-full object-cover object-top"
+          style={{ opacity: patternOpacity }}
+        />
+      </div>
 
       {/* Top subtle rim light */}
-      <div className="absolute top-0 inset-x-10 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent pointer-events-none" />
+      <div className="absolute top-0 inset-x-10 h-[1px] bg-gradient-to-r from-transparent via-amber-400/40 to-transparent pointer-events-none z-10" />
 
       {/* ── Eyebrow: // BACKLIFY PRO ── */}
       <div className="flex items-center gap-2 mb-11 relative z-10">
@@ -357,7 +377,7 @@ export function BacklifyProCardAdapted({ className }: { className?: string }) {
       </div>
 
       {/* ── Feature List ── */}
-      <ul className="space-y-4.5 relative z-10">
+      <ul className="space-y-5 relative z-10">
         <li className="flex items-center gap-3 text-[#fef3c7]">
           <AutomationIcon className="text-amber-400" />
           <span className="text-[13.5px] leading-tight font-normal">Hourly continuous backups</span>
