@@ -16,7 +16,7 @@ export default function PreviewPricingPage() {
       <SiteHeader containerMaxWidth="1240px" />
 
       {/* ── Exact Pricing Header ── */}
-      <PricingSection />
+      <PricingSection showCards={false} />
 
       {/* ── Interactive Cards Showcase with Pegboard Texture ── */}
       <PreviewPricingClient />

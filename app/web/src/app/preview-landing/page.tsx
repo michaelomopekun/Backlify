@@ -34,9 +34,9 @@ export default function PreviewLandingPage() {
       {/* ── CLI Showcase (DBDock Developer Section) ── */}
       <CliShowcase />
 
-      <div className="relative w-2px border-y border-[#22252b]">
-      {/* ── Pricing Header Section ── */}
-      <PricingSection />
+      {/* ── Pricing Section with Starter & Pro Cards ── */}
+      <div className="relative w-full border-t border-[#22252b]">
+        <PricingSection />
       </div>
 
     </MarketingRailsLayout>

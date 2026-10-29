@@ -2,13 +2,22 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import {
+  BacklifyStarterCard,
+  BacklifyProCardAdapted,
+} from "@/components/marketing/veyro-card";
 
-export interface PricingHeaderProps {
+export interface PricingSectionProps {
   className?: string;
+  showCards?: boolean;
   onCycleChange?: (cycle: "monthly" | "annual") => void;
 }
 
-export function PricingSection({ className, onCycleChange }: PricingHeaderProps) {
+export function PricingSection({
+  className,
+  showCards = true,
+  onCycleChange,
+}: PricingSectionProps) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "annual">("monthly");
 
   const handleCycleSelect = (cycle: "monthly" | "annual") => {
@@ -20,7 +29,7 @@ export function PricingSection({ className, onCycleChange }: PricingHeaderProps)
     <section
       id="pricing"
       className={cn(
-        "relative w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-12 pt-16 sm:pt-24 pb-12",
+        "relative w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-12 pt-16 sm:pt-24 pb-20",
         className
       )}
     >
@@ -72,6 +81,26 @@ export function PricingSection({ className, onCycleChange }: PricingHeaderProps)
           </div>
         </div>
       </div>
+
+      {/* ── Exact Side-by-Side Pricing Cards Grid ── */}
+      {showCards && (
+        <div className="mt-14 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10 items-stretch justify-items-center max-w-4xl mx-auto">
+            {/* Tier 1: Starter (Free) */}
+            <div className="flex flex-col items-center w-full">
+              <BacklifyStarterCard />
+            </div>
+
+            {/* Tier 2: Pro (Amber Brand Aesthetics) */}
+            <div className="flex flex-col items-center w-full">
+              <BacklifyProCardAdapted
+                price={billingCycle === "annual" ? "$2.50" : "$3"}
+                period={billingCycle === "annual" ? "// MONTH (BILLED ANNUALLY)" : "// MONTH"}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }
