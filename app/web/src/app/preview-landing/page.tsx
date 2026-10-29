@@ -34,10 +34,8 @@ export default function PreviewLandingPage() {
       {/* ── CLI Showcase (DBDock Developer Section) ── */}
       <CliShowcase />
 
-      {/* ── Pricing Section (Veyro & Backlify Dark Developer Aesthetic) ── */}
-      <div className="w-full mt-24 mb-16">
-        <PricingSection />
-      </div>
+      {/* ── Pricing Header Section ── */}
+      <PricingSection />
     </MarketingRailsLayout>
   );
 }
