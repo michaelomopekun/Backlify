@@ -307,7 +307,7 @@ export function CliShowcase({ className }: { className?: string }) {
           </h2>
 
           <p className="font-sans text-[12px] sm:text-[13px] leading-relaxed text-[#8a8f98] mb-8 max-w-[440px]">
-            Set DATABASE_URL in your local environment, then link the project.
+            Set <span className="text-[#f9fafb]">DATABASE_URL in your local environment,</span> then link the project.
             The CLI and local MCP keep checkpoints on disk or in your S3/R2
             bucket. Only change records go to Cloud.
           </p>
@@ -339,7 +339,7 @@ export function CliShowcase({ className }: { className?: string }) {
         <div className="lg:col-span-5 flex flex-col">
           <div className="relative w-full rounded-2xl bg-[#101010ff] border border-[#1e2028] shadow-[0_12px_40px_rgba(0,0,0,0.6)] overflow-hidden">
             {/* Top Icon Bar */}
-            <div className="grid grid-cols-5 border-b border-[#1c1e26] bg-[#101010ff]/70">
+            <div className="grid grid-cols-5 border-b border-[#1c1e26] bg-[#101012ff]/">
               {TABS.map((tab, idx) => {
                 const Icon = tab.icon;
                 const isActive = activeTabIdx === idx;
@@ -352,7 +352,7 @@ export function CliShowcase({ className }: { className?: string }) {
                       "h-14 flex items-center justify-center transition-colors cursor-pointer relative",
                       idx !== 0 && "border-l border-[#1c1e26]",
                       isActive
-                        ? "bg-[#13151c] text-[#f9fafb]"
+                        ? "bg-[#13151c]/80 text-[#f9fafb]"
                         : "text-[#5a606d] hover:text-[#94a3b8] hover:bg-[#0f1016]"
                     )}
                   >
@@ -389,7 +389,7 @@ export function CliShowcase({ className }: { className?: string }) {
             </div>
 
             {/* Terminal Code Display */}
-            <div className="px-6 pt-1 pb-8 font-mono text-[11px] sm:text-[12px] leading-relaxed select-text min-h-[220px]">
+            <div className="px-6 pt-1 pb-8 font-mono text-[11px] sm:text-[12px] leading-relaxed select-text min-h-[260px]">
               {activeTab.codeLines.map((line, lineIdx) => {
                 if (line.tokens.length === 0) {
                   return <div key={lineIdx} className="h-4" />;
@@ -422,7 +422,7 @@ export function CliShowcase({ className }: { className?: string }) {
             <div className="px-6 pb-6 pt-2 flex justify-end">
               <a
                 href="#docs"
-                className="inline-flex items-center gap-1.5 rounded-lg border border-[#232731] bg-[#11131a] hover:bg-[#161922] hover:border-[#2e3340] px-3.5 py-2 text-xs font-sans text-[#cbd5e1] hover:text-[#f9fafb] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-[#232731] bg-[#11131a]/20 hover:bg-[#161922] hover:border-[#2e3340] px-3.5 py-2 text-xs font-sans text-[#cbd5e1] hover:text-[#f9fafb] transition-colors cursor-pointer"
               >
                 <span>Read the CLI docs</span>
                 <ArrowUpRight className="w-3.5 h-3.5 text-[#8a8f98]" />
