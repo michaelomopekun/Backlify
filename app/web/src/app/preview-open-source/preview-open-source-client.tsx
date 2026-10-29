@@ -7,8 +7,9 @@ import { MatrixColorTheme, MatrixPixelSize } from "@/components/marketing/dot-ma
 
 export function PreviewOpenSourceClient() {
   const [colorTheme, setColorTheme] = React.useState<MatrixColorTheme>("amber");
-  const [pixelSize, setPixelSize] = React.useState<MatrixPixelSize>("xlarge");
+  const [pixelSize, setPixelSize] = React.useState<MatrixPixelSize>("jumbo");
   const [displayValue, setDisplayValue] = React.useState<string>("114.2K");
+  const [npxCommand, setNpxCommand] = React.useState<string>("npx  dbdock");
   const [showComparison, setShowComparison] = React.useState<boolean>(false);
 
   const presets = ["114.2K", "backlify", "MIT", "100K", "50K", "14.8K", "100%"];

@@ -623,7 +623,7 @@ export function DotMatrixDisplay({
       <div
         className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-[75px] opacity-30"
         style={{
-          background: `radial-gradient(ellipse 75% 65% at 50% 50%, ${theme.glowRgba} 0%, transparent 75%)`,
+          background: `radial-gradient(ellipse 75% 65% at 50% 50%, ${theme.glowRgba} 0%, transparent 70%)`,
         }}
         aria-hidden="true"
       />
