@@ -505,6 +505,28 @@ function MailAlertIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
   );
 }
 
+// 11. Zero-knowledge security & encryption
+function LockSecurityIcon({ className, ...props }: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.75"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("w-[17px] h-[17px] min-w-[17px] min-h-[17px] shrink-0", className)}
+      {...props}
+    >
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+      <circle cx="12" cy="16" r="1.5" />
+    </svg>
+  );
+}
+
 /* ── Backlify Adaptation: Same Lighting & Depth in Brand Amber ── */
 
 export interface BacklifyCardProps {
@@ -517,7 +539,7 @@ export interface BacklifyCardProps {
 export function BacklifyProCardAdapted({
   className,
   patternVariant = "amber",
-  patternOpacity = 0.95,
+  patternOpacity = 0.45,
   subtitle = "Complete database disaster recovery, continuous verification drills & incident alerts.",
 }: BacklifyCardProps) {
   const patternSrc =
@@ -546,9 +568,9 @@ export function BacklifyProCardAdapted({
         className="absolute inset-x-0 top-0 h-[180px] w-full pointer-events-none overflow-hidden select-none z-0"
         style={{
           maskImage:
-            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 10%)",
           WebkitMaskImage:
-            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 10%)",
         }}
       >
         <img
@@ -654,7 +676,7 @@ export interface BacklifyStarterCardProps {
 
 export function BacklifyStarterCard({
   className,
-  patternOpacity = 0.95,
+  patternOpacity = 0.20,
   patternVariant = "brand",
   subtitle = "Local database checkpoints, daily schedules & essential recovery drills.",
 }: BacklifyStarterCardProps) {
@@ -678,9 +700,9 @@ export function BacklifyStarterCard({
         className="absolute inset-x-0 top-0 h-[180px] w-full pointer-events-none overflow-hidden select-none z-0"
         style={{
           maskImage:
-            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 10%)",
           WebkitMaskImage:
-            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.95) 55%, rgba(0,0,0,0.35) 82%, transparent 10%)",
         }}
       >
         <img
@@ -765,8 +787,8 @@ export function BacklifyStarterCard({
           <span className="text-[13.5px] leading-tight font-normal">Local checkpoints & CLI toolchain</span>
         </li>
         <li className="flex items-center gap-3 text-[#fef3c7]/80">
-          <MailAlertIcon className="text-amber-400" />
-          <span className="text-[13.5px] leading-tight font-normal">Community support & failure alerts</span>
+          <LockSecurityIcon className="text-amber-400" />
+          <span className="text-[13.5px] leading-tight font-normal">Client-side AES-256 encryption</span>
         </li>
       </ul>
     </div>
