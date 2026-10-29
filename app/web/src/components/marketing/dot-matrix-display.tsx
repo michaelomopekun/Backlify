@@ -4,7 +4,7 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * 7-Row Squircle Tile Matrix Font (Exact 1:1 Match with Physical Reference)
+ * 7-Row Squircle Tile Matrix Font
  * '#' represents an illuminated squircle tile, '.' represents an unlit tile.
  */
 const GLYPHS: Record<string, string[]> = {
@@ -107,7 +107,7 @@ const GLYPHS: Record<string, string[]> = {
     "..",
     "##",
   ],
-  // Letters (B, A, C, K, L, I, F, Y and full alphabet support)
+  // Full alphabet support including B, A, C, K, L, I, F, Y
   "B": [
     "####.",
     "#...#",
@@ -464,7 +464,7 @@ const GLYPHS: Record<string, string[]> = {
 export type MatrixColorTheme = "amber" | "blue" | "emerald";
 
 export interface DotMatrixDisplayProps {
-  /** The value or count to display (e.g. "114.2K", "100K", "14.8K") */
+  /** The value or count to display (e.g. "114.2K", "BACKLIFY", "100K") */
   value?: string;
   /** Primary accent color theme */
   colorTheme?: MatrixColorTheme;
@@ -479,14 +479,12 @@ export function DotMatrixDisplay({
   interactive = true,
   className,
 }: DotMatrixDisplayProps) {
-  const [hoverPos, setHoverPos] = React.useState<{ x: number; y: number } | null>(null);
-
   // Build the text bitmap row-by-row
   const chars = value.split("");
   const renderedRows: boolean[][] = Array.from({ length: 7 }, () => []);
 
   chars.forEach((char, charIdx) => {
-    const glyph = GLYPHS[char] || GLYPHS[" "] || Array(7).fill("...");
+    const glyph = GLYPHS[char] || GLYPHS[char.toUpperCase()] || GLYPHS[" "] || Array(7).fill("...");
     for (let r = 0; r < 7; r++) {
       const line = glyph[r] || "";
       for (let c = 0; c < line.length; c++) {
@@ -501,15 +499,24 @@ export function DotMatrixDisplay({
   });
 
   const textWidth = renderedRows[0]?.length || 0;
-  // Grid layout geometry matching reference squircle tile matrix
-  const TOTAL_COLS = Math.max(44, textWidth + 8);
-  const TOTAL_ROWS = 13;
-  const PITCH = 13.0; // Total pitch per tile (tile size + gap)
-  const TILE_SIZE = 7.4; // Squircle tile size (approx 57% of pitch)
-  const TILE_RADIUS = 1.85; // Clean squircle corner radius (25% of tile size)
 
-  const startCol = Math.max(1, Math.floor((TOTAL_COLS - textWidth) / 2));
-  const startRow = Math.max(1, Math.floor((TOTAL_ROWS - 7) / 2));
+  // ── Macro Container Dimensions matching the Supabase Reference ──
+  // The grid spans 31 rows (12 rows above, 7 rows text, 12 rows below)
+  // and 65 columns (or wider for long words) to completely fill the right container
+  const TOTAL_ROWS = 31;
+  const TOTAL_COLS = Math.max(65, textWidth + 18);
+  const PITCH = 11.5; // Pitch per squircle tile (tile + gap)
+  const TILE_SIZE = 6.6; // Squircle tile size (approx 57% of pitch)
+  const TILE_RADIUS = 1.65; // Clean squircle corner radius (25% of tile size)
+
+  const [hoverPos, setHoverPos] = React.useState<{ x: number; y: number } | null>(null);
+
+  const startCol = Math.max(2, Math.floor((TOTAL_COLS - textWidth) / 2));
+  const startRow = Math.max(2, Math.floor((TOTAL_ROWS - 7) / 2));
+
+  // Center coordinate of the active text for radial falloff calculation
+  const centerCol = TOTAL_COLS / 2;
+  const centerRow = TOTAL_ROWS / 2;
 
   // Precompute set of lit tiles
   const litSet = React.useMemo(() => {
@@ -578,39 +585,50 @@ export function DotMatrixDisplay({
 
   return (
     <div className={cn("relative flex items-center justify-center select-none w-full", className)}>
-      {/* Soft atmospheric background bloom */}
+      {/* ── Soft Atmospheric Background Glow filling the stadium ── */}
       <div
-        className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-[65px] opacity-25"
+        className="pointer-events-none absolute inset-0 -z-10 rounded-full blur-[70px] opacity-25"
         style={{
-          background: `radial-gradient(ellipse 70% 60% at 50% 50%, ${theme.glowRgba} 0%, transparent 75%)`,
+          background: `radial-gradient(ellipse 75% 65% at 50% 50%, ${theme.glowRgba} 0%, transparent 75%)`,
         }}
         aria-hidden="true"
       />
 
       <svg
         viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-        className="w-full h-auto max-w-[580px] overflow-visible cursor-default"
+        className="w-full h-auto max-w-[760px] overflow-visible cursor-default"
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
+        style={{
+          maskImage:
+            "radial-gradient(ellipse 88% 82% at 50% 50%, black 42%, rgba(0,0,0,0.85) 66%, rgba(0,0,0,0.25) 86%, transparent 100%)",
+          WebkitMaskImage:
+            "radial-gradient(ellipse 88% 82% at 50% 50%, black 42%, rgba(0,0,0,0.85) 66%, rgba(0,0,0,0.25) 86%, transparent 100%)",
+        }}
       >
-        {/* ── Render ALL Squircle Tiles in the Matrix Grid ── */}
+        {/* ── Render Full 31x65 Field of Squircle Tiles that Fades Out ── */}
         {Array.from({ length: TOTAL_ROWS }).map((_, r) => {
           return Array.from({ length: TOTAL_COLS }).map((_, c) => {
             const isLit = litSet.has(`${r},${c}`);
             const x = c * PITCH + (PITCH - TILE_SIZE) / 2;
             const y = r * PITCH + (PITCH - TILE_SIZE) / 2;
 
+            // Normalized distance from center of the stadium matrix
+            const dx = (c - centerCol) / (TOTAL_COLS * 0.46);
+            const dy = (r - centerRow) / (TOTAL_ROWS * 0.46);
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
             // Interactive cursor proximity boost
             let isHovered = false;
             if (hoverPos) {
               const hdx = x + TILE_SIZE / 2 - hoverPos.x;
               const hdy = y + TILE_SIZE / 2 - hoverPos.y;
-              isHovered = hdx * hdx + hdy * hdy < 28 * 28;
+              isHovered = hdx * hdx + hdy * hdy < 32 * 32;
             }
 
             if (isLit) {
               // ── CRISP FLAT ILLUMINATED SQUIRCLE TILE ──
-              // Razor-sharp geometry with 25% corner radius, no blurry fuzz
+              // Solid 100% opacity, razor-sharp 25% rounded corners
               return (
                 <rect
                   key={`${r}-${c}`}
@@ -626,20 +644,31 @@ export function DotMatrixDisplay({
               );
             }
 
-            // ── UNLIT SQUIRCLE TILE ──
-            // Organic varied luminance: base dark, mid tone, or tinted reflection
+            // Outside the soft stadium perimeter -> don't render
+            if (dist > 1.05 && !isHovered) {
+              return null;
+            }
+
+            // Smoothstep falloff calculation (solid in center, smoothly dissolving to 0 at perimeter)
+            let falloff = 1.0;
+            if (dist > 0.35) {
+              const t = (dist - 0.35) / (1.05 - 0.35);
+              falloff = Math.max(0, 1 - t * t * (3 - 2 * t));
+            }
+
+            // Organic varied luminance across unlit tiles matching reference
             const hash = (r * 7919 + c * 6271) % 100;
             let tileFill = theme.unlitDark;
 
-            // Determine subtle ambient tinting matching the reference screenshot
             if (hash < 14) {
-              tileFill = theme.unlitTint; // Tinted reflection tile (like in close-up)
+              tileFill = theme.unlitTint; // Tinted reflection tile
             } else if (hash < 38) {
-              tileFill = theme.unlitMid; // Mid-tone dark slate
+              tileFill = theme.unlitMid; // Mid-tone slate tile
             }
 
             if (isHovered) {
               tileFill = theme.unlitTint;
+              falloff = Math.max(falloff, 0.85);
             }
 
             return (
@@ -652,7 +681,8 @@ export function DotMatrixDisplay({
                 rx={TILE_RADIUS}
                 ry={TILE_RADIUS}
                 fill={tileFill}
-                className="transition-colors duration-200"
+                opacity={falloff}
+                className="transition-opacity duration-200"
               />
             );
           });

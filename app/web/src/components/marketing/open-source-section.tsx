@@ -30,9 +30,9 @@ export function OpenSourceSection({
         className
       )}
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-center min-h-[380px]">
         {/* ── Left Column: Headline, Narrative & GitHub CTA ── */}
-        <div className="flex flex-col items-start lg:col-span-6 max-w-xl">
+        <div className="flex flex-col items-start lg:col-span-5 max-w-xl z-10">
           {/* Main Display Headline */}
           <h2 className="font-sans text-3xl sm:text-4xl lg:text-[40px] font-semibold text-[#ededed] tracking-[-0.03em] leading-[1.14] mb-5">
             {headline}
@@ -75,7 +75,7 @@ export function OpenSourceSection({
         </div>
 
         {/* ── Right Column: Giant Scoreboard Dot-Matrix Display ── */}
-        <div className="flex items-center justify-center lg:justify-end lg:col-span-6 w-full overflow-hidden">
+        <div className="flex items-center justify-center lg:justify-end lg:col-span-7 w-full overflow-hidden">
           <DotMatrixDisplay
             value={starCount}
             colorTheme={colorTheme}
