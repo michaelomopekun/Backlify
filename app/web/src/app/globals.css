@@ -5,6 +5,43 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ── Site Header 850px Collapse Utilities ── */
+@media (max-width: 850px) {
+  .header-nav-desktop,
+  .header-actions-desktop {
+    display: none !important;
+  }
+  .header-toggle-mobile {
+    display: inline-flex !important;
+  }
+}
+
+@media (min-width: 851px) {
+  .header-nav-desktop {
+    display: flex !important;
+  }
+  .header-actions-desktop {
+    display: inline-flex !important;
+  }
+  .header-toggle-mobile,
+  .header-drawer-mobile {
+    display: none !important;
+  }
+}
+
+/* ── Blueprint Rails 445px Screen Size Trigger ── */
+@media (max-width: 445px) {
+  .blueprint-rail {
+    display: none !important;
+  }
+}
+
+@media (min-width: 446px) {
+  .blueprint-rail {
+    display: block !important;
+  }
+}
+
 /* ── Dashboard tokens (dark-native, Supabase-structural) ── */
 :root {
   --background: #0a0a0a;

@@ -18,7 +18,13 @@ export interface CoreFeaturesBentoProps {
 export function CoreFeaturesBento({ className }: CoreFeaturesBentoProps) {
   const isMobile = useIsMobile();
   return (
-    <section className={cn(`relative w-full max-w-[1152px] mx-auto ${isMobile ? 'px-5' : 'px-6'} py-5`, className)}>
+    <section
+      id="features"
+      className={cn(
+        `relative w-full max-w-[1152px] mx-auto ${isMobile ? 'px-5' : 'px-6'} py-5 scroll-mt-20`,
+        className
+      )}
+    >
 
       {/* ── 4-Column Supabase Bento Grid ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-2">
