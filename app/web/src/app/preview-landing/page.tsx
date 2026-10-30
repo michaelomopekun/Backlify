@@ -10,6 +10,7 @@ import { PricingSection } from "@/components/marketing/pricing-section";
 import { OpenSourceSection } from "@/components/marketing/open-source-section";
 import { QaSection } from "@/components/marketing/qa-section";
 import { CtaSection } from "@/components/marketing/cta-section";
+import { SecurityTrustStrip } from "@/components/marketing/security-trust-strip";
 import { MarketingRailsLayout } from "@/components/marketing/layout-rails";
 
 export const metadata: Metadata = {
@@ -55,6 +56,11 @@ export default function PreviewLandingPage() {
       {/* ── Final Call to Action (CTA Section) ── */}
       <div className="relative w-full border-t border-[#22252b]">
         <CtaSection />
+      </div>
+
+      {/* ── Security & Compliance Trust Strip ── */}
+      <div className="relative w-full border-t border-[#22252b]">
+        <SecurityTrustStrip />
       </div>
 
     </MarketingRailsLayout>
