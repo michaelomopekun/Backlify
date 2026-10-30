@@ -55,8 +55,8 @@ export function SiteHeader({
           : hasScrolled
           ? "rgba(10, 10, 10, 0.65)"
           : "rgba(10, 10, 10, 0.50)",
-        backdropFilter: "blur(16px) saturate(180%)",
-        WebkitBackdropFilter: "blur(16px) saturate(180%)",
+        backdropFilter: "blur(16px) saturate(100%)",
+        WebkitBackdropFilter: "blur(16px) saturate(100%)",
         borderBottom: hasScrolled
           ? "1px solid rgba(255, 255, 255, 0.08)"
           : "1px solid rgba(255, 255, 255, 0.04)",
@@ -192,26 +192,29 @@ export function SiteHeader({
             <span style={{ fontSize: "12px", color: "#8c9298" }}></span>
           </Link>
 
-          { !isMobileMenuOpen ? (
+          {!isMobileMenuOpen ? (
             <ActionButton
-            variant="dark"
-            size="xs"
-            borderRadius="8px"
-            href="/login"
-          >
-            Sign in
-          </ActionButton>
-        ) : <></>}
+              variant="dark"
+              size="xs"
+              borderRadius="8px"
+              href="/login"
+              className="hidden sm:inline-flex"
+            >
+              Sign in
+            </ActionButton>
+          ) : <></>}
 
-
-          {!isMobileMenuOpen ? (<ActionButton
-            variant="amber"
-            size="xs"
-            borderRadius="8px"
-            href="/signup"
-          >
-            Start free
-          </ActionButton>) : ( <></>)}
+          {!isMobileMenuOpen ? (
+            <ActionButton
+              variant="amber"
+              size="xs"
+              borderRadius="8px"
+              href="/signup"
+              className="hidden sm:inline-flex"
+            >
+              Start free
+            </ActionButton>
+          ) : <></>}
 
           {/* Mobile menu toggle */}
           <button
@@ -297,47 +300,36 @@ export function SiteHeader({
           ))}
           <div
             style={{
-              paddingTop: "14px",
-              gap: "8px",
-            //   borderTop: "1px solid #222222",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+              paddingTop: "16px",
+              display: "grid",
+              gridTemplateColumns: "1fr 1fr",
+              gap: "10px",
+              width: "100%",
             }}
           >
-            
-            {/* <span
-              style={{
-                fontFamily: "inherit",
-                fontWeight: 400,
-                color: "#a1a1a1",
-                fontSize: "13px",
-                letterSpacing: "-0.01em",
-                whiteSpace: "nowrap",
-              }}
+            <ActionButton
+              variant="dark"
+              size="md"
+              width="100%"
+              minWidth="0"
+              borderRadius="8px"
+              href="/login"
+              onClick={() => setIsMobileMenuOpen(false)}
             >
-              Get Back In
-            </span> */}
+              Sign in
+            </ActionButton>
 
             <ActionButton
-                variant="dark"
-                size="long"
-                borderRadius="8px"
-                href="/login"
+              variant="amber"
+              size="md"
+              width="100%"
+              minWidth="0"
+              borderRadius="8px"
+              href="/signup"
+              onClick={() => setIsMobileMenuOpen(false)}
             >
-                Sign in
+              Start your project
             </ActionButton>
-            
-            <ActionButton
-                variant="amber"
-                size="long"
-                borderRadius="8px"
-                href="/signup"
-            >
-                Start free
-            </ActionButton>
-            
-
           </div>
         </div>
       )}

@@ -231,6 +231,7 @@ export const ActionButton = React.forwardRef<HTMLButtonElement, ActionButtonProp
           rel={external ? "noreferrer noopener" : undefined}
           className={baseClassName}
           style={mergedStyles}
+          onClick={props.onClick as any}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
         >
