@@ -29,14 +29,14 @@
   }
 }
 
-/* ── Blueprint Rails 1000px Screen Size Trigger ── */
-@media (max-width: 1000px) {
+/* ── Blueprint Rails 740px Screen Size Trigger ── */
+@media (max-width: 740px) {
   .blueprint-rail {
     display: none !important;
   }
 }
 
-@media (min-width: 1001px) {
+@media (min-width: 741px) {
   .blueprint-rail {
     display: block !important;
   }
