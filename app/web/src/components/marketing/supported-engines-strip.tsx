@@ -13,7 +13,10 @@ export function SupportedEnginesStrip({
   eyebrow = "Supported by leading database engines and cloud platforms",
 }: SupportedEnginesStripProps) {
   return (
-    <div className={cn("relative w-full select-none", className)}>
+    <div
+      id="engines"
+      className={cn("relative w-full select-none scroll-mt-20", className)}
+    >
       {/* ── Eyebrow Header: sits above the top horizontal line, aligned with the logos ── */}
       <div className="w-full max-w-[1200px] mx-auto px-6 sm:px-10 mb-4 sm:mb-5">
         <p className="text-[13px] text-[#717682] font-normal tracking-tight">

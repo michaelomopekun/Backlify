@@ -1,6 +1,6 @@
 import * as React from "react"
 
-const breakpoint = 768
+const breakpoint = 850
 
 export function useIsMobile() {
 

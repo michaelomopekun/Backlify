@@ -30,7 +30,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${instrumentSerif.variable} ${jetBrainsMono.variable} antialiased`}
+      className={`${instrumentSerif.variable} ${jetBrainsMono.variable} scroll-smooth antialiased`}
     >
       <body>
         {children}

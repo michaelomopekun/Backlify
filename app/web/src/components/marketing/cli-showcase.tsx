@@ -292,8 +292,9 @@ export function CliShowcase({ className }: { className?: string }) {
 
   return (
     <section
+      id="cli"
       className={cn(
-        "relative w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-12 py-16 sm:py-24",
+        "relative w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-12 py-16 sm:py-24 scroll-mt-20",
         className
       )}
     >

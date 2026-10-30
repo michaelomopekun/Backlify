@@ -11,18 +11,17 @@ export interface ComplianceBadge {
   status: string;
 }
 
-export const BACKLIFY_SECURITY_BADGES: ComplianceBadge[] = [
-  { id: "aes256", title: "AES-256-GCM", status: "Encrypted" },
-  { id: "soc2", title: "SOC2 Type 2", status: "Certified" },
-  { id: "hipaa", title: "HIPAA", status: "Compliant" },
-  { id: "iso27001", title: "ISO 27001", status: "Certified" },
-];
+// export const BACKLIFY_SECURITY_BADGES: ComplianceBadge[] = [
+//   { id: "aes256", title: "AES-256-GCM", status: "Encrypted" },
+//   { id: "soc2", title: "SOC2 Type 2", status: "Certified" },
+//   { id: "hipaa", title: "HIPAA", status: "Compliant" },
+//   { id: "iso27001", title: "ISO 27001", status: "Certified" },
+// ];
 
 export const BACKLIFY_ZERO_KNOWLEDGE_BADGES: ComplianceBadge[] = [
   { id: "zero-knowledge", title: "Zero-Knowledge", status: "Architecture" },
   { id: "aes256", title: "AES-256-GCM", status: "At Rest & Transit" },
-  { id: "soc2", title: "SOC2 Type 2", status: "Certified" },
-  { id: "hipaa", title: "HIPAA", status: "Compliant" },
+  { id: "bucket", title: "Your Bucket", status: "Your Key" },
 ];
 
 export interface SecurityTrustStripProps {
@@ -36,10 +35,10 @@ export interface SecurityTrustStripProps {
 }
 
 export function SecurityTrustStrip({
-  headingText = "Your data stays strictly under your control.",
+  headingText = "How we protect your data",
   linkText = "More on Security",
   linkHref = "/security",
-  badges = BACKLIFY_SECURITY_BADGES,
+  badges = BACKLIFY_ZERO_KNOWLEDGE_BADGES,
   accentColor = "amber",
   showShieldIcon = false,
   className,
@@ -89,7 +88,7 @@ export function SecurityTrustStrip({
         </div>
 
         {/* ── Right Side: Compliance & Security Badges ── */}
-        <div className="flex flex-wrap items-center justify-center md:justify-end gap-5 sm:gap-7 lg:gap-8">
+        <div className="flex flex-wrap md:justify-start gap-5 sm:gap-7 lg:gap-8">
           {badges.map((badge) => (
             <div
               key={badge.id}

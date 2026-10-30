@@ -40,7 +40,7 @@ export function PricingSection({
     <section
       id="pricing"
       className={cn(
-        "relative w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-12 pt-16 sm:pt-24 pb-20",
+        "relative w-full max-w-[1200px] mx-auto px-5 sm:px-8 lg:px-12 pt-16 sm:pt-24 pb-20 scroll-mt-20",
         className
       )}
     >

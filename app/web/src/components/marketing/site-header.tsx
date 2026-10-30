@@ -6,12 +6,19 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ActionButton } from "@/components/ui/action-button";
 
-const NAV_LINKS = [
+interface NavItem {
+  label: string;
+  href: string;
+  external?: boolean;
+}
+
+const NAV_LINKS: NavItem[] = [
   { label: "Features", href: "#features" },
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Storage Vaults", href: "#storage-vaults" },
+  { label: "Engines", href: "#engines" },
+  { label: "CLI", href: "#cli" },
   { label: "Pricing", href: "#pricing" },
-  { label: "Docs", href: "https://docs.backlify.dev", external: true },
+  { label: "Open Source", href: "#open-source" },
+  { label: "FAQ", href: "#faq" },
 ];
 
 export interface SiteHeaderProps {

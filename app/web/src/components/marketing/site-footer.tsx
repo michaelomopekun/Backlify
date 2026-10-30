@@ -178,7 +178,7 @@ export function SiteFooter({ className }: SiteFooterProps) {
           </div>
 
           {/* Newsletter Box */}
-          <div className="mt-7">
+          {/* <div className="mt-7">
             <p className="text-[13px] text-[#8a8f98] leading-relaxed mb-3">
               Get product updates and engineering dispatches from Backlify.
             </p>
@@ -207,14 +207,17 @@ export function SiteFooter({ className }: SiteFooterProps) {
                 </button>
               </form>
             )}
-          </div>
+          </div> */}
+        <div className="mt-6 text-[12px] text-[#64748b]">
+          Database backups, recovery drills, and guarded migrations.
+        </div>
         </div>
 
         {/* ── Right Area: Currently Available Columns ── */}
         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-8 lg:gap-10 flex-1">
           {FOOTER_COLUMNS.map((column) => (
             <div key={column.title} className="flex flex-col">
-              <h3 className="text-[13.5px] sm:text-[14px] font-medium text-[#ededed] mb-3.5 tracking-[-0.01em]">
+              <h3 className="text-[13.5px] sm:text-[14px] font-mono font-bold text-[#ededed] mb-3.5 tracking-[-0.01em]">
                 {column.title}
               </h3>
               <ul className="space-y-2.5">
@@ -248,9 +251,7 @@ export function SiteFooter({ className }: SiteFooterProps) {
         <div>
           © {new Date().getFullYear()} Backlify. All rights reserved.
         </div>
-        <div className="text-[12px] text-[#64748b]">
-          Database backups, recovery drills, and guarded migrations.
-        </div>
+          {/* we can later have a link to our Privacy Policy & Terms of Service here */}
       </div>
     </footer>
   );
