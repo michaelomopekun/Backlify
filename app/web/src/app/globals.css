@@ -29,6 +29,19 @@
   }
 }
 
+/* ── Blueprint Rails 1000px Screen Size Trigger ── */
+@media (max-width: 1000px) {
+  .blueprint-rail {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1001px) {
+  .blueprint-rail {
+    display: block !important;
+  }
+}
+
 /* ── Dashboard tokens (dark-native, Supabase-structural) ── */
 :root {
   --background: #0a0a0a;
