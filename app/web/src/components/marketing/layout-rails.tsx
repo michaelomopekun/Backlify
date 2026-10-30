@@ -11,7 +11,7 @@ export interface MarketingRailsLayoutProps {
 
 /**
  * Technical blueprint layout with diagonal-hatched side rails flanking the marketing container.
- * Automatically hidden on screen sizes <= 740px.
+ * Automatically hidden on screen sizes <= 390px.
  */
 export function MarketingRailsLayout({
   children,
@@ -19,10 +19,10 @@ export function MarketingRailsLayout({
 }: MarketingRailsLayoutProps) {
   return (
     <div className={cn("relative min-h-screen bg-[#0a0a0a] text-[#f9fafb] flex justify-center w-full", className)}>
-      {/* ── Left Blueprint Rail (Hidden at <= 740px) ── */}
+      {/* ── Left Blueprint Rail (Hidden at <= 390px) ── */}
       <div
         aria-hidden="true"
-        className="blueprint-rail hidden min-[741px]:block w-10 2xl:w-12 shrink-0 border-r border-[#1b1e24] border-l border-[#14161a] select-none pointer-events-none self-stretch"
+        className="blueprint-rail hidden min-[391px]:block w-10 2xl:w-12 shrink-0 border-r border-[#1b1e24] border-l border-[#14161a] select-none pointer-events-none self-stretch"
         style={{
           backgroundImage: `repeating-linear-gradient(
             45deg,
@@ -39,10 +39,10 @@ export function MarketingRailsLayout({
         {children}
       </div>
 
-      {/* ── Right Blueprint Rail (Hidden at <= 740px) ── */}
+      {/* ── Right Blueprint Rail (Hidden at <= 390px) ── */}
       <div
         aria-hidden="true"
-        className="blueprint-rail hidden min-[741px]:block w-10 2xl:w-12 shrink-0 border-l border-[#1b1e24] border-r border-[#14161a] select-none pointer-events-none self-stretch"
+        className="blueprint-rail hidden min-[391px]:block w-10 2xl:w-12 shrink-0 border-l border-[#1b1e24] border-r border-[#14161a] select-none pointer-events-none self-stretch"
         style={{
           backgroundImage: `repeating-linear-gradient(
             45deg,
