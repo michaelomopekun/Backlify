@@ -11,6 +11,7 @@ import { OpenSourceSection } from "@/components/marketing/open-source-section";
 import { QaSection } from "@/components/marketing/qa-section";
 import { CtaSection } from "@/components/marketing/cta-section";
 import { SecurityTrustStrip } from "@/components/marketing/security-trust-strip";
+import { SiteFooter } from "@/components/marketing/site-footer";
 import { MarketingRailsLayout } from "@/components/marketing/layout-rails";
 
 export const metadata: Metadata = {
@@ -61,6 +62,11 @@ export default function PreviewLandingPage() {
       {/* ── Security & Compliance Trust Strip ── */}
       <div className="relative w-full border-t border-[#22252b]">
         <SecurityTrustStrip />
+      </div>
+
+      {/* ── Site Footer (Multi-Column Supabase-Style Layout) ── */}
+      <div className="relative w-full border-t border-[#22252b]">
+        <SiteFooter />
       </div>
 
     </MarketingRailsLayout>
