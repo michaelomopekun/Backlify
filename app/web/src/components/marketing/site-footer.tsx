@@ -70,12 +70,12 @@ const FOOTER_COLUMNS: FooterColumn[] = [
       { label: "Questions & FAQ", href: "#qa" },
       {
         label: "Contact Support",
-        href: "mailto:support@dbdock.xyz",
+        href: "mailto:support@mail.backlify.space",
         external: true,
       },
       {
         label: "Security Reporting",
-        href: "mailto:support@dbdock.xyz",
+        href: "mailto:support@mail.backlify.space",
         external: true,
       },
     ],
@@ -168,9 +168,9 @@ export function SiteFooter({ className }: SiteFooterProps) {
 
             {/* Email Support */}
             <a
-              href="mailto:support@dbdock.xyz"
+              href="mailto:support@mail.backlify.space"
               aria-label="Email Support"
-              title="support@dbdock.xyz"
+              title="support@mail.backlify.space"
               className="p-1.5 rounded hover:text-white hover:bg-white/[0.04] transition-colors"
             >
               <Mail className="w-[17px] h-[17px]" />

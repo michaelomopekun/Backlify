@@ -20,7 +20,7 @@ export function CtaSection({
   primaryCtaText = "Start your project",
   primaryCtaHref = "/signup",
   secondaryCtaText = "Request a demo",
-  secondaryCtaHref = "mailto:support@dbdock.xyz",
+  secondaryCtaHref = "mailto:support@mail.backlify.space",
   className,
 }: CtaSectionProps) {
   return (
