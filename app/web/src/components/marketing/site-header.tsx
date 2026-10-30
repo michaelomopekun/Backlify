@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { ActionButton } from "@/components/ui/action-button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface NavItem {
   label: string;
@@ -32,6 +33,14 @@ export function SiteHeader({
 }: SiteHeaderProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   const [hasScrolled, setHasScrolled] = React.useState(false);
+  const isMobile = useIsMobile();
+
+  // Close mobile drawer automatically if resized above 850px breakpoint
+  React.useEffect(() => {
+    if (!isMobile) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [isMobile]);
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -115,7 +124,7 @@ export function SiteHeader({
 
           {/* Desktop Navigation Links */}
           <nav
-            className="hidden md:flex"
+            className="header-nav-desktop hidden min-[851px]:flex"
             style={{
               alignItems: "center",
               gap: "28px",
@@ -161,7 +170,7 @@ export function SiteHeader({
             target="_blank"
             rel="noreferrer"
             aria-label="GitHub Repository"
-            className="hidden md:inline-flex"
+            className="header-actions-desktop hidden min-[851px]:inline-flex"
             style={{
               alignItems: "center",
               gap: "6px",
@@ -198,7 +207,7 @@ export function SiteHeader({
               size="xs"
               borderRadius="8px"
               href="/login"
-              className="hidden sm:inline-flex"
+              className="header-actions-desktop hidden min-[851px]:inline-flex"
             >
               Sign in
             </ActionButton>
@@ -210,7 +219,7 @@ export function SiteHeader({
               size="xs"
               borderRadius="8px"
               href="/signup"
-              className="hidden sm:inline-flex"
+              className="header-actions-desktop hidden min-[851px]:inline-flex"
             >
               Start free
             </ActionButton>
@@ -220,7 +229,7 @@ export function SiteHeader({
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden"
+            className="header-toggle-mobile min-[851px]:hidden"
             style={{
               padding: "6px",
               borderRadius: "6px",
@@ -269,9 +278,9 @@ export function SiteHeader({
       {/* Mobile Menu Dropdown */}
       {isMobileMenuOpen && (
         <div
-          className="bg:hidden"
+          className="header-drawer-mobile min-[851px]:hidden"
           style={{
-            background: "rgba(12, 13, 14, 0.92)",
+            background: "rgba(12, 13, 14, 0.98)",
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
